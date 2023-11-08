@@ -2,4 +2,7 @@
 open Cast
 (* Open Tast *)
 
-let check_file d f = f;;
+let check_file f = match f with
+	| [] -> []
+	| h::t -> [h]
+;;

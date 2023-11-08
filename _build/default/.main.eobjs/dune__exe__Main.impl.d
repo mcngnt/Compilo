@@ -1,1 +1,1 @@
-main.ml: Clexer Compile Cparser Ctyping Filename Format Lc3 Lexing Pretty Printexc Printf Usage
+main.ml: Clexer Cparser Ctyping Filename Format Lexing Pretty Printexc Printf Usage

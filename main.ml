@@ -26,22 +26,23 @@ let () =
     if !Usage.parse_only then exit 0;
 
 
-    let f = Ctyping.check_file ~debug f in
+    (* let tf = Ctyping.check_file ~debug f in *)
+    let tf = Ctyping.check_file f in
 
     if Usage.debug then begin
       let ast_dot_file = open_out (Filename.chop_suffix file ".c" ^ "_tast.dot") in
-      Printf.fprintf ast_dot_file "%s" (Pretty.get_dot_tast f (not !no_pretty));
+      Printf.fprintf ast_dot_file "%s" (Pretty.get_dot_tast tf (not !no_pretty));
       close_out ast_dot_file
     end;
 
-    if !Usage.type_only then exit 0;
+(*     if !Usage.type_only then exit 0;
 
-    let code = Compile.file ~debug f in
+    let code = Compile.file ~debug tf in
 
     let c = open_out (Filename.chop_suffix file ".c" ^ ".s") in
     let fmt = formatter_of_out_channel c in
     Lc3.print_program fmt code;
-    close_out c
+    close_out c *)
 
   with
     | Clexer.Lexing_error s ->

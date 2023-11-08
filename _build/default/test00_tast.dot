@@ -1,0 +1,8 @@
+digraph ast {
+node [shape=plaintext];
+root [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >*</b></td></tr></table>>]
+CDECL_1 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CDECL</b></td></tr><tr ><td colspan = '1'>v_name = "glob"</td></tr><tr ><td port='v_typ'>v_typ</td></tr></table>>]
+root -> CDECL_1
+TINT_2 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+CDECL_1:v_typ -> TINT_2
+}
