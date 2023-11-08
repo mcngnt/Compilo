@@ -1,0 +1,103 @@
+type token =
+    WHILE
+  | TILDE_CHR
+  | SUB_CHR
+  | STRING_LITERAL of string
+  | STAR_CHR
+  | SEMI_CHR
+  | RETURN
+  | QUES_CHR
+  | OR_OP
+  | OPEN_PAREN_CHR
+  | OPEN_BRACE_CHR
+  | OPEN_ANGLE_CHR
+  | NULL
+  | NE_OP
+  | MOD_CHR
+  | LE_OP
+  | INTEGER
+  | INC_OP
+  | IF
+  | IDENTIFIER of string
+  | GE_OP
+  | FOR
+  | EQ_OP
+  | EQ_CHR
+  | EOF
+  | ELSE
+  | DIV_CHR
+  | DEC_OP
+  | CONSTANT of int
+  | COMMA_CHR
+  | COLON_CHR
+  | CLOSE_PAREN_CHR
+  | CLOSE_BRACE_CHR
+  | CLOSE_ANGLE_CHR
+  | BANG_CHR
+  | AND_OP
+  | AMP_CHR
+  | ADD_CHR
+exception Parse_error of Cast.location * string
+val sup_locator : 'a * 'b -> 'c * 'd -> 'a * 'd
+val menhir_begin_marker : int
+val xv_whilekw : Cast.location
+val xv_unary_operator : Cast.location * token
+val xv_unary_expression : Cast.loc_expr
+val xv_type_specifier : Cast.ctyp
+val xv_tilde_chr : Cast.location * token
+val xv_sub_chr : Cast.location * token
+val xv_string_literal : Cast.location * string
+val xv_statement_list : Cast.loc_code list
+val xv_statement : Cast.loc_code
+val xv_star_chr : Cast.location * token
+val xv_shift_expression : Cast.loc_expr
+val xv_semi_chr : Cast.location
+val xv_selection_statement : Cast.loc_code
+val xv_return : Cast.location
+val xv_relational_expression : Cast.loc_expr
+val xv_primary_expression : Cast.loc_expr
+val xv_postfix_expression : Cast.loc_expr
+val xv_parameter_type_list : Cast.var_declaration list
+val xv_parameter_list : Cast.var_declaration list
+val xv_parameter_declarator : Cast.var_declaration list
+val xv_parameter_declaration : Cast.var_declaration
+val xv_open_brace : Cast.location
+val xv_open_block : Cast.location
+val xv_multiplicative_expression : Cast.loc_expr
+val xv_logical_or_expression : Cast.loc_expr
+val xv_logical_and_expression : Cast.loc_expr
+val xv_jump_statement : Cast.loc_code
+val xv_iteration_statement : Cast.loc_code
+val xv_inclusive_or_expression : Cast.loc_expr
+val xv_inc_op : Cast.location
+val xv_ifkw : Cast.location
+val xv_identifier : Cast.location * string
+val xv_function_definition : Cast.var_declaration
+val xv_function_declarator :
+  (Cast.location * string) * Cast.var_declaration list * Cast.ctyp
+val xv_forkw : Cast.location
+val xv_file : Cast.var_declaration list
+val xv_external_declaration : Cast.var_declaration list
+val xv_expression_statement : Cast.loc_expr
+val xv_expression : Cast.loc_expr
+val xv_exclusive_or_expression : Cast.loc_expr
+val xv_equality_expression : Cast.loc_expr
+val xv_declarator : Cast.location * string
+val xv_declaration_list : Cast.var_declaration list
+val xv_declaration : Cast.var_declaration list
+val xv_dec_op : Cast.location
+val xv_constant : Cast.location * int
+val xv_conditional_expression : Cast.loc_expr
+val xv_compound_statement : Cast.loc_code
+val xv_close_paren : Cast.location
+val xv_close_brace : Cast.location
+val xv_close_block : Cast.location
+val xv_cast_expression : Cast.loc_expr
+val xv_bang_chr : Cast.location * token
+val xv_assignment_expression : Cast.loc_expr
+val xv_argument_expression_list : Cast.loc_expr list
+val xv_and_expression : Cast.loc_expr
+val xv_amp_chr : Cast.location * token
+val xv_additive_expression : Cast.loc_expr
+val xv_add_chr : Cast.location * token
+val menhir_end_marker : int
