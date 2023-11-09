@@ -58,12 +58,14 @@ type cmp_op = C_LT | C_LE | C_EQ
 
 type ptyp =
   | Tint
+  | Tchar
   | Tptr of ptyp
    
 type loc_expr = location * expr
 and expr =
     VAR of string (* une variable --- toujours de type int. *)
   | CST of int (* une constante entiere. *)
+  | STRING of string (* une constante chaine. *)
   | NULLPTR (* the null pointer *)
   | SET_VAR of string * loc_expr (* affectation x=e. *)
   | SET_VAL of string * loc_expr (* affectation *x=e. *)

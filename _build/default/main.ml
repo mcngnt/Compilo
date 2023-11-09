@@ -26,7 +26,7 @@ let () =
     if !Usage.parse_only then exit 0;
 
 
-    (* let tf = Ctyping.check_file ~debug f in *)
+    Ctyping.check_file f;
     (* let tf = Ctyping.check_file f in *)
 
 (*     if Usage.debug then begin
@@ -52,6 +52,10 @@ let () =
     | Cparser.Error ->
       report_loc (lexeme_start_p lb, lexeme_end_p lb);
       eprintf "Syntax error\n@.";
+      exit 1
+    | Ctyping.Error (l, msg) ->
+      report_loc l;
+      eprintf "Typing error: %s\n@." msg;
       exit 1
 (*
     | Typing.Error (l, msg) ->

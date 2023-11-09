@@ -2,4 +2,4 @@
 
 open Cast
 
-type vdeclt = VART of string * ctyp | FUNT of string * (ctyp list) * ctyp
+type vdeclt = VART of string * ctyp * int | FUNT of string * (ctyp list) * ctyp

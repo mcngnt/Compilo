@@ -81,8 +81,8 @@ let unop = function
 let rec get_ast_typ ptyp parent_id =
   let create_node = create_node parent_id in
   match ptyp with
-  | TINT -> create_node "Tint" [] []
-  | TPTR ptyp -> create_node "Tptr" [] [ ("ptyp", get_ast_typ ptyp) ]
+  | TINT -> create_node "TINT" [] []
+  | TPTR ptyp -> create_node "TPTR" [] [ ("ptyp", get_ast_typ ptyp) ]
 
 let rec get_ast_expr lexpr parent_id =
   let create_node = create_node parent_id in
@@ -187,9 +187,5 @@ and get_ast_pdecl pdecl parent_id =
 
 
 let get_dot_ast pdecls flag_is_pretty =
-  is_pretty := flag_is_pretty;
-  draw_root_ast (fold_children get_ast_pdecl pdecls)
-
-let get_dot_tast pdecls flag_is_pretty =
   is_pretty := flag_is_pretty;
   draw_root_ast (fold_children get_ast_pdecl pdecls)

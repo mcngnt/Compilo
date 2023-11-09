@@ -57,14 +57,16 @@ type cmp_op = C_LT | C_LE | C_EQ
   *)
 
 type loc_expr = location * expr
-and expr = VAR of string (** une variable --- toujours de type int. *)
+and expr =
+
+  | VAR of string (** une variable --- toujours de type int. *)
   | CST of int (** une constante entiere. *)
   | STRING of string (** une constante chaine. *)
   | NULLPTR (* the null pointer *)
   | SET_VAR of string * loc_expr (** affectation x=e. *)
   | SET_VAL of string * loc_expr (** affectation *x=e. *)
   | CALL of string * loc_expr list (** appel de fonction f(e1,...,en) *)
-
+  
   | OP1 of mon_op * loc_expr
     (** OP1(mop, e) dénote -e, ~e, e++, e--, ++e, --e, &e ou *e. *)
   | OP2 of bin_op * loc_expr * loc_expr
