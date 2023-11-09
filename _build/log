@@ -3,7 +3,7 @@
 # Shared cache: disabled
 # Workspace root: /home/mcngnt/compilo
 # Auto-detected concurrency: 12
-$ /usr/bin/ocamlc.opt -config > /tmp/dune_20dafb_output
+$ /usr/bin/ocamlc.opt -config > /tmp/dune_85b29c_output
 # Dune context:
 #  { name = "default"
 #  ; kind = "default"
@@ -138,13 +138,13 @@ $ /usr/bin/ocamlc.opt -config > /tmp/dune_20dafb_output
 #      }
 #  ; instrument_with = []
 #  }
-$ (cd _build/default && /usr/bin/ocamldep.opt -modules -impl ctyping.ml) > _build/default/.main.eobjs/dune__exe__Ctyping.impl.d
-$ (cd _build/default && /usr/bin/ocamlc.opt -g -bin-annot -I .main.eobjs/byte -no-alias-deps -opaque -open Dune__exe -o .main.eobjs/byte/dune__exe__Ctyping.cmo -c -impl ctyping.ml)
-> File "ctyping.ml", line 24, characters 63-66:
-> 24 | 	| h::q, lcl -> match h with | CDECL(l,s,t) -> handle_block (q,lcl) (insert_no_double env (VART(s,t))) | _ -> failwith "Fonction définie dans une autre"
->                                                                     ^^^
-> Error: This expression has type 'a but an expression was expected of type
->          (Dune__exe.Cast.var_declaration list * 'a) list
->        The type variable 'a occurs inside
->        (Dune__exe.Cast.var_declaration list * 'a) list
+$ (cd _build/default && /usr/bin/ocamldep.opt -modules -intf cast.mli) > _build/default/.main.eobjs/dune__exe__Cast.intf.d
+$ (cd _build/default && /usr/bin/ocamlc.opt -g -bin-annot -I .main.eobjs/byte -no-alias-deps -opaque -open Dune__exe -o .main.eobjs/byte/dune__exe__Cast.cmi -c -intf cast.mli)
+$ (cd _build/.sandbox/16c135e9d4dfa34ff40f375e65171951/default && /usr/bin/ocamlc.opt -g -I .main.eobjs/byte -open Dune__exe -short-paths -i -impl cparser__mock.ml.mock) > _build/.sandbox/16c135e9d4dfa34ff40f375e65171951/default/cparser__mock.mli.inferred
+$ (cd _build/default && /usr/bin/ocamlopt.opt -g -I .main.eobjs/byte -I .main.eobjs/native -intf-suffix .ml -no-alias-deps -opaque -open Dune__exe -o .main.eobjs/native/dune__exe__Cast.cmx -c -impl cast.ml)
+> File "cast.ml", line 202, characters 8-14:
+> 202 |       | STRING s ->
+>               ^^^^^^
+> Error: This variant pattern is expected to have type expr
+>        There is no constructor STRING within type expr
 [2]

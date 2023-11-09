@@ -57,9 +57,7 @@ type cmp_op = C_LT | C_LE | C_EQ
   *)
 
 type loc_expr = location * expr
-and expr =
-
-  | VAR of string (** une variable --- toujours de type int. *)
+and expr = VAR of string (** une variable --- toujours de type int. *)
   | CST of int (** une constante entiere. *)
   | STRING of string (** une constante chaine. *)
   | NULLPTR (* the null pointer *)
@@ -91,7 +89,7 @@ type var_declaration =
     (** fonction avec ses arguments, le type du resultat et son code. *)
 and loc_code = location * code
 and code =
-    CBLOCK of (var_declaration list) * (loc_code list) (** { declarations; code; } *)
+    CBLOCK of var_declaration list * loc_code list (** { declarations; code; } *)
   | CEXPR of loc_expr (** une expression e; vue comme instruction. *)
   | CIF of loc_expr * loc_code * loc_code (** if (e) c1; else c2; *)
   | CWHILE of loc_expr * loc_code (** while (e) c1; *)
