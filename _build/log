@@ -3,7 +3,7 @@
 # Shared cache: disabled
 # Workspace root: /home/mcngnt/compilo
 # Auto-detected concurrency: 12
-$ /usr/bin/ocamlc.opt -config > /tmp/dune_26253d_output
+$ /usr/bin/ocamlc.opt -config > /tmp/dune_20dafb_output
 # Dune context:
 #  { name = "default"
 #  ; kind = "default"
@@ -138,7 +138,13 @@ $ /usr/bin/ocamlc.opt -config > /tmp/dune_26253d_output
 #      }
 #  ; instrument_with = []
 #  }
-$ (cd _build/default && /usr/bin/ocamldep.opt -modules -impl main.ml) > _build/default/.main.eobjs/dune__exe__Main.impl.d
-$ (cd _build/default && /usr/bin/ocamlc.opt -g -bin-annot -I .main.eobjs/byte -no-alias-deps -opaque -open Dune__exe -o .main.eobjs/byte/dune__exe__Main.cmo -c -impl main.ml)
-$ (cd _build/default && /usr/bin/ocamlopt.opt -g -I .main.eobjs/byte -I .main.eobjs/native -intf-suffix .ml -no-alias-deps -opaque -open Dune__exe -o .main.eobjs/native/dune__exe__Main.cmx -c -impl main.ml)
-$ (cd _build/default && /usr/bin/ocamlopt.opt -g -o main.exe .main.eobjs/native/dune__exe.cmx .main.eobjs/native/dune__exe__Cast.cmx .main.eobjs/native/dune__exe__Cparser.cmx .main.eobjs/native/dune__exe__Clexer.cmx .main.eobjs/native/dune__exe__Ctyping.cmx .main.eobjs/native/dune__exe__Pretty.cmx .main.eobjs/native/dune__exe__Usage.cmx .main.eobjs/native/dune__exe__Main.cmx)
+$ (cd _build/default && /usr/bin/ocamldep.opt -modules -impl ctyping.ml) > _build/default/.main.eobjs/dune__exe__Ctyping.impl.d
+$ (cd _build/default && /usr/bin/ocamlc.opt -g -bin-annot -I .main.eobjs/byte -no-alias-deps -opaque -open Dune__exe -o .main.eobjs/byte/dune__exe__Ctyping.cmo -c -impl ctyping.ml)
+> File "ctyping.ml", line 24, characters 63-66:
+> 24 | 	| h::q, lcl -> match h with | CDECL(l,s,t) -> handle_block (q,lcl) (insert_no_double env (VART(s,t))) | _ -> failwith "Fonction définie dans une autre"
+>                                                                     ^^^
+> Error: This expression has type 'a but an expression was expected of type
+>          (Dune__exe.Cast.var_declaration list * 'a) list
+>        The type variable 'a occurs inside
+>        (Dune__exe.Cast.var_declaration list * 'a) list
+[2]

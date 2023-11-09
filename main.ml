@@ -27,13 +27,13 @@ let () =
 
 
     (* let tf = Ctyping.check_file ~debug f in *)
-    let tf = Ctyping.check_file f in
+    (* let tf = Ctyping.check_file f in *)
 
-    if Usage.debug then begin
+(*     if Usage.debug then begin
       let ast_dot_file = open_out (Filename.chop_suffix file ".c" ^ "_tast.dot") in
       Printf.fprintf ast_dot_file "%s" (Pretty.get_dot_tast tf (not !no_pretty));
       close_out ast_dot_file
-    end;
+    end; *)
 
 (*     if !Usage.type_only then exit 0;
 

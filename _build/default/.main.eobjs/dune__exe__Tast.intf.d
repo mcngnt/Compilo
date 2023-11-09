@@ -1,1 +1,1 @@
-tast.mli:
+tast.mli: Cast

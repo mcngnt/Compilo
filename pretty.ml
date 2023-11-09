@@ -81,8 +81,8 @@ let unop = function
 let rec get_ast_typ ptyp parent_id =
   let create_node = create_node parent_id in
   match ptyp with
-  | Tint -> create_node "Tint" [] []
-  | Tptr ptyp -> create_node "Tptr" [] [ ("ptyp", get_ast_typ ptyp) ]
+  | TINT -> create_node "Tint" [] []
+  | TPTR ptyp -> create_node "Tptr" [] [ ("ptyp", get_ast_typ ptyp) ]
 
 let rec get_ast_expr lexpr parent_id =
   let create_node = create_node parent_id in
