@@ -97,7 +97,7 @@ let rec handle_expr le env = match le with | (l,e) -> begin match e with
 										| M_ADDR -> TTPTR (TTPTR t)
 										| _ -> TTPTR t 
 								end
-						| _ -> raise (Error(l, "Illegal pointer operation."))
+						| _ -> raise (Error(l, "Illegal operation with NULL pointer."))
 					end
 	| OP2(op, le1, le2) -> let t1 = handle_expr le1 env in let t2 = handle_expr le2 env in 
 							begin match (t1,t2) with
@@ -115,11 +115,14 @@ let rec handle_expr le env = match le with | (l,e) -> begin match e with
 																			| S_SUB -> TTPTR t1
 																			| _ -> raise (Error(l, "Illegal pointer-pointer operation."))
 																		end
-									| _ -> raise (Error(l, "Illegal pointer-pointer operation."))
+									| _ -> raise (Error(l, "Illegal pointer operation with NULL pointer."))
 							end
 	| CMP(op, le1,le2) -> let t1 = handle_expr le1 env in let t2 = handle_expr le2 env in if nequals_type t1 t2 then raise (Error(l, "Can't compare different types.")); TTINT
 	| EIF(le1,le2,le3) -> let t1 = handle_expr le1 env in let t2 = handle_expr le2 env in let t3 = handle_expr le3 env in if (nequals_type t1 TTINT) || (nequals_type t2  t3) then raise (Error(l, "Uncompatible types involved in the ternary operator.")); t2
-	| ESEQ lle -> let _ = List.map (fun e -> handle_expr e env) lle in TTINT
+	| ESEQ lle -> begin match List.rev (List.map (fun e -> handle_expr e env) lle) with
+							| [] -> TTINT
+							| h::q -> h
+				  end
 	| _ -> TTINT
 end
 

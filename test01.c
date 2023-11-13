@@ -26,7 +26,7 @@ int main()
 {
   int a;
   int** p;
-  p = NULL + 1;
+  p = NULL;
   glob = 3+2;
   {
       int p;
