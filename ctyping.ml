@@ -17,10 +17,15 @@ let rec insert_env env x l =
 	in
 	aux env
 
-(* Returns a string of the ctype *)
+let rec convert_ttype t = match t with
+	| TINT -> TTINT
+	| TPTR tx -> TTPTR (convert_ttype tx)
+
+(* Returns a string of the ttype *)
 let rec print_type t = match t with
-	| TINT -> "int"
-	| TPTR tx -> "pointer of " ^ (print_type tx)
+	| TTINT -> "int"
+	| TTPTR tx -> "pointer of " ^ (print_type tx)
+	| TTNULL -> "null pointer"
 
 (* Returns the string of the ctype associated with a vdeclt *)
 let print_vdeclt v = match v with
@@ -29,10 +34,12 @@ let print_vdeclt v = match v with
 
 (* Check if two ctype are equal *)
 let rec equals_type t1 t2 = match (t1,t2) with
-	| TINT,TINT -> true
-	| TINT, _ -> false
-	| _,TINT -> false
-	| TPTR st1, TPTR st2 -> equals_type st1 st2
+	| TTINT,TTINT -> true
+	| TTINT, _ -> false
+	| _,TTINT -> false
+	| TTNULL, _ -> true
+	| _,TTNULL -> true
+	| TTPTR st1, TTPTR st2 -> equals_type st1 st2
 
 (* Check if two ctype are not equal *)
 let nequals_type t1 t2 = not (equals_type t1 t2)
@@ -67,52 +74,53 @@ let  current_fun_type_env env l =
 (* Handle expression according to typing rules and returns the type of the expression *)
 let rec handle_expr le env = match le with | (l,e) -> begin match e with
 	| VAR s -> get_type_env env s l
-	| CST x -> TINT
-	| NULLPTR -> TPTR TINT
+	| CST x -> TTINT
+	| NULLPTR -> TTNULL
 	| SET_VAR(s,le) -> let t = handle_expr le env in begin match get_type_env env s l with
 														| tx when equals_type tx t -> t
 														| tx -> raise (Error(l, "Variable " ^ s ^ " of type " ^ (print_type tx) ^ " doesn't match expression affectation of type " ^ (print_type t)))
 													end
 	| SET_VAL(s,le) -> let t = handle_expr le env in begin match get_type_env env s l with
-														| TPTR tx when equals_type tx t -> t
+														| TTPTR tx when equals_type tx t -> t
 														| _ -> raise (Error(l, "Types do not match."))
 													end
 	| CALL(s,lle) -> let lt = List.map 	(fun e -> handle_expr e env) lle in check_args_fun_env env s lt l ; get_type_env env s l		
 	| OP1(op, le) -> begin match handle_expr le env with
-						| TINT -> begin match op with
+						| TTINT -> begin match op with
 										| M_DEREF -> raise (Error(l, "Dereferencing int type not allowed."))
-										| M_ADDR -> TPTR TINT
-										| _ -> TINT
+										| M_ADDR -> TTPTR TTINT
+										| _ -> TTINT
 								end
-						| TPTR t -> begin match op with
+						| TTPTR t -> begin match op with
 										| M_MINUS -> raise (Error(l, "Negative pointer not allowed."))
 										| M_DEREF -> t
-										| M_ADDR -> TPTR (TPTR t)
-										| _ -> TPTR t 
+										| M_ADDR -> TTPTR (TTPTR t)
+										| _ -> TTPTR t 
 								end
+						| _ -> raise (Error(l, "Illegal pointer operation."))
 					end
 	| OP2(op, le1, le2) -> let t1 = handle_expr le1 env in let t2 = handle_expr le2 env in 
 							begin match (t1,t2) with
-									| (TINT, TINT) -> TINT
-									| (TINT, TPTR t) -> begin match op with
-															| S_ADD -> TPTR t
+									| (TTINT, TTINT) -> TTINT
+									| (TTINT, TTPTR t) -> begin match op with
+															| S_ADD -> TTPTR t
 															| _ -> raise (Error(l, "Illegal pointer-int operation."))
 														end
-									| (TPTR t, TINT) -> begin match op with
-															| S_ADD -> TPTR t
-															| S_SUB -> TPTR t
+									| (TTPTR t, TTINT) -> begin match op with
+															| S_ADD -> TTPTR t
+															| S_SUB -> TTPTR t
 															| _ -> raise (Error(l, "Illegal pointer-int operation."))
 														end
-									| (TPTR t1, TPTR t2) when equals_type t1 t2 -> begin match op with
-																			| S_SUB -> TPTR t1
+									| (TTPTR t1, TTPTR t2) when equals_type t1 t2 -> begin match op with
+																			| S_SUB -> TTPTR t1
 																			| _ -> raise (Error(l, "Illegal pointer-pointer operation."))
 																		end
 									| _ -> raise (Error(l, "Illegal pointer-pointer operation."))
 							end
-	| CMP(op, le1,le2) -> let t1 = handle_expr le1 env in let t2 = handle_expr le2 env in if nequals_type t1 t2 then raise (Error(l, "Can't compare different types.")); TINT
-	| EIF(le1,le2,le3) -> let t1 = handle_expr le1 env in let t2 = handle_expr le2 env in let t3 = handle_expr le3 env in if (nequals_type t1 TINT) || (nequals_type t2  t3) then raise (Error(l, "Uncompatible types involved in the ternary operator.")); t2
-	| ESEQ lle -> let _ = List.map (fun e -> handle_expr e env) lle in TINT
-	| _ -> TINT
+	| CMP(op, le1,le2) -> let t1 = handle_expr le1 env in let t2 = handle_expr le2 env in if nequals_type t1 t2 then raise (Error(l, "Can't compare different types.")); TTINT
+	| EIF(le1,le2,le3) -> let t1 = handle_expr le1 env in let t2 = handle_expr le2 env in let t3 = handle_expr le3 env in if (nequals_type t1 TTINT) || (nequals_type t2  t3) then raise (Error(l, "Uncompatible types involved in the ternary operator.")); t2
+	| ESEQ lle -> let _ = List.map (fun e -> handle_expr e env) lle in TTINT
+	| _ -> TTINT
 end
 
 
@@ -123,14 +131,14 @@ let rec handle_block vdl lcl env d = match vdl with
 				| h::q -> (handle_code h env d) || (handle_block [] q env d)
 			end
 	| h::q -> match h with
-						| CDECL(l,s,t) -> handle_block q lcl ( insert_env env (VART(s,t,d)) l ) d
+						| CDECL(l,s,t) -> handle_block q lcl ( insert_env env (VART(s,convert_ttype t,d)) l ) d
 						| CFUN(l,s,vl,t,lc) -> raise (Error(l, "Function defined in another is not allowed."))
 
 and handle_code lc env d = match lc with | (l,c) -> begin match c with
 	| CBLOCK(vdl, lcl) -> handle_block vdl lcl env (d+1)
 	| CEXPR le -> let _ = handle_expr le env in false
-	| CIF(le, lc1, lc2) -> let t = handle_expr le env in if nequals_type t TINT then raise (Error(l, "Non-int type as condition.")) else (handle_code lc1 env d) && (handle_code lc2 env d)
-	| CWHILE(le, lc) -> let t = handle_expr le env in if nequals_type t TINT then raise (Error(l, "Non-int type as condition.")) else handle_code lc env d
+	| CIF(le, lc1, lc2) -> let t = handle_expr le env in if nequals_type t TTINT then raise (Error(l, "Non-int type as condition.")) else (handle_code lc1 env d) && (handle_code lc2 env d)
+	| CWHILE(le, lc) -> let t = handle_expr le env in if nequals_type t TTINT then raise (Error(l, "Non-int type as condition.")) else handle_code lc env d
 	| CRETURN None -> raise (Error(l, "Return needs to return a non-empty expression."))
 	| CRETURN (Some le) -> let t = handle_expr le env in let ft = current_fun_type_env env l in if nequals_type t ft then raise (Error(l, "Return type " ^ (print_type t) ^ " does not correspond to function type " ^ (print_type ft) ^ ".")); true
 end
@@ -140,20 +148,20 @@ end
 (* Converts a list of var_declaration to a ctype list *)
 let rec convert_to_type_dec l = match l with
 	| [] -> []
-	|CDECL(l,s,t)::q -> t::(convert_to_type_dec q)
-	| CFUN(l,s,vl,t,lc)::q -> raise (Error(l, "Function passed as a parameter."))
+	|CDECL(l,s,t)::q -> (convert_ttype t)::(convert_to_type_dec q)
+	|CFUN(l,s,vl,t,lc)::q -> raise (Error(l, "Function passed as a parameter."))
 
 (* Converts a list of var_declaration to a vdeclt (custom type used in env) list *)
 let rec convert_to_vdeclt_dec l = match l with
 	| [] -> []
-	| CDECL(l,s,t)::q -> VART(s,t,1)::(convert_to_vdeclt_dec q)
+	| CDECL(l,s,t)::q -> VART(s,convert_ttype t,1)::(convert_to_vdeclt_dec q)
 	| CFUN(l,s,vl,t,lc)::q -> raise (Error(l, "Function passed as a parameter."))
 
 (* Function to handle global declarations *)
 let rec handle_val_dec f env = match f with
 	| [] -> ()
-	| CDECL(l,s,t)::q ->  handle_val_dec q (insert_env env (VART(s,t,0)) l)
-	| CFUN(l,s,vl,t,lc)::q -> let newenv = insert_env env (FUNT(s, convert_to_type_dec vl, t)) l in let b = handle_code lc (List.fold_left (fun e x -> insert_env e x l)  newenv (convert_to_vdeclt_dec vl) ) 1 in if not b then raise (Error(l, "Function " ^ s ^ " doesn't return in every code branch.")); handle_val_dec q newenv
+	| CDECL(l,s,t)::q ->  handle_val_dec q (insert_env env (VART(s,convert_ttype t,0)) l)
+	| CFUN(l,s,vl,t,lc)::q -> let newenv = insert_env env (FUNT(s, convert_to_type_dec vl, convert_ttype t)) l in let b = handle_code lc (List.fold_left (fun e x -> insert_env e x l)  newenv (convert_to_vdeclt_dec vl) ) 1 in if not b then raise (Error(l, "Function " ^ s ^ " doesn't return in every code branch.")); handle_val_dec q newenv
 
 
 (* Starts the AST traversing with an empty environment *)

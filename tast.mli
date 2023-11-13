@@ -1,5 +1,6 @@
 
 
-open Cast
 
-type vdeclt = VART of string * ctyp * int | FUNT of string * (ctyp list) * ctyp
+type ttype = TTINT | TTPTR of ttype | TTNULL
+
+type vdeclt = VART of string * ttype * int | FUNT of string * (ttype list) * ttype

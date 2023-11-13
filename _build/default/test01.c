@@ -25,7 +25,7 @@ int* g(int** p)
 int main() 
 {
   int a;
-  int* p;
+  int** p;
   p = NULL;
   glob = 3+2;
   {
