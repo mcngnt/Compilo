@@ -5,7 +5,7 @@ open Tast
 exception Error of location * string
 
 
-(* Insert a new variable to the environment checking previous variables to ensure that typing rules are respected *)
+(* Inserts a new variable to the environment checking previous variables to ensure that typing rules are respected *)
 let rec insert_env env x l = 
 	let sx = match x with |VART(s,t,d) -> s |FUNT(s,vl,t) -> s in
 	let dx = match x with |VART(s,t,d) -> d |FUNT(s,vl,t) -> 0 in
@@ -17,6 +17,7 @@ let rec insert_env env x l =
 	in
 	aux env
 
+(* Converts a ctype into a ttype *)
 let rec convert_ttype t = match t with
 	| TINT -> TTINT
 	| TPTR tx -> TTPTR (convert_ttype tx)
@@ -32,7 +33,7 @@ let print_vdeclt v = match v with
 	| VART(s,t,d) -> s ^ " of type " ^ (print_type t)
 	| FUNT(s,vl, t) -> s
 
-(* Check if two ctype are equal *)
+(* Checks if two ctype are equal *)
 let rec equals_type t1 t2 = match (t1,t2) with
 	| TTINT,TTINT -> true
 	| TTINT, _ -> false
@@ -41,10 +42,10 @@ let rec equals_type t1 t2 = match (t1,t2) with
 	| _,TTNULL -> true
 	| TTPTR st1, TTPTR st2 -> equals_type st1 st2
 
-(* Check if two ctype are not equal *)
+(* Checks if two ctype are not equal *)
 let nequals_type t1 t2 = not (equals_type t1 t2)
 
-(* Get the type of a variable in the env (the newest variable of the env is used if two variables have the same name) *)
+(* Gets the type of a variable in the env (the newest variable of the env is used if two variables have the same name) *)
 let get_type_env env sx l = 
 	let rec aux e = match e with
 		| VART(s,t,d)::q when s = sx -> t
@@ -62,7 +63,7 @@ let rec check_args_fun_env env sx args l = match env with
 	| [] -> raise (Error(l, "No function named " ^ sx ^ " matches with the args provided."))
 
 
-(* Get the type of the latest function added to the environment *)
+(* Gets the type of the latest function added to the environment *)
 let  current_fun_type_env env l =
 	let rec aux e = match e with
 		| FUNT(s,vl, t)::q  -> t
@@ -71,10 +72,11 @@ let  current_fun_type_env env l =
 	in
 	aux (List.rev env)
 
-(* Handle expression according to typing rules and returns the type of the expression *)
+(* Handles expression according to typing rules and returns the type of the expression *)
 let rec handle_expr le env = match le with | (l,e) -> begin match e with
 	| VAR s -> get_type_env env s l
 	| CST x -> TTINT
+	| STRING s -> TTPTR TTINT
 	| NULLPTR -> TTNULL
 	| SET_VAR(s,le) -> let t = handle_expr le env in begin match get_type_env env s l with
 														| tx when equals_type tx t -> t
@@ -97,7 +99,12 @@ let rec handle_expr le env = match le with | (l,e) -> begin match e with
 										| M_ADDR -> TTPTR (TTPTR t)
 										| _ -> TTPTR t 
 								end
-						| _ -> raise (Error(l, "Illegal operation with NULL pointer."))
+						| TTNULL -> begin match op with
+										| M_MINUS -> raise (Error(l, "Negative pointer not allowed."))
+										| M_DEREF -> raise (Error(l, "Deref of null pointer not allowed."))
+										| M_ADDR -> TTPTR (TTNULL)
+										| _ -> TTNULL
+								end
 					end
 	| OP2(op, le1, le2) -> let t1 = handle_expr le1 env in let t2 = handle_expr le2 env in 
 							begin match (t1,t2) with
@@ -115,6 +122,15 @@ let rec handle_expr le env = match le with | (l,e) -> begin match e with
 																			| S_SUB -> TTPTR t1
 																			| _ -> raise (Error(l, "Illegal pointer-pointer operation."))
 																		end
+									| (TTINT, TTNULL) -> begin match op with
+															| S_ADD -> TTNULL
+															| _ -> raise (Error(l, "Illegal null pointer-int operation."))
+														end
+									| (TTNULL, TTINT) -> begin match op with
+															| S_ADD -> TTNULL
+															| S_SUB -> TTNULL
+															| _ -> raise (Error(l, "Illegal null pointer-int operation."))
+														end
 									| _ -> raise (Error(l, "Illegal pointer operation with NULL pointer."))
 							end
 	| CMP(op, le1,le2) -> let t1 = handle_expr le1 env in let t2 = handle_expr le2 env in if nequals_type t1 t2 then raise (Error(l, "Can't compare different types.")); TTINT
@@ -123,7 +139,6 @@ let rec handle_expr le env = match le with | (l,e) -> begin match e with
 							| [] -> TTINT
 							| h::q -> h
 				  end
-	| _ -> TTINT
 end
 
 

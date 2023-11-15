@@ -1,9 +1,9 @@
 # dune build @all
 # OCAMLPARAM: unset
 # Shared cache: disabled
-# Workspace root: /home/mcngnt/compilo
-# Auto-detected concurrency: 12
-$ /usr/bin/ocamlc.opt -config > /tmp/dune_d20dfa_output
+# Workspace root: /users/dptinfo/cuingnet/Documents/Compilo
+# Auto-detected concurrency: 8
+$ /usr/bin/ocamlc.opt -config > /tmp/dune_833078_output
 # Dune context:
 #  { name = "default"
 #  ; kind = "default"
@@ -18,13 +18,25 @@ $ /usr/bin/ocamlc.opt -config > /tmp/dune_d20dfa_output
 #  ; ocamlopt = Ok External "/usr/bin/ocamlopt.opt"
 #  ; ocamldep = Ok External "/usr/bin/ocamldep.opt"
 #  ; ocamlmklib = Ok External "/usr/bin/ocamlmklib.opt"
-#  ; installed_env =
+#  ; env =
 #      map
-#        { "INSIDE_DUNE" : "/home/mcngnt/compilo/_build/default"
+#        { "DUNE_OCAML_HARDCODED" : "/users/dptinfo/cuingnet/.opam/default/lib"
+#        ; "DUNE_OCAML_STDLIB" : "/usr/lib/ocaml"
+#        ; "DUNE_SOURCEROOT" : "/users/dptinfo/cuingnet/Documents/Compilo"
+#        ; "INSIDE_DUNE" :
+#            "/users/dptinfo/cuingnet/Documents/Compilo/_build/default"
+#        ; "OCAMLFIND_IGNORE_DUPS_IN" :
+#            "/users/dptinfo/cuingnet/Documents/Compilo/_build/install/default/lib"
+#        ; "OCAMLPATH" :
+#            "/users/dptinfo/cuingnet/Documents/Compilo/_build/install/default/lib"
+#        ; "OCAMLTOP_INCLUDE_PATH" :
+#            "/users/dptinfo/cuingnet/Documents/Compilo/_build/install/default/lib/toplevel"
 #        ; "OCAML_COLOR" : "always"
 #        ; "OPAMCOLOR" : "always"
 #        }
-#  ; findlib_paths = [ External "/home/mcngnt/.opam/default/lib" ]
+#  ; findlib_paths = [ External "/users/dptinfo/cuingnet/.opam/default/lib" ]
+#  ; natdynlink_supported = true
+#  ; supports_shared_libraries = true
 #  ; ocaml_config =
 #      { version = "4.13.1"
 #      ; standard_library_default = "/usr/lib/ocaml"
@@ -136,7 +148,6 @@ $ /usr/bin/ocamlc.opt -config > /tmp/dune_d20dfa_output
 #      ; supports_shared_libraries = true
 #      ; windows_unicode = false
 #      }
-#  ; instrument_with = []
 #  }
 $ (cd _build/default && /usr/bin/ocamldep.opt -modules -impl ctyping.ml) > _build/default/.main.eobjs/dune__exe__Ctyping.impl.d
 $ (cd _build/default && /usr/bin/ocamlc.opt -g -bin-annot -I .main.eobjs/byte -no-alias-deps -opaque -open Dune__exe -o .main.eobjs/byte/dune__exe__Ctyping.cmo -c -impl ctyping.ml)
