@@ -72,6 +72,16 @@ let  current_fun_type_env env l =
 	in
 	aux (List.rev env)
 
+(*
+let rec is_lvalue le = match le with
+	| (l,e) -> begin match e with
+				| Var s -> true
+				| OP1(op,le) when op = M_DEREF -> is_lvalue le
+				| _ -> false
+				end
+
+*)
+
 (* Handles expression according to typing rules and returns the type of the expression *)
 let rec handle_expr le env = match le with | (l,e) -> begin match e with
 	| VAR s -> get_type_env env s l
@@ -87,7 +97,12 @@ let rec handle_expr le env = match le with | (l,e) -> begin match e with
 														| _ -> raise (Error(l, "Types do not match."))
 													end
 	| CALL(s,lle) -> let lt = List.map 	(fun e -> handle_expr e env) lle in check_args_fun_env env s lt l ; get_type_env env s l		
-	| OP1(op, le) -> begin match handle_expr le env with
+	| OP1(op, le) -> (*let islv = is_lvalue le in begin match op with
+						| M_ADDR | M_POST_INC | M_POST_DEC | M_PRE_INC | M_PRE_DEC when not islv -> raise (Error(l, "The expression used with & is not an lvalue."))
+						| _ -> ()
+					end
+					*)
+					begin match handle_expr le env 
 						| TTINT -> begin match op with
 										| M_DEREF -> raise (Error(l, "Dereferencing int type not allowed."))
 										| M_ADDR -> TTPTR TTINT
