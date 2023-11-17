@@ -7,12 +7,12 @@ $(EXE): *.ml*
 	dune build @all
 	cp $(EXE) ccomp
 
-test: $(EXE) test.c
-	./ccomp --debug test.c
+test: $(EXE) Tests/test01.c
+	./ccomp --debug Tests/test01.c
 	# lc2as test.s 
 	# gcc -o test.exe test.c
 	# ./test.exe
-	dot -v -Tpng -O test_ast.dot
+	dot -v -Tpng -O Tests/test01_ast.dot
 
 .PHONY: clean
 clean:

@@ -3,6 +3,9 @@
 (** @canonical Dune__exe.Cast *)
 module Cast = Dune__exe__Cast
 
+(** @canonical Dune__exe.Ccompile *)
+module Ccompile = Dune__exe__Ccompile
+
 (** @canonical Dune__exe.Clexer *)
 module Clexer = Dune__exe__Clexer
 

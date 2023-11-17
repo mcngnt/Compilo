@@ -1,4 +1,5 @@
 dune__exe__Cast
+dune__exe__Ccompile
 dune__exe__Clexer
 dune__exe__Cparser
 dune__exe__Ctyping

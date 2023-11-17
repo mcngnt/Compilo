@@ -3,7 +3,7 @@
 # Shared cache: disabled
 # Workspace root: /users/dptinfo/cuingnet/Documents/Compilo
 # Auto-detected concurrency: 8
-$ /usr/bin/ocamlc.opt -config > /tmp/dune_72100a_output
+$ /usr/bin/ocamlc.opt -config > /tmp/dune_240791_output
 # Dune context:
 #  { name = "default"
 #  ; kind = "default"
@@ -149,9 +149,7 @@ $ /usr/bin/ocamlc.opt -config > /tmp/dune_72100a_output
 #      ; windows_unicode = false
 #      }
 #  }
-$ (cd _build/default && /usr/bin/ocamldep.opt -modules -impl ctyping.ml) > _build/default/.main.eobjs/dune__exe__Ctyping.impl.d
-> File "ctyping.ml", line 106, characters 6-7:
-> 106 | 						| TTINT -> begin match op with
->             ^
-> Error: Syntax error
-[2]
+$ (cd _build/default && /usr/bin/ocamldep.opt -modules -impl ccompile.ml) > _build/default/.main.eobjs/dune__exe__Ccompile.impl.d
+$ (cd _build/default && /usr/bin/ocamlc.opt -g -bin-annot -I .main.eobjs/byte -no-alias-deps -opaque -open Dune__exe -o .main.eobjs/byte/dune__exe__Ccompile.cmo -c -impl ccompile.ml)
+$ (cd _build/default && /usr/bin/ocamlopt.opt -g -I .main.eobjs/byte -I .main.eobjs/native -intf-suffix .ml -no-alias-deps -opaque -open Dune__exe -o .main.eobjs/native/dune__exe__Ccompile.cmx -c -impl ccompile.ml)
+$ (cd _build/default && /usr/bin/ocamlopt.opt -g -o main.exe .main.eobjs/native/dune__exe.cmx .main.eobjs/native/dune__exe__Cast.cmx .main.eobjs/native/dune__exe__Ccompile.cmx .main.eobjs/native/dune__exe__Cparser.cmx .main.eobjs/native/dune__exe__Clexer.cmx .main.eobjs/native/dune__exe__Ctyping.cmx .main.eobjs/native/dune__exe__Pretty.cmx .main.eobjs/native/dune__exe__Usage.cmx .main.eobjs/native/dune__exe__Main.cmx)
