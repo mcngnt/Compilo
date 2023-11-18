@@ -1,1 +1,1 @@
-ccompile.ml: Printf
+ccompile.ml: Cast Ctable Printf

@@ -5,7 +5,7 @@ open Tast
 exception Error of location * string
 
 
-(* Inserts a new variable to the environment checking previous variables to ensure that typing rules are respected *)
+(* Inserts a new variable in the environment checking previous variables to ensure that typing rules are respected *)
 let rec insert_env env x l = 
 	let sx = match x with |VART(s,t,d) -> s |FUNT(s,vl,t) -> s in
 	let dx = match x with |VART(s,t,d) -> d |FUNT(s,vl,t) -> 0 in
@@ -16,6 +16,7 @@ let rec insert_env env x l =
 		| h::q -> h::(aux q)
 	in
 	aux env
+
 
 (* Converts a ctype into a ttype *)
 let rec convert_ttype t = match t with
@@ -86,7 +87,9 @@ let rec handle_expr le env = match le with | (l,e) -> begin match e with
 	| CST x -> TTINT
 	| STRING s -> TTPTR TTINT
 	| NULLPTR -> TTNULL
-	| SET_VAR(s,le) -> let t = handle_expr le env in begin match get_type_env env s l with
+	| SET_VAR(s,le) -> (* Here I don't change the type of the variable in the environment, making the statements (int* a; a = NULL; return *a) a valid code
+						  as it is the case for gcc *)
+						let t = handle_expr le env in begin match get_type_env env s l with
 														| tx when equals_type tx t -> t
 														| tx -> raise (Error(l, "Variable " ^ s ^ " of type " ^ (print_type tx) ^ " doesn't match expression affectation of type " ^ (print_type t)))
 													end
@@ -112,7 +115,7 @@ let rec handle_expr le env = match le with | (l,e) -> begin match e with
 										| _ -> TTPTR t 
 								end
 						| TTNULL -> begin match op with
-										| M_MINUS -> raise (Error(l, "Negative pointer not allowed."))
+										| M_MINUS -> raise (Error(l, "Negative null pointer not allowed."))
 										| M_DEREF -> raise (Error(l, "Deref of null pointer not allowed."))
 										| M_ADDR -> TTPTR (TTNULL)
 										| _ -> TTNULL
@@ -169,7 +172,7 @@ and handle_code lc env d = match lc with | (l,c) -> begin match c with
 	| CEXPR le -> let _ = handle_expr le env in false
 	| CIF(le, lc1, lc2) -> let t = handle_expr le env in if nequals_type t TTINT then raise (Error(l, "Non-int type as condition.")) else (handle_code lc1 env d) && (handle_code lc2 env d)
 	| CWHILE(le, lc) -> let t = handle_expr le env in if nequals_type t TTINT then raise (Error(l, "Non-int type as condition.")) else handle_code lc env d
-	| CRETURN None -> raise (Error(l, "Return needs to return a non-empty expression."))
+	| CRETURN None -> true
 	| CRETURN (Some le) -> let t = handle_expr le env in let ft = current_fun_type_env env l in if nequals_type t ft then raise (Error(l, "Return type " ^ (print_type t) ^ " does not correspond to function type " ^ (print_type ft) ^ ".")); true
 end
 
@@ -195,4 +198,5 @@ let rec handle_val_dec f env = match f with
 
 
 (* Starts the AST traversing with an empty environment *)
+(* Here, i don't return a typed AST because it is not needed in LC3 compilation : but I still check every typing rule throught an AST traversing *)
 let check_file f = handle_val_dec f [];;

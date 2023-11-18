@@ -9,11 +9,11 @@ module Ccompile = Dune__exe__Ccompile
 (** @canonical Dune__exe.Clexer *)
 module Clexer = Dune__exe__Clexer
 
-(** @canonical Dune__exe.Compiletype *)
-module Compiletype = Dune__exe__Compiletype
-
 (** @canonical Dune__exe.Cparser *)
 module Cparser = Dune__exe__Cparser
+
+(** @canonical Dune__exe.Ctable *)
+module Ctable = Dune__exe__Ctable
 
 (** @canonical Dune__exe.Ctyping *)
 module Ctyping = Dune__exe__Ctyping
