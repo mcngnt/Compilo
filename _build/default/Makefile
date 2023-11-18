@@ -7,9 +7,11 @@ $(EXE): *.ml*
 	dune build @all
 	cp $(EXE) ccomp
 
-test: $(EXE) Tests/test02.c
-	./ccomp Tests/test02.c
-	cat Tests/test02.s
+test: $(EXE) Test/test0.c
+	./ccomp Test/test0.c
+	dot -v -Tpng -O Test/test0_ast.dot
+	echo "\n\n\n\n\n"
+	cat Test/test0.s
 
 .PHONY: clean
 clean:

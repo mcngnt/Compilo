@@ -198,5 +198,7 @@ let rec handle_val_dec f env = match f with
 
 
 (* Starts the AST traversing with an empty environment *)
-(* Here, i don't return a typed AST because it is not needed in LC3 compilation : but I still check every typing rule throught an AST traversing *)
+(* Here, i don't return a typed AST because it is not needed in LC3 compilation : but I still check every typing rule throught the AST traversing 
+  (My typing code was already finished when I learned the need to return a typed AST so I decided to not change it because 
+  	my code will much more longer if I did as I already use return types of functions to check typing rules) *)
 let check_file f = handle_val_dec f [];;
