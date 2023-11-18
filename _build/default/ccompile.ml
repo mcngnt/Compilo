@@ -32,12 +32,16 @@ let rec insert_no_double l x = match l with
 	| h::q -> h::(insert_no_double q x)
 
 
+let gen_condition e ctrue cfalse id flagname brtype = let idstring = string_of_int id in
+	e ^ "BR" ^ brtype ^ " " ^ flagname ^ "_" ^ "ELSE" ^ idstring ^ "\n" ^ ctrue ^ "BR " ^ flagname ^ "_" ^ "ENDELSE" ^ idstring ^ "\n" ^ flagname ^ "_" ^  "ELSE" ^ idstring ^ "\n" ^ cfalse ^ flagname ^ "_" ^  "ENDELSE" ^ idstring ^ "\n"
 
 let check_file f =
   let orig = 0x3000 in
   let stack = 0x8000 in
-  let cstdecl = ref [] in
-  let ifcount = ref 0 in
+  let cstdecl = ref [0;1] in
+  let flagcount = ref 0 in
+
+  let incr_flag () = flagcount := !flagcount + 1 in
 
 	let rec handle_expr le tab d r6 = match le with | (l,e) -> begin match e with
 		| VAR s -> let a = get_addr_tab tab s in "LDR R0 R5 #-" ^ (string_of_int a) ^ "\n"
@@ -55,6 +59,13 @@ let check_file f =
 													 	| S_SUB -> "NOT R0 R0\nADD R0 R0 #1\nADD R0 R0 R1\n"
 													 	| _ -> ""
 													 end
+		| CMP(op, le1, le2) -> (handle_expr le1 tab d r6) ^ "STR R0 R6 #0\nADD R6 R6 #-1\n" ^ (handle_expr le2 tab d (r6+1)) ^ "ADD R6 R6 #1\nLDR R1 R6 #0\n" ^
+													 let brtype = match op with
+													 										| C_LT -> "zp"
+													 										| C_LE -> "p"
+													 										| C_EQ -> "np"
+													 							in 
+													 let e = "NOT R0 R0\nADD R0 R0 #1\nADD R0 R0 R1\n" in let ctrue = "LD R0 CST1\n" in let cfalse = "LD R0 CST0\n" in incr_flag(); gen_condition e ctrue cfalse !flagcount "CMP" brtype
 		| _ -> ""
 	end
 	in
@@ -71,7 +82,8 @@ let check_file f =
 	and handle_code lc tab d r6 = match lc with | (l,c) -> begin match c with
 	 			| CBLOCK(vdl, lcl) -> handle_block vdl lcl tab (d+1) r6
 				| CEXPR le -> handle_expr le tab d r6
-				| CIF(le, lc1,lc2) -> let ifnb = string_of_int !ifcount in ifcount := !ifcount + 1; (handle_expr le tab d r6) ^ "BRz ELSE" ^ ifnb ^ "\n" ^ (handle_code lc1 tab d r6) ^ "BR ENDELSE" ^ ifnb ^ "\n" ^ "ELSE" ^ ifnb ^ "\n" ^ (handle_code lc2 tab d r6) ^ "ENDELSE" ^ ifnb ^ "\n"
+				| CIF(le, lc1,lc2) -> incr_flag(); let e = (handle_expr le tab d r6) in let c1 = (handle_code lc1 tab d r6) in let c2 = (handle_code lc2 tab d r6) in gen_condition e c1 c2 !flagcount "IF" "z"
+				| CWHILE(le, lc) -> let flagstring = string_of_int (!flagcount) in incr_flag(); "STARTWHILE" ^ flagstring ^ "\n" ^ (handle_expr le tab d r6) ^ "BRz ENDWHILE" ^ flagstring ^ "\n" ^ (handle_code lc tab d r6) ^ "BR STARTWHILE" ^ flagstring ^ "\n" ^ "ENDWHILE" ^ flagstring ^ "\n"
 				| CRETURN (Some le) -> handle_expr le tab d r6
 				| _ -> ""
 		end

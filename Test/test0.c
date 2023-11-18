@@ -2,15 +2,14 @@
 int main()
 {
 	int x;
-	int y;
-	x = 0;
-	if(x)
+	x = 2;
+	if(x <= (3 - 2))
 	{
-		y = 1;
+		x = 100;
 	}
 	else
 	{
-		y = -1;
+		x = 200;
 	}
-	return y;
+	return x;
 }
