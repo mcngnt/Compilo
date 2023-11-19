@@ -47,18 +47,20 @@ let check_file f =
   let cstdecl = ref [0;1] in
   let flagcount = ref 0 in
   let globvar = ref ["STATIC"] in
+  let lastaddr = ref 0 in
 
   let incr_flag () = flagcount := !flagcount + 1 in
 
 	let rec handle_expr le tab d r6 = match le with | (l,e) -> begin match e with
-		| VAR s -> let a = get_addr_tab tab s in (if (get_depth_tab tab s) == 0 then "LDR R0 R4 #" ^ (string_of_int a) ^ "\n" else "LDR R0 R5 #" ^ (string_of_int a) ^ "\n" )
+		| VAR s -> let a = get_addr_tab tab s in lastaddr := a ; (if (get_depth_tab tab s) == 0 then "LDR R0 R4 #" ^ (string_of_int a) ^ "\n" else "LDR R0 R5 #" ^ (string_of_int a) ^ "\n" )
 		| CST x -> cstdecl := insert_no_double (!cstdecl) x; "LD R0 CST" ^ (string_of_int x) ^ "\n"
 		| SET_VAR(s,le) -> let a = get_addr_tab tab s in (handle_expr le tab d r6) ^ (if (get_depth_tab tab s) == 0 then "STR R0 R4 #" ^ (string_of_int a) ^ "\n" else "STR R0 R5 #" ^ (string_of_int a) ^ "\n" )
-		| SET_VAL(s,le) -> let a = get_addr_tab tab s in (handle_expr le tab d r6) ^ (if (get_depth_tab tab s) == 0 then "STI R0 R4 #" ^ (string_of_int a) ^ "\n" else "STI R0 R5 #" ^ (string_of_int a) ^ "\n" )
+		| SET_VAL(s,le) -> let a = get_addr_tab tab s in (handle_expr le tab d r6) ^ (if (get_depth_tab tab s) == 0 then "LDR R0 R4 #" ^ (string_of_int a) ^ "\n" ^ "ADD R1 R0 R4\nSTR R0 R1 #0\n" else "LDR R0 R5 #" ^ (string_of_int a) ^ "\n" ^ "ADD R1 R0 R5\nSTR R0 R1 #0\n" )
 		| OP1(op, le) -> (handle_expr le tab d r6) ^ begin
 											match op with
 												| M_MINUS -> "NOT R0 R0\nADD R0 R0 #1\n"
 												| M_NOT -> "NOT R0 R0\n"
+												(* | M_ADDR -> !lastaddr *)
 												(* | M_DEREF ->  *)
 												| _ -> ""
 											end

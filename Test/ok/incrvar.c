@@ -1,6 +1,6 @@
 // Test : incr var fun
 
-// GOOD
+// OK
 
 int* incr(int* addr)
 {

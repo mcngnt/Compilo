@@ -60,7 +60,7 @@ let check_file f =
 											match op with
 												| M_MINUS -> "NOT R0 R0\nADD R0 R0 #1\n"
 												| M_NOT -> "NOT R0 R0\n"
-												| M_ADDR -> !lastaddr
+												(* | M_ADDR -> !lastaddr *)
 												(* | M_DEREF ->  *)
 												| _ -> ""
 											end

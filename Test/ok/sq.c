@@ -1,6 +1,6 @@
-// Test : square root
+// Test : compute square root
 
-// GOOD
+// OK
 
 int sq(int n)
 {

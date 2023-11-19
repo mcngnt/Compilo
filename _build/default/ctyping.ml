@@ -11,6 +11,7 @@ let rec insert_env env x l =
 	let dx = match x with |VART(s,t,d) -> d |FUNT(s,vl,t) -> 0 in
 	let rec aux li = match li with
 		| [] -> [x]
+																		(*I do not allow to redefine global variables or to redefine a variable in the same scope (ie same depth)*)
 		| VART(s,t,d)::q when s = sx && (d = dx || d = 0) -> raise (Error(l, "Variable " ^ sx ^ " is already defined."))
 		| FUNT(s,vl,t)::q when s=sx -> raise (Error(l, "Function " ^ sx ^ " is already defined."))
 		| h::q -> h::(aux q)
@@ -73,7 +74,7 @@ let  current_fun_type_env env l =
 	in
 	aux (List.rev env)
 
-
+(* Checks if a given expression is an left value *)
 let rec is_lvalue le = match le with
 	| (l,e) -> begin match e with
 				| VAR s -> true
@@ -150,7 +151,7 @@ let rec handle_expr le env = match le with | (l,e) -> begin match e with
 							end
 	| CMP(op, le1,le2) -> let t1 = handle_expr le1 env in let t2 = handle_expr le2 env in if nequals_type t1 t2 then raise (Error(l, "Can't compare different types.")); TTINT
 	| EIF(le1,le2,le3) -> let t1 = handle_expr le1 env in let t2 = handle_expr le2 env in let t3 = handle_expr le3 env in if (nequals_type t1 TTINT) || (nequals_type t2  t3) then raise (Error(l, "Uncompatible types involved in the ternary operator.")); t2
-	| ESEQ lle -> begin match List.rev (List.map (fun e -> handle_expr e env) lle) with
+	| ESEQ lle -> begin match List.rev (List.map (fun e -> handle_expr e env) lle) with (*I check typing rules on every expr and returs the type of the last*)
 							| [] -> TTINT
 							| h::q -> h
 				  end
@@ -198,7 +199,13 @@ let rec handle_val_dec f env = match f with
 
 
 (* Starts the AST traversing with an empty environment *)
-(* Here, i don't return a typed AST because it is not needed in LC3 compilation : but I still check every typing rule throught the AST traversing 
-  (My typing code was already finished when I learned the need to return a typed AST so I decided to not change it because 
-  	my code will much more longer if I did as I already use return types of functions to check typing rules) *)
+(* Here, i don't return a typed AST because it is not needed in LC3 compilation (though I ankowledge that it is very
+useful in general, such as when dealing with variable-sized types).
+However, I still check every typing rule during the AST traversal. 
+(My typing code was already completed when I realized the need to return a typed AST. I decided not to change it
+because my code would become much longer and less elegant if I did so, 
+especially considering that I already use the return types of functions to check typing rules) *)
 let check_file f = handle_val_dec f [];;
+
+(* Here I represnt the environment as a list of variablles and functions declaration, the environment beign updated
+when passed as a parameter to recursive functions. *)

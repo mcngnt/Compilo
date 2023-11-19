@@ -1,6 +1,6 @@
 // Test : fibonacci
 
-// GOOD
+// OK
 
 int f(int n)
 {
