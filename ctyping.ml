@@ -162,7 +162,7 @@ end
 let rec handle_block vdl lcl env d = match vdl with
 	| [] -> begin match lcl with 
 				| [] -> false
-				| h::q -> (handle_code h env d) || (handle_block [] q env d)
+				| h::q -> let ch = (handle_code h env d) in let cq = (handle_block [] q env d) in ch || cq 
 			end
 	| h::q -> match h with
 						| CDECL(l,s,t) -> handle_block q lcl ( insert_env env (VART(s,convert_ttype t,d)) l ) d
@@ -171,8 +171,8 @@ let rec handle_block vdl lcl env d = match vdl with
 and handle_code lc env d = match lc with | (l,c) -> begin match c with
 	| CBLOCK(vdl, lcl) -> handle_block vdl lcl env (d+1)
 	| CEXPR le -> let _ = handle_expr le env in false
-	| CIF(le, lc1, lc2) -> let t = handle_expr le env in if nequals_type t TTINT then raise (Error(l, "Non-int type as condition.")) else (handle_code lc1 env d) && (handle_code lc2 env d)
-	| CWHILE(le, lc) -> let t = handle_expr le env in if nequals_type t TTINT then raise (Error(l, "Non-int type as condition.")) else handle_code lc env d
+	| CIF(le, lc1, lc2) -> let t = handle_expr le env in if nequals_type t TTINT then raise (Error(l, "Non-int type as condition.")) else let c1 = (handle_code lc1 env d) in let c2 = (handle_code lc2 env d) in c1 && c2 
+	| CWHILE(le, lc) -> let t = handle_expr le env in if nequals_type t TTINT then raise (Error(l, "Non-int type as condition.")) else let c = handle_code lc env d in false
 	| CRETURN None -> true
 	| CRETURN (Some le) -> let t = handle_expr le env in let ft = current_fun_type_env env l in if nequals_type t ft then raise (Error(l, "Return type " ^ (print_type t) ^ " does not correspond to function type " ^ (print_type ft) ^ ".")); true
 end
@@ -207,5 +207,5 @@ because my code would become much longer and less elegant if I did so,
 especially considering that I already use the return types of functions to check typing rules) *)
 let check_file f = handle_val_dec f [];;
 
-(* Here I represnt the environment as a list of variablles and functions declaration, the environment beign updated
+(* Here I represent the environment as a list of variables and functions declaration, the environment being updated
 when passed as a parameter to recursive functions. *)

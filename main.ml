@@ -20,7 +20,6 @@ let () =
       let ast_dot_file = open_out (Filename.chop_suffix file ".c" ^ "_ast.dot") in
       Printf.fprintf ast_dot_file "%s" (Pretty.get_dot_ast f (not !no_pretty));
       close_out ast_dot_file;
-      (* eprintf "DEBUG\n@."; *)
     end;
 
     if !Usage.parse_only then exit 0;

@@ -4,11 +4,18 @@ open Cast
 
 exception Error of string
 
+(* Problems : -cst label
+							-> add to tab
+							-> using nearby to tp to static
+					 -br label
+					 	-> use nearby + LDI *)
+
 let hexstring_of_int a = Printf.sprintf "x%x" a
 
 
 (* Inserts new variable in the table with its name, address and scope *)
 let insert_var_tab tab s d r = match d with | 0 -> SVAR(s,r,0)::tab | _ -> SVAR(s,-r,d)::tab
+
 
 
 (* Gets the address of the most recent variable whit name s *)
@@ -22,14 +29,20 @@ let rec get_depth_tab tab sx = match tab with
 	| SVAR(s,r,d)::q when s=sx -> d
 	| h::q -> get_depth_tab q sx
 
+
+let cst_string_of_int x = match x with
+	| _ when x >= 0 -> string_of_int x
+	| _ -> "M" ^ (string_of_int (-x))
+
 let rec fill_cst l = match l with
 	| [] -> ""
-	| h::q -> let sh = string_of_int h in "CST" ^ sh ^ " .FILL #" ^ sh ^"\n" ^ (fill_cst q)
+	| h::q -> "CST" ^ (cst_string_of_int h) ^ " .FILL #" ^ (string_of_int h) ^"\n" ^ (fill_cst q)
 
 
 let rec fill_glob_var l = match l with
 	| []-> ""
-	| h::q -> (fill_glob_var q) ^ h ^ " .BLKW #1\n" 
+	| h::q when h = "STATIC" ->  (fill_glob_var q) ^ h ^ " .BLKW #1\n" 
+	| h::q ->  (fill_glob_var q) ^ "V_" ^ h ^ " .BLKW #1\n" 
 
 let rec insert_no_double l x = match l with
 	| [] -> [x]
@@ -39,6 +52,8 @@ let rec insert_no_double l x = match l with
 
 let gen_condition e ctrue cfalse id flagname brtype = let idstring = string_of_int id in
 	e ^ "BR" ^ brtype ^ " " ^ flagname ^ "_" ^ "ELSE" ^ idstring ^ "\n" ^ ctrue ^ "BR " ^ flagname ^ "_" ^ "ENDELSE" ^ idstring ^ "\n" ^ flagname ^ "_" ^  "ELSE" ^ idstring ^ "\n" ^ cfalse ^ flagname ^ "_" ^  "ENDELSE" ^ idstring ^ "\n"
+
+
 
 
 let check_file f =
@@ -52,16 +67,16 @@ let check_file f =
   let incr_flag () = flagcount := !flagcount + 1 in
 
 	let rec handle_expr le tab d r6 = match le with | (l,e) -> begin match e with
-		| VAR s -> let a = get_addr_tab tab s in lastaddr := a ; (if (get_depth_tab tab s) == 0 then "LDR R0 R4 #" ^ (string_of_int a) ^ "\n" else "LDR R0 R5 #" ^ (string_of_int a) ^ "\n" )
-		| CST x -> cstdecl := insert_no_double (!cstdecl) x; "LD R0 CST" ^ (string_of_int x) ^ "\n"
+		| VAR s -> let a = get_addr_tab tab s in let msg =  (if (get_depth_tab tab s) == 0 then "LDR R0 R4 #" ^ (string_of_int a) ^ "\n" else "LDR R0 R5 #" ^ (string_of_int a) ^ "\n" ) in lastaddr := a ; msg
+		| CST x -> cstdecl := insert_no_double (!cstdecl) x; "LD R0 CST" ^ (cst_string_of_int x) ^ "\n"
 		| SET_VAR(s,le) -> let a = get_addr_tab tab s in (handle_expr le tab d r6) ^ (if (get_depth_tab tab s) == 0 then "STR R0 R4 #" ^ (string_of_int a) ^ "\n" else "STR R0 R5 #" ^ (string_of_int a) ^ "\n" )
 		| SET_VAL(s,le) -> let a = get_addr_tab tab s in (handle_expr le tab d r6) ^ (if (get_depth_tab tab s) == 0 then "LDR R0 R4 #" ^ (string_of_int a) ^ "\n" ^ "ADD R1 R0 R4\nSTR R0 R1 #0\n" else "LDR R0 R5 #" ^ (string_of_int a) ^ "\n" ^ "ADD R1 R0 R5\nSTR R0 R1 #0\n" )
-		| OP1(op, le) -> (handle_expr le tab d r6) ^ begin
+		| OP1(op, le) -> let msg = (handle_expr le tab d r6) in msg ^ begin
 											match op with
 												| M_MINUS -> "NOT R0 R0\nADD R0 R0 #1\n"
 												| M_NOT -> "NOT R0 R0\n"
-												(* | M_ADDR -> !lastaddr *)
-												(* | M_DEREF ->  *)
+												| M_ADDR -> cstdecl := insert_no_double (!cstdecl) (!lastaddr); "LD R0 CST" ^ (cst_string_of_int (!lastaddr)) ^ "\n"
+												| M_DEREF -> incr_flag(); (gen_condition "" "ADD R0 R0 R5\n" "ADD R0 R0 R4\n" !flagcount "DEREF" "z") ^ "LDR R0 R0 #0\n"
 												| _ -> ""
 											end
 		| OP2(op, le1, le2) -> (handle_expr le1 tab d r6) ^ "STR R0 R6 #0\nADD R6 R6 #-1\n" ^ (handle_expr le2 tab d (r6+1)) ^ "ADD R6 R6 #1\nLDR R1 R6 #0\n" ^ begin

@@ -1,6 +1,6 @@
 // Test : two definition in different blocks
 
-// GOOD
+// OK
 
 int main()
 {
