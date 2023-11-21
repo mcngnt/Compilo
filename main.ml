@@ -25,7 +25,15 @@ let () =
     if !Usage.parse_only then exit 0;
 
 
-    Ctyping.check_file f;
+    let tast = Ctyping.check_file f in
+
+    (* After creating it, I call pretty.ml (that I modified to pretty print typed ast) on the freshly created tast *)
+
+    if Usage.debug then begin
+      let tast_dot_file = open_out (Filename.chop_suffix file ".c" ^ "_tast.dot") in
+      Printf.fprintf tast_dot_file "%s" (Pretty.get_dot_tast tast (not !no_pretty));
+      close_out tast_dot_file;
+    end;
 
     print_string "No typing error !\n";
 

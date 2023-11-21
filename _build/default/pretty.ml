@@ -189,3 +189,128 @@ and get_ast_pdecl pdecl parent_id =
 let get_dot_ast pdecls flag_is_pretty =
   is_pretty := flag_is_pretty;
   draw_root_ast (fold_children get_ast_pdecl pdecls)
+
+
+
+
+
+
+
+
+
+
+
+  let rec get_tast_expr lexpr parent_id =
+  let create_node = create_node parent_id in
+  let _, expr,t = lexpr in
+  match expr with
+  | TVAR s -> create_node "VAR" [ sprintf "name = \"%s\"" s ] [("type", get_tast_ptyp t);]
+  | TCST i -> create_node "CST" [ sprintf "int = \"%d\"" i ] [("type", get_tast_ptyp t);]
+  | TSTRING s -> create_node "STRING" [ sprintf "string = \"%s\"" s ] [("type", get_tast_ptyp t);]
+  | TNULLPTR -> create_node "NULL" [] [("type", get_tast_ptyp t);]
+ 
+  | TSET_VAR (s, lexpr) -> create_node "SET_VAR" [ sprintf "vg = \"%s\"" s ] [
+      ("pexpr_left", get_tast_expr lexpr);
+      ("type", get_tast_ptyp t);
+    ]
+
+  | TSET_VAL (s, lexpr) -> create_node "SET_VAL" [ sprintf "vg = *\"%s\"" s ] [
+      ("pexpr_left", get_tast_expr lexpr);
+      ("type", get_tast_ptyp t);
+    ]
+      
+  | TCALL (s, pexprs) -> create_node "CALL" [ sprintf "fname = \"%s\"" s ] [
+      ("pexpr_list", fold_children get_tast_expr pexprs);
+      ("type", get_tast_ptyp t);
+    ]
+
+  | TOP1 (op, pexpr) -> create_node "OP1" [ "unop = \"" ^ unop op ^ "\"" ] [
+      ("pexpr", get_tast_expr pexpr);
+      ("type", get_tast_ptyp t);
+    ]
+      
+  | TOP2 (op, pexpr_left, pexpr_right) ->
+    create_node "OP2" [ "binop = \"" ^ binop op ^ "\"" ] [
+      ("pexpr_left", get_tast_expr pexpr_left);
+      ("pexpr_right", get_tast_expr pexpr_right);
+      ("type", get_tast_ptyp t);
+    ]
+
+  | TCMP (op, pexpr_left, pexpr_right) ->
+    create_node "CMP" [ "cmpop = \"" ^ cmpop op ^ "\"" ] [
+      ("pexpr_left", get_tast_expr pexpr_left);
+      ("pexpr_right", get_tast_expr pexpr_right);
+      ("type", get_tast_ptyp t);
+    ]
+ 
+  | TEIF (cond, if_pexpr, else_pexpr) -> create_node "EIF" [] [
+      ("pexpr_cond", get_tast_expr cond);
+      ("pexpr_if", get_tast_expr if_pexpr);
+      ("pexpr_else", get_tast_expr else_pexpr);
+      ("type", get_tast_ptyp t);
+    ]
+
+  | TESEQ pexprs -> create_node "ESEQ" [] [
+      ("pexpr_list", fold_children get_tast_expr pexprs);
+      ("type", get_tast_ptyp t);
+    ]
+
+and get_tast_code lcode parent_id =
+  let create_node = create_node parent_id in
+  let _, blk = lcode in
+  match blk with
+  | TCBLOCK (decl, stmts) ->
+    create_node "CBLOCK" [] [
+      ("var_decl_list", fold_children get_tast_pdecl decl);
+      ("loc_code_list", fold_children get_tast_code stmts)
+    ]
+  | TCEXPR pexpr ->
+    create_node "CEXPR" [] [
+      ("pexpr", get_tast_expr pexpr)
+    ]
+  | TCIF (cond, if_lcode, else_lcode) ->
+    create_node "CIF" [] [
+      ("loc_expr_cond", get_tast_expr cond);
+      ("loc_code_if", get_tast_code if_lcode);
+      ("loc_code_else", get_tast_code else_lcode)
+    ]
+  | TCWHILE (cond, while_block) ->
+    create_node "CWHILE" [] [
+      ("loc_expr_cond", get_tast_expr cond);
+      ("loc_code_while", get_tast_code while_block)
+    ]
+  | TCRETURN (None) ->
+    create_node "CRETURN" [] []
+  | TCRETURN (Some(lexpr)) ->
+    create_node "CRETURN" [] [
+      ("loc_expr", get_tast_expr lexpr);
+    ]
+
+and get_tast_ptyp ptyp parent_id =
+  let create_node = create_node parent_id in
+  match ptyp with
+  | TTINT -> create_node "TINT" [] []
+  | TTPTR (typ) -> 
+    create_node "TPTR" [] [
+      ("ptyp", get_tast_ptyp typ)
+    ]
+  | TTNULL -> create_node "TNULL" [] []
+and get_tast_pdecl pdecl parent_id =
+  let create_node = create_node parent_id in
+  match pdecl with
+  | TCFUN (_, f_name, f_params, f_rtyp, f_code) ->
+    create_node "CFUN" [ "f_name = \"" ^ f_name ^ "\"" ] [
+      ("f_params", fold_children get_tast_pdecl f_params);
+      ("f_rtyp", get_ast_ptyp f_rtyp);
+      ("f_code", get_tast_code f_code)
+    ]
+
+  | TCDECL (_, v_name, v_typ) ->
+    create_node "CDECL" [ "v_name = \"" ^ v_name ^ "\"" ] [
+      ("v_typ", get_ast_ptyp v_typ);
+    ]
+
+
+let get_dot_tast pdecls flag_is_pretty =
+  is_pretty := flag_is_pretty;
+  draw_root_ast (fold_children get_tast_pdecl pdecls)

@@ -82,28 +82,29 @@ let rec is_lvalue le = match le with
 				| _ -> false
 				end
 
-(* Handles expression according to typing rules and returns the type of the expression *)
+(* Handles expression according to typing rules and returns the typed version of the expression as well as the type of the expression in the form of a tuple *)
 let rec handle_expr le env = match le with | (l,e) -> begin match e with
-	| VAR s -> get_type_env env s l
-	| CST x -> TTINT
-	| STRING s -> TTPTR TTINT
-	| NULLPTR -> TTNULL
+	| VAR s -> l,TVAR s,get_type_env env s l
+	| CST x -> l,TCST x,TTINT
+	| STRING s -> l,TSTRING s,TTPTR TTINT
+	| NULLPTR -> l,TNULLPTR,TTNULL
 	| SET_VAR(s,le) -> (* Here I don't change the type of the variable in the environment, making the statements (int* a; a = NULL; return *a) a valid code
 						  as it is the case for gcc *)
-						let t = handle_expr le env in begin match get_type_env env s l with
+						let tl,te,t = handle_expr le env in l,TSET_VAR(s,(tl,te,t)), begin match get_type_env env s l with
 														| tx when equals_type tx t -> t
 														| tx -> raise (Error(l, "Variable " ^ s ^ " of type " ^ (print_type tx) ^ " doesn't match expression affectation of type " ^ (print_type t)))
 													end
-	| SET_VAL(s,le) -> let t = handle_expr le env in begin match get_type_env env s l with
+	| SET_VAL(s,le) -> let tl,te,t = handle_expr le env in l,TSET_VAL(s,(tl,te,t)), begin match get_type_env env s l with
 														| TTPTR tx when equals_type tx t -> t
 														| _ -> raise (Error(l, "Types do not match."))
 													end
-	| CALL(s,lle) -> let lt = List.map 	(fun e -> handle_expr e env) lle in check_args_fun_env env s lt l ; get_type_env env s l		
+	| CALL(s,lle) -> let lt = List.map 	(fun e -> match handle_expr e env with | (tl,te,t) -> t) lle in check_args_fun_env env s lt l ; l,TCALL(s,List.map 	(fun e -> handle_expr e env) lle), get_type_env env s l		
 	| OP1(op, le) -> let islv = is_lvalue le in begin match op with
 						| M_ADDR | M_POST_INC | M_POST_DEC | M_PRE_INC | M_PRE_DEC when not islv -> raise (Error(l, "The expression is not an lvalue."))
 						| _ -> ()
 					end;
-					begin match handle_expr le env with
+					let tl,te,t = handle_expr le env in
+					l,TOP1(op,(tl,te,t)),begin match t with
 						| TTINT -> begin match op with
 										| M_DEREF -> raise (Error(l, "Dereferencing int type not allowed."))
 										| M_ADDR -> TTPTR TTINT
@@ -122,8 +123,8 @@ let rec handle_expr le env = match le with | (l,e) -> begin match e with
 										| _ -> TTNULL
 								end
 					end
-	| OP2(op, le1, le2) -> let t1 = handle_expr le1 env in let t2 = handle_expr le2 env in 
-							begin match (t1,t2) with
+	| OP2(op, le1, le2) -> let tl1,te1,t1 = handle_expr le1 env in let tl2,te2,t2 = handle_expr le2 env in 
+							l,TOP2(op,(tl1,te1,t1),(tl2,te2,t2)),begin match (t1,t2) with
 									| (TTINT, TTINT) -> TTINT
 									| (TTINT, TTPTR t) -> begin match op with
 															| S_ADD -> TTPTR t
@@ -149,33 +150,32 @@ let rec handle_expr le env = match le with | (l,e) -> begin match e with
 														end
 									| _ -> raise (Error(l, "Illegal pointer operation with NULL pointer."))
 							end
-	| CMP(op, le1,le2) -> let t1 = handle_expr le1 env in let t2 = handle_expr le2 env in if nequals_type t1 t2 then raise (Error(l, "Can't compare different types.")); TTINT
-	| EIF(le1,le2,le3) -> let t1 = handle_expr le1 env in let t2 = handle_expr le2 env in let t3 = handle_expr le3 env in if (nequals_type t1 TTINT) || (nequals_type t2  t3) then raise (Error(l, "Uncompatible types involved in the ternary operator.")); t2
-	| ESEQ lle -> begin match List.rev (List.map (fun e -> handle_expr e env) lle) with (*I check typing rules on every expr and returs the type of the last*)
+	| CMP(op, le1,le2) -> let tl1,te1,t1 = handle_expr le1 env in let tl2,te2,t2 = handle_expr le2 env in if nequals_type t1 t2 then raise (Error(l, "Can't compare different types.")); l,TCMP(op,(tl1,te1,t1),(tl2,te2,t2)),TTINT
+	| EIF(le1,le2,le3) ->  let tl1,te1,t1 = handle_expr le1 env in let tl2,te2,t2 = handle_expr le2 env in let tl3,te3,t3 = handle_expr le3 env in if (nequals_type t1 TTINT) || (nequals_type t2  t3) then raise (Error(l, "Uncompatible types involved in the ternary operator.")); l,TEIF((tl1,te1,t1),(tl2,te2,t2),(tl3,te3,t3)),t2
+	| ESEQ lle -> l,TESEQ(List.map (fun e -> handle_expr e env) lle),begin match List.rev (List.map (fun e -> match handle_expr e env with | (tl,te,t) -> t) lle) with (*I check typing rules on every expr and returs the type of the last*)
 							| [] -> TTINT
 							| h::q -> h
 				  end
 end
 
 
-(* handle_block and handle_code return true if there is a return statement in every code branch *)
+(* handle_block and handle_code return the type version of what they are respectively handling as well as returning true if there is a return statement in every code branch in the form of a tuple *)
 let rec handle_block vdl lcl env d = match vdl with
 	| [] -> begin match lcl with 
-				| [] -> false
-				(* Here because of the lazy or, I do not check the typing after a return *)
-				| h::q -> let ch = (handle_code h env d) in let cq = (handle_block [] q env d) in ch || cq 
+				| [] -> [],[],false
+				| h::q -> let htl, htc, hb = (handle_code h env d) in let qtvdl, qtlcl, qb = (handle_block [] q env d) in [], (htl,htc)::qtlcl , hb || qb 
 			end
 	| h::q -> match h with
-						| CDECL(l,s,t) -> handle_block q lcl ( insert_env env (VART(s,convert_ttype t,d)) l ) d
+						| CDECL(l,s,t) -> let tvdl, tlcl,b = handle_block q lcl ( insert_env env (VART(s,convert_ttype t,d)) l ) d in TCDECL(l,s,t)::tvdl,tlcl,b
 						| CFUN(l,s,vl,t,lc) -> raise (Error(l, "Function defined in another is not allowed."))
 
 and handle_code lc env d = match lc with | (l,c) -> begin match c with
-	| CBLOCK(vdl, lcl) -> handle_block vdl lcl env (d+1)
-	| CEXPR le -> let _ = handle_expr le env in false
-	| CIF(le, lc1, lc2) -> let t = handle_expr le env in if nequals_type t TTINT then raise (Error(l, "Non-int type as condition.")) else let c1 = (handle_code lc1 env d) in let c2 = (handle_code lc2 env d) in c1 && c2 
-	| CWHILE(le, lc) -> let t = handle_expr le env in if nequals_type t TTINT then raise (Error(l, "Non-int type as condition.")) else let c = handle_code lc env d in false
-	| CRETURN None -> true
-	| CRETURN (Some le) -> let t = handle_expr le env in let ft = current_fun_type_env env l in if nequals_type t ft then raise (Error(l, "Return type " ^ (print_type t) ^ " does not correspond to function type " ^ (print_type ft) ^ ".")); true
+	| CBLOCK(vdl, lcl) -> let tvdl, tlcl, b = handle_block vdl lcl env (d+1) in l,TCBLOCK(tvdl,tlcl),b
+	| CEXPR le -> let tl,te,t = handle_expr le env in l,TCEXPR((tl,te,t)),false
+	| CIF(le, lc1, lc2) -> let tl,te,t = handle_expr le env in if nequals_type t TTINT then raise (Error(l, "Non-int type as condition.")) else let tl1,tc1,b1 = (handle_code lc1 env d) in let tl2,tc2,b2 = (handle_code lc2 env d) in l,TCIF((tl,te,t),(tl1,tc1),(tl2,tc2)),b1 && b2 
+	| CWHILE(le, lc) -> let tle,te,t = handle_expr le env in if nequals_type t TTINT then raise (Error(l, "Non-int type as condition.")) else let tl,tc,b = handle_code lc env d in l,TCWHILE((tle,te,t),(tl,tc)),false
+	| CRETURN None -> l,TCRETURN None,true
+	| CRETURN (Some le) -> let tl,te,t = handle_expr le env in let ft = current_fun_type_env env l in if nequals_type t ft then raise (Error(l, "Return type " ^ (print_type t) ^ " does not correspond to function type " ^ (print_type ft) ^ ".")); l,TCRETURN(Some((tl,te,t))),true
 end
 
 
@@ -192,21 +192,23 @@ let rec convert_to_vdeclt_dec l = match l with
 	| CDECL(l,s,t)::q -> VART(s,convert_ttype t,1)::(convert_to_vdeclt_dec q)
 	| CFUN(l,s,vl,t,lc)::q -> raise (Error(l, "Function passed as a parameter."))
 
+(* Converts a list of var_declaration to a tvar_declaration (custom type for the tast) list *)
+let rec convert_to_tvar_declaration l = match l with
+	| [] -> []
+	| CDECL(l,s,t)::q -> TCDECL(l,s,t)::(convert_to_tvar_declaration q)
+	| CFUN(l,s,vl,t,lc)::q -> raise (Error(l, "Function passed as a parameter."))
+
 (* Function to handle global declarations *)
 let rec handle_val_dec f env = match f with
-	| [] -> ()
-	| CDECL(l,s,t)::q ->  handle_val_dec q (insert_env env (VART(s,convert_ttype t,0)) l)
-	| CFUN(l,s,vl,t,lc)::q -> let newenv = insert_env env (FUNT(s, convert_to_type_dec vl, convert_ttype t)) l in let b = handle_code lc (List.fold_left (fun e x -> insert_env e x l)  newenv (convert_to_vdeclt_dec vl) ) 1 in if not b then raise (Error(l, "Function " ^ s ^ " doesn't return in every code branch.")); handle_val_dec q newenv
+	| [] -> []
+	| CDECL(l,s,t)::q -> (TCDECL(l,s,t))::(handle_val_dec q (insert_env env (VART(s,convert_ttype t,0)) l))
+	| CFUN(l,s,vl,t,lc)::q -> let newenv = insert_env env (FUNT(s, convert_to_type_dec vl, convert_ttype t)) l in let tl,tc,b = handle_code lc (List.fold_left (fun e x -> insert_env e x l)  newenv (convert_to_vdeclt_dec vl) ) 1 in if not b then raise (Error(l, "Function " ^ s ^ " doesn't return in every code branch.")); (TCFUN(l,s,convert_to_tvar_declaration vl,t,(tl,tc)))::(handle_val_dec q newenv)
 
 
-(* Starts the AST traversing with an empty environment *)
-(* Here, i don't return a typed AST because it is not needed in LC3 compilation (though I ankowledge that it is very
-useful in general, such as when dealing with variable-sized types).
-However, I still check every typing rule during the AST traversal. 
-(My typing code was already completed when I realized the need to return a typed AST. I decided not to change it
-because my code would become much longer and less elegant if I did so, 
-especially considering that I already use the return types of functions to check typing rules) *)
+
+(* Here I start the AST traversing *)
+(* During the traversing, I check ervery typing rule and I also return the typed version of the AST *)
 let check_file f = handle_val_dec f [];;
 
-(* Here I represnt the environment as a list of variablles and functions declaration, the environment beign updated
+(* Here I represent the environment as a list of variables and functions declaration, the environment being updated
 when passed as a parameter to recursive functions. *)

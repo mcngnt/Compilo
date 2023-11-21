@@ -8,10 +8,10 @@ $(EXE): *.ml*
 	cp $(EXE) ccomp
 
 test: $(EXE) Test/test0.c
-	./ccomp Test/test0.c
-# 	dot -v -Tpng -O Test/test0_ast.dot
-	echo "\n\n\n\n\n"
-	cat Test/test0.s
+	./ccomp --debug Test/test0.c
+	dot -v -Tpng -O Test/test0_tast.dot
+# 	echo "\n\n\n\n\n"
+# 	cat Test/test0.s
 
 .PHONY: clean
 clean:
