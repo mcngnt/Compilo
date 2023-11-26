@@ -1,20 +1,14 @@
-// Test : fibonacci
-
-// OK
-
-int f(int n)
-{
-	if(n <= 1)
-	{
-		return 1;
-	}
-	return f(n-1) + f(n-2);
-}
-
 
 int main()
 {
+	int y;
 	int x;
-	x = 5;
-	return f(x + 3);
+	y = 5;
+	x = 0;
+	while(y)
+	{
+		x = x + 2;
+		y = y - 1;
+	}
+	return x;
 }

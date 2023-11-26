@@ -74,7 +74,7 @@ let  current_fun_type_env env l =
 	in
 	aux (List.rev env)
 
-(* Checks if a given expression is an left value *)
+(* Checks if a given expression is a left value *)
 let rec is_lvalue le = match le with
 	| (l,e) -> begin match e with
 				| VAR s -> true
@@ -159,7 +159,7 @@ let rec handle_expr le env = match le with | (l,e) -> begin match e with
 end
 
 
-(* handle_block and handle_code return the type version of what they are respectively handling as well as returning true if there is a return statement in every code branch in the form of a tuple *)
+(* handle_block and handle_code return the typed version of what they are respectively handling as well as returning true if there is a return statement in every code branch in the form of a tuple *)
 let rec handle_block vdl lcl env d = match vdl with
 	| [] -> begin match lcl with 
 				| [] -> [],[],false
@@ -207,7 +207,7 @@ let rec handle_val_dec f env = match f with
 
 
 (* Here I start the AST traversing *)
-(* During the traversing, I check ervery typing rule and I also return the typed version of the AST *)
+(* During the traversing, I check ervery typing rule and I return the typed version of the AST, that can then be pretty printed*)
 let check_file f = handle_val_dec f [];;
 
 (* Here I represent the environment as a list of variables and functions declaration, the environment being updated

@@ -37,10 +37,10 @@ let () =
 
     print_string "No typing error !\n";
 
-    (* let code = Ccompile.check_file f in
+    let code = Ccompile.check_file f in
     let oc = open_out (Filename.chop_suffix file ".c" ^ ".s") in
     Printf.fprintf oc "%s\n" code;
-    close_out oc; *)
+    close_out oc;
 
 
 
