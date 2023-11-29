@@ -1,14 +1,16 @@
+int glob;
 
 int main()
 {
-	int y;
 	int x;
-	y = 5;
-	x = 0;
-	while(y)
+	int y;
+	x = 3;
+	y = 2;
+	while(x > 0)
 	{
-		x = x + 2;
-		y = y - 1;
+		x = x - 1;
+		y = y * y;
 	}
-	return x;
+	glob = y;
+	return y;
 }

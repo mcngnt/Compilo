@@ -1,17 +1,16 @@
-
-int global;
+int glob;
 
 int main()
 {
-	int y;
 	int x;
+	int y;
+	x = 3;
 	y = 2;
-	x = 0;
-	while(y > 0)
+	while(x > 0)
 	{
-		x = x + 2;
-		y = y - 1;
+		x = x - 1;
+		y = y * y;
 	}
-	global = x;
-	return x;
+	glob = y;
+	return y;
 }
