@@ -6,8 +6,8 @@ int main()
 	int x;
 	int y;
 	x = -3;
-	y = 5;
-	p = &x;
+	y = 1 ? 5 : 0;
+	p = &y;
 	glob = *p;
 	return 0;
 }
