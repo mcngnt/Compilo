@@ -2,15 +2,13 @@ int glob;
 
 int main()
 {
+	int* p;
 	int x;
 	int y;
-	x = 3;
-	y = 2;
-	while(x > 0)
-	{
-		x = x - 1;
-		y = y * y;
-	}
-	glob = y;
-	return y;
+	x = -3;
+	y = 5;
+	p = &x;
+	glob = *p;
+	return 0;
 }
+

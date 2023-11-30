@@ -4,19 +4,13 @@ open Cast
 
 exception Error of string
 
-(* Problems : -cst label
-							-> add to tab
-							-> using nearby to tp to static
-					 -br label
-					 	-> use nearby + LDI *)
-
 let hexstring_of_int a = Printf.sprintf "x%x" a
 
 
 (* Inserts new variable in the table with its name, address and scope *)
 let insert_var_tab tab s r isglob = match isglob with
 	| true -> SVAR(s,r, isglob)::tab
-	| false -> SVAR(s,-r, isglob)::tab
+	| false -> SVAR(s,r, isglob)::tab
 
 
 let insert_fun_tab tab s vl = 
@@ -43,20 +37,13 @@ let get_addr_tab tab sx =
 		| SVAR(s,r,b)::q when s=sx -> r,b
 		| h::q -> aux q
 	in
-	(* try *)
 		aux tab
-	(* with *)
-	(* | _ -> List.find (fun s -> s=sx) (get_args ) *)
 
 
-
-let cst_string_of_int x = match x with
-	| _ when x >= 0 -> string_of_int x
-	| _ -> "M" ^ (string_of_int (-x))
 
 let rec fill_glob_var l = match l with
 	| []-> ""
-	| h::q when h = "STATIC" -> ";\n; --- STATIC VARIABLES ---\n;\n" ^ (fill_glob_var q) ^ h ^ " .BLKW #1\n" 
+	| h::q when h = "STATIC" -> "STATIC_VAR\n;\n; --- STATIC VARIABLES ---\n;\n" ^ (fill_glob_var q) ^ h ^ " .BLKW #1\n" 
 	| h::q ->  (fill_glob_var q) ^ "V_" ^ h ^ " .BLKW #1\n" 
 
 let rec insert_no_double l x = match l with
@@ -76,6 +63,9 @@ let negate_r0 () = "NOT R0 R0\nADD R0 R0 #1 ;  R0 <- -R0\n"
 
 let print_mult_fun () = "FUN_MULT\nADD R0 R0 #0\nBRn MULT_CHANGE_SIGN\nBR MULT_INIT\nMULT_CHANGE_SIGN\nNOT R0 R0\nADD R0 R0 #1\nNOT R1 R1\nADD R1 R1 #1\nMULT_INIT\nAND R2 R2 #0\nADD R2 R2 R0\nAND R0 R0 #0\nMULT_LOOP\nADD R0 R0 R1\nADD R2 R2 #-1\nBRz MULT_STOP\nBR MULT_LOOP\nMULT_STOP\nRET\n"
 
+let print_div_fun () = "FUN_DIV\nAND R2 R2 #0 ; Q\nLD R2 DIV_ISNEG ; Set is_neg to 0\nADD R1 R1 #0\nBRn DIV_A_NEG\nBR DIV_A_POS\nDIV_A_NEG\nNOT R1 R1 ; Change A sign when negative\nADD R1 R1 #1\nADD R0 R0 #0\nBRn DIV_AN_BN\nBR DIV_AN_BP\nDIV_A_POS\nADD R0 R0 #0\nBRn DIV_AP_BN\nBR DIV_AP_BP\nDIV_AN_BN\nNOT R0 R0\nADD R0 R0 #1\nBR DIV_POS\nDIV_AN_BP\nBR DIV_NEG\nDIV_AP_BN\nNOT R0 R0\nADD R0 R0 #1\nBR DIV_NEG\nDIV_AP_BP\nBR DIV_POS\nDIV_NEG\nADD R3 R2 #1\nST R3 DIV_ISNEG ; IS_NEG <- 1\nBR DIV_ENDSIGN\nDIV_POS\nBR DIV_ENDSIGN\nDIV_ENDSIGN\n; Compute the sign of the result in DIV_ISNEG\nDIV_LOOP\nNOT R3 R1\nADD R3 R3 #1\nADD R3 R3 R0 ; R3 <- R0 - R1 = B - R\nBRp DIV_END_LOOP\nAND R3 R3 #0\nADD R3 R3 R0\nNOT R3 R3\nADD R3 R3 #1 ; R3 <- -B\nADD R1 R1 R3 ; R <- R - B\nADD R2 R2 #1\nBR DIV_LOOP\nDIV_END_LOOP\nADD R0 R2 #0\nLD R3 DIV_ISNEG\nBRz DIV_END\nNOT R0 R0\nADD R0 R0 #1\nDIV_END\nRET\nDIV_ISNEG .BLKW #1\n"
+
+let print_mod_fun () = "FUN_MOD\nAND R2 R2 #0 ; Q\nADD R1 R1 #0\nBRn MOD_A_NEG\nBR MOD_ENDSIGN\nMOD_A_NEG\nADD R1 R1 R0\nBRn MOD_A_NEG\nMOD_ENDSIGN\n; Compute the sign of the result in MOD_ISNEG\nMOD_LOOP\nNOT R3 R1\nADD R3 R3 #1\nADD R3 R3 R0 ; R3 <- R0 - R1 = B - R\nBRp MOD_END_LOOP\nAND R3 R3 #0\nADD R3 R3 R0\nNOT R3 R3\nADD R3 R3 #1 ; R3 <- -B\nADD R1 R1 R3 ; R <- R - B\nADD R2 R2 #1\nBR MOD_LOOP\nMOD_END_LOOP\nADD R0 R1 #0\nMOD_END\nRET\n"
 
 let inverse_condition s = match s with
 	| "z" -> "np"
@@ -90,15 +80,21 @@ let inverse_condition s = match s with
 	| _ -> raise (Error("Can't find an inverse condition for condition : " ^ s))
 
 
+let get_var a isglob = 
+	(if isglob then "LDR R0 R4 #" ^ (string_of_int a) ^ "\n" else "LDR R0 R5 #" ^ (string_of_int a) ^ "\n")
+
+let set_var a isglob =
+	(if isglob then "STR R0 R4 #" ^ (string_of_int a) else "STR R0 R5 #" ^ (string_of_int a) ) ^ "\n"
+
+
 let check_file f =
   let orig = 0x3000 in
   let stack = 0xFDFF in
   let flagcount = ref 0 in
   let globvar = ref ["STATIC"] in
-  let lastaddr = ref 0 in
+  let lastaddr = ref (0,false) in
 
   let incr_flag () = flagcount := !flagcount + 1 in
-
 
 
   let fun_accessing asm = 
@@ -162,32 +158,39 @@ let check_file f =
 	in
 
 (*TODO : add local variables to the environment *)
-	let rec gen_call s lle tab n k = match lle with
+	(* let rec gen_call s lle tab n k = match lle with
 			(* I limit functions to 15 args *)
 			| [] -> "GOTORET FUN_USER_" ^ s ^ "\nADD R6 R6 #" ^ (string_of_int n)
 			| h::t -> let msge = handle_expr h tab in
 								msge ^ "ADD R6 R6 #-1\nLDR R0 R6 #0\n" ^ (gen_call s t tab n (k+1))
-	
-	and handle_expr le tab = match le with | (l,e) -> begin match e with
-		| VAR s -> let a,isglob = get_addr_tab tab s in lastaddr := a ; (if isglob then "LDR R0 R4 #" ^ (string_of_int a) ^ "\n" else "LDR R0 R5 #" ^ (string_of_int a) ^ "; R0 <- variable " ^ s ^ "\n" )
+	 *)
+
+	let rec handle_expr le tab = match le with | (l,e) -> begin match e with
+		| VAR s -> let a,isglob = get_addr_tab tab s in lastaddr := (a,isglob) ; get_var a isglob
 		| CST x -> incr_flag() ; "LD R0 CST" ^ (string_of_int !flagcount) ^ " ; R0 <- cst " ^ (string_of_int x) ^ "\n" ^ (print_cst_fill !flagcount x)
-		| SET_VAR(s,le) -> let a,isglob = get_addr_tab tab s in (handle_expr le tab) ^ (if isglob then "STR R0 R4 #" ^ (string_of_int a) else "STR R0 R5 #" ^ (string_of_int a) ) ^ "; variable " ^ s ^ " <- R0" ^ "\n"
+		| NULLPTR -> "AND R0 R0 #0\n"
+		| SET_VAR(s,le) -> let a,isglob = get_addr_tab tab s in (handle_expr le tab) ^ (set_var a isglob)
 		| SET_VAL(s,le) -> let a,isglob = get_addr_tab tab s in (handle_expr le tab) ^ (if isglob then "LDR R0 R4 #" ^ (string_of_int a) ^ "\n" ^ "ADD R1 R0 R4\nSTR R0 R1 #0" else "LDR R0 R5 #" ^ (string_of_int a) ^ "\n" ^ "ADD R1 R0 R5\nSTR R0 R1 #0" ) ^ " ; (variable " ^ s ^ ")* <- R0\n"
 		(* | CALL(s,lle) -> gen_call s lle tab (List.length lle) 0 *)
-		| OP1(op, le) -> let msg = (handle_expr le tab) in msg ^ begin
+		| OP1(op, le) -> let msg = (handle_expr le tab) in
+										 let a,isglob = !lastaddr in msg ^ begin
 											match op with
 												| M_MINUS -> negate_r0()
 												| M_NOT -> "NOT R0 R0\n"
-												| M_ADDR ->  incr_flag(); "LD R0 CST" ^ (string_of_int !flagcount) ^ "\n" ^ (print_cst_fill !flagcount !lastaddr)
-												| M_DEREF -> incr_flag(); (gen_condition "" "ADD R0 R0 R5\n" "ADD R0 R0 R4\n" !flagcount "DEREF" "zp") ^ "LDR R0 R0 #0\n"
-												| _ -> ""
+												| M_ADDR ->  incr_flag(); "LD R0 CST" ^ (string_of_int !flagcount) ^ "\n" ^ (print_cst_fill !flagcount a)
+												| M_DEREF -> if isglob then "ADD R1 R4 R0\nLDR R0 R1 #0" else "ADD R1 R5 R0\nLDR R0 R1 #0\n"
+												| M_PRE_INC -> let getmsg = (get_var a isglob) and setmsg = (set_var a isglob) in getmsg ^ "ADD R0 R0 #1\n" ^ setmsg
+												| M_PRE_DEC -> let getmsg = (get_var a isglob) and setmsg = (set_var a isglob) in getmsg ^ "ADD R0 R0 #-1\n" ^ setmsg
+												| M_POST_INC -> let getmsg = (get_var a isglob) and setmsg = (set_var a isglob) in getmsg ^ "ADD R0 R0 #1\n" ^ setmsg ^ "ADD R0 R0 #-1\n"
+												| M_POST_DEC -> let getmsg = (get_var a isglob) and setmsg = (set_var a isglob) in getmsg ^ "ADD R0 R0 #-1\n" ^ setmsg ^ "ADD R0 R0 #1\n"
 											end
 		| OP2(op, le1, le2) -> (handle_expr le1 tab) ^ "STR R0 R6 #0 ; Store R0 on the stack\nADD R6 R6 #-1 ; Increase the stack\n" ^ (handle_expr le2 tab) ^ "ADD R6 R6 #1 ; Decrease the stack\nLDR R1 R6 #0 ; Retrieve upmost result on the stack in R1\n" ^ begin
 													 match op with
 													 	| S_ADD -> "ADD R0 R0 R1 ; R0 <- R0 + R1\n"
 													 	| S_SUB -> (negate_r0()) ^ "ADD R0 R0 R1 ; R0 <- R1 - R0\n"
 													 	| S_MUL -> "GOTORET FUN_MULT\n"
-													 	| _ -> ""
+													 	| S_DIV -> "GOTORET FUN_DIV\n"
+													 	| S_MOD -> "GOTORET FUN_MOD\n"
 													 end
 		| CMP(op, le1, le2) -> (handle_expr le1 tab) ^ "STR R0 R6 #0 ; Store R0 on the stack\nADD R6 R6 #-1 ; Increase the stack\n" ^ (handle_expr le2 tab) ^ "ADD R6 R6 #1 ; Decrease the stack\nLDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1\n" ^
 													 let brtype = match op with
@@ -204,6 +207,8 @@ let check_file f =
 													 																																					 			| C_LE -> "<"
 													 																																					 			| C_EQ -> "=="
 													 																																					 end ^ " e2\n"
+		| EIF(le1,le2,le3) -> incr_flag(); let e = (handle_expr le1 tab) in let c1 = handle_expr le2 tab in let c2 = handle_expr le2 tab in gen_condition e c1 c2 !flagcount "IF" "z"
+		| ESEQ(lle) -> List.fold_left (fun acc le -> acc ^ (handle_expr le tab)) "" lle
 		| _ -> ""
 	end
 	in
@@ -232,24 +237,22 @@ let check_file f =
 	 	| [] -> ""
 	 	| CDECL(l,s,t)::q -> globvar := s::(!globvar) ; ( handle_val_dec q (insert_var_tab tab s r4 true) (r4 + 1))
 	 	| CFUN(l,s,vl,t,lc)::q -> let funtab = (insert_fun_tab tab s vl) in
-	 														let funbase = "FUN_USER_" ^ s ^ "\nADD R6 R6 #-1\nLDR R5 R6 #0\nADD R6 R6 #-1\nLDR R7 R6 #0\nADD R6 R6 #-1\nAND R5 R5 #0\nADD R5 R5 R6\n" in
+	 														let funbase = "FUN_USER_" ^ s ^ "\nADD R6 R6 #-1\nLDR R5 R6 #0 ; Store R5 on the stack\nADD R6 R6 #-1\nLDR R7 R6 #0 ; Store R7 on the stack\nADD R6 R6 #-1\nAND R5 R5 #0\nADD R5 R5 R6 ; R5 <- R6\n" in
 	 														let c = (handle_code lc funtab 0) in
-	 														let endfun = "LDR R7 R5 #-1\nLDR R5 R5 #-2\n" in
+	 														let endfun = "LDR R7 R5 #-1 ; Restore R7\nLDR R5 R5 #-2 ; Restore R5\n" in
 	 														funbase ^ c ^ endfun ^ (handle_val_dec q funtab r4)
 	in
 
 	let codebody = handle_val_dec f [] 0 in
 
-	let rawasm = ".ORIG " ^ (hexstring_of_int orig) ^ "\n;\n; --- START OF THE PROGRAMM ---\n;\nLD R6 STACK\nLD R5 STACK\nLEA R4 STATIC\nADD R4 R4 #1\n"
+	let rawasm = ".ORIG " ^ (hexstring_of_int orig) ^ "\nLD R6 STACK\nLD R5 STACK\nLEA R4 STATIC\nADD R4 R4 #1\n"
 		^ "GOTO FUN_USER_main\n"
 		^ print_mult_fun()
-		(* ^ print_test_fun() *)
-		(* ^ "FUN_MAIN\n" *)
+		^ print_div_fun()
+		^ print_mod_fun()
 	  ^ codebody
-	  (* ^ "GOTORET FUN_TEST\n" *)
 	  ^ (fill_glob_var !globvar) ^
 	  "STACK .FILL " ^ (hexstring_of_int stack) ^ "\n" ^ ".END" in
-	  (* rawasm *)
 	let funasm = fun_accessing rawasm in
 	funasm
 
