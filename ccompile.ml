@@ -10,7 +10,7 @@ let hexstring_of_int a = Printf.sprintf "x%x" a
 (* Inserts new variable in the table with its name, address and scope *)
 let insert_var_tab tab s r isglob = match isglob with
 	| true -> SVAR(s,r, isglob)::tab
-	| false -> SVAR(s,r, isglob)::tab
+	| false -> SVAR(s,-r, isglob)::tab
 
 
 let insert_fun_tab tab s vl = 
@@ -41,10 +41,12 @@ let get_addr_tab tab sx =
 
 
 
-let rec fill_glob_var l = match l with
-	| []-> ""
-	| h::q when h = "STATIC" -> "STATIC_VAR\n;\n; --- STATIC VARIABLES ---\n;\n" ^ (fill_glob_var q) ^ h ^ " .BLKW #1\n" 
-	| h::q ->  (fill_glob_var q) ^ "V_" ^ h ^ " .BLKW #1\n" 
+let fill_glob_var l = 
+	let rec aux li = match li with 
+		| []-> ""
+		| h::q ->  (aux q) ^ "V_" ^ h ^ " .BLKW #1\n"
+	in
+	"STATIC_VAR\n" ^ (aux l)
 
 let rec insert_no_double l x = match l with
 	| [] -> [x]
@@ -70,13 +72,10 @@ let print_mod_fun () = "FUN_MOD\nAND R2 R2 #0 ; Q\nADD R1 R1 #0\nBRn MOD_A_NEG\n
 let inverse_condition s = match s with
 	| "z" -> "np"
 	| "n" -> "zp"
-	| "p" -> "zn"
+	| "p" -> "nz"
 	| "zp" -> "n"
-	| "pz" -> "n"
-	| "zn" -> "p"
 	| "nz" -> "p"
 	| "np" -> "z"
-	| "pn" -> "z"
 	| _ -> raise (Error("Can't find an inverse condition for condition : " ^ s))
 
 
@@ -91,7 +90,7 @@ let check_file f =
   let orig = 0x3000 in
   let stack = 0xFDFF in
   let flagcount = ref 0 in
-  let globvar = ref ["STATIC"] in
+  let globvar = ref ["LVALUE_ADDR"; "LVALUE_ISGLOBAL"] in
   let lastaddr = ref (0,false) in
 
   let incr_flag () = flagcount := !flagcount + 1 in
@@ -121,6 +120,7 @@ let check_file f =
 									| "GOTORET" -> create_env t (count + 4)
 									| "GOTO" -> create_env t (count + 4)
 									| "GOTOC" -> create_env t (count + 5)
+									| "GLEA" -> create_env t (count + 3)
 									| "RET" | "RTI" -> create_env t (count + 1)
 									| _ when nbargs = 1 -> (h,count)::(create_env t count)
 									| _ when nbargs = 0 -> create_env t count
@@ -149,6 +149,9 @@ let check_file f =
 															incr_flag();
 															 let condjmp = "BR" ^ (inverse_condition (List.nth decompunderscore 1)) ^ " IGNORE_GOTO" ^ (string_of_int !flagcount) ^ "\n" ^ jmpmsg ^ "IGNORE_GOTO" ^ (string_of_int !flagcount) ^ "\n" in
 															 condjmp ^ (replace_fun t env)
+									| "GLEA" -> let n = find_pos (List.nth (String.split_on_char ' ' h) 2) env in incr_flag();
+															let msg = "LD " ^ (List.nth (String.split_on_char ' ' h) 1) ^ " CST" ^ (string_of_int !flagcount) ^ "\n" ^ (print_cst_fill !flagcount n) in
+															msg ^ (replace_fun t env)
 									| _ -> h ^ "\n" ^ (replace_fun t env)
 								end
 		in
@@ -245,14 +248,15 @@ let check_file f =
 
 	let codebody = handle_val_dec f [] 0 in
 
-	let rawasm = ".ORIG " ^ (hexstring_of_int orig) ^ "\nLD R6 STACK\nLD R5 STACK\nLEA R4 STATIC\nADD R4 R4 #1\n"
-		^ "GOTO FUN_USER_main\n"
+	incr_flag();
+	let header = ".ORIG " ^ (hexstring_of_int orig) ^ "\nLD R6 CST" ^ (string_of_int !flagcount) ^"\n" ^ (print_cst_fill !flagcount stack) ^ "AND R5 R5 #0\nADD R5 R5 R6\nGLEA R4 STATIC_VAR\nADD R4 R4 #2\nGOTO FUN_USER_main\n" in
+	let rawasm = header
 		^ print_mult_fun()
 		^ print_div_fun()
 		^ print_mod_fun()
 	  ^ codebody
 	  ^ (fill_glob_var !globvar) ^
-	  "STACK .FILL " ^ (hexstring_of_int stack) ^ "\n" ^ ".END" in
+	  ".END" in
 	let funasm = fun_accessing rawasm in
 	funasm
 
