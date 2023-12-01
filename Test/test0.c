@@ -2,16 +2,16 @@ int glob;
 
 int main()
 {
-	int y;
-	int z;
-	int* p;
-	int x;
-	int w;
+	int n;
+	n = 100;
+	int k;
+	k = 0;
+	while(k*k <= n)
+	{
+		k++;
+	}
 
-	x = 5;
-	p = &x;
-	++(*p);
-	glob = --(*p);
+	glob = k;
 
 	return 0;
 }
