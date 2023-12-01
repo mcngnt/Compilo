@@ -1,3 +1,11 @@
+(* TODO :
+- Change lastaddr to using static variables LVALUE_ADDR
+- Make LVALUE_ADDR special var
+- ADD CALL
+- Properly add args to env for accessing
+ *)
+
+
 
 open Ctable
 open Cast
@@ -44,6 +52,7 @@ let get_addr_tab tab sx =
 let fill_glob_var l = 
 	let rec aux li = match li with 
 		| []-> ""
+		| h::q when h = "LVALUE_ADDR" || h = "LVALUE_ISGLOBAL" -> (aux q) ^ h ^ " .BLKW #1\n"
 		| h::q ->  (aux q) ^ "V_" ^ h ^ " .BLKW #1\n"
 	in
 	"STATIC_VAR\n" ^ (aux l)
@@ -52,6 +61,8 @@ let rec insert_no_double l x = match l with
 	| [] -> [x]
 	| h::q when h = x -> h::q
 	| h::q -> h::(insert_no_double q x)
+
+
 
 
 let print_cst_fill id x = let idstring = string_of_int id in 
@@ -84,6 +95,19 @@ let get_var a isglob =
 
 let set_var a isglob =
 	(if isglob then "STR R0 R4 #" ^ (string_of_int a) else "STR R0 R5 #" ^ (string_of_int a) ) ^ "\n"
+
+let set_lvalue_addr a isglob = 
+	int isglobint = match isglob with | true -> 1 | false -> 0 in
+	incr_flag();
+	let set_addr = "LD R0 CST" ^ (string_of_int !flagcount) ^ "\nSTR R0 R4 #0" ^ (print_cst_fill !flagcount a) in
+	incr_flag();
+	let set_isglob = "LD R0 CST" ^ (string_of_int !flagcount) ^ "\nSTR R0 R4 #1" ^ (print_cst_fill !flagcount isglobint) in
+	set_addr ^ set_isglob
+
+let set_lvalue_addr () = 
+	incr_flag();
+	"\nSTR R0 R4 #0" ^ (print_cst_fill !flagcount a)
+
 
 
 let check_file f =
@@ -169,7 +193,7 @@ let check_file f =
 	 *)
 
 	let rec handle_expr le tab = match le with | (l,e) -> begin match e with
-		| VAR s -> let a,isglob = get_addr_tab tab s in lastaddr := (a,isglob) ; get_var a isglob
+		| VAR s -> let a,isglob = get_addr_tab tab s in (get_var a isglob) ^ (set_lvalue_addr a isglob) (* Set LVALUE_VAR to a and isglob *)
 		| CST x -> incr_flag() ; "LD R0 CST" ^ (string_of_int !flagcount) ^ " ; R0 <- cst " ^ (string_of_int x) ^ "\n" ^ (print_cst_fill !flagcount x)
 		| NULLPTR -> "AND R0 R0 #0\n"
 		| SET_VAR(s,le) -> let a,isglob = get_addr_tab tab s in (handle_expr le tab) ^ (set_var a isglob)
@@ -181,8 +205,8 @@ let check_file f =
 												| M_MINUS -> negate_r0()
 												| M_NOT -> "NOT R0 R0\n"
 												| M_ADDR ->  incr_flag(); "LD R0 CST" ^ (string_of_int !flagcount) ^ "\n" ^ (print_cst_fill !flagcount a)
-												| M_DEREF -> if isglob then "ADD R1 R4 R0\nLDR R0 R1 #0" else "ADD R1 R5 R0\nLDR R0 R1 #0\n"
-												| M_PRE_INC -> let getmsg = (get_var a isglob) and setmsg = (set_var a isglob) in getmsg ^ "ADD R0 R0 #1\n" ^ setmsg
+												| M_DEREF -> if isglob then "ADD R1 R4 R0\nLDR R0 R1 #0" else "ADD R1 R5 R0\nLDR R0 R1 #0\n" ^ set_lvalue_addr() (* set LVALUE_VAR to value of R0 *)
+												| M_PRE_INC -> let getmsg = (get_var a isglob) and setmsg = (set_var a isglob) in getmsg ^ "ADD R0 R0 #1\n" ^ setmsg (*fetch address from LVALUE_VAR*)
 												| M_PRE_DEC -> let getmsg = (get_var a isglob) and setmsg = (set_var a isglob) in getmsg ^ "ADD R0 R0 #-1\n" ^ setmsg
 												| M_POST_INC -> let getmsg = (get_var a isglob) and setmsg = (set_var a isglob) in getmsg ^ "ADD R0 R0 #1\n" ^ setmsg ^ "ADD R0 R0 #-1\n"
 												| M_POST_DEC -> let getmsg = (get_var a isglob) and setmsg = (set_var a isglob) in getmsg ^ "ADD R0 R0 #-1\n" ^ setmsg ^ "ADD R0 R0 #1\n"
