@@ -2,10 +2,10 @@
 int x;
 int y;
 int z;
+int* p;
 
 int main()
 {
-	int* p;
 	p = NULL;
 	x = -(0 - 5);
 	{
@@ -14,7 +14,7 @@ int main()
 	}
 	y = x > 0 ? 3 : -100/2;
 	z = x * y;
-	if(z > y)
+	if(z < y)
 	{
 		while(z > y)
 		{
@@ -25,7 +25,7 @@ int main()
 	{
 		p = &y;
 		++p;
-		// x = *p;
+		x = *p;
 		return 0;
 		x = ~666;
 	}

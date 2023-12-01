@@ -1,11 +1,11 @@
 
 int x;
-int y;
-int z;
-int* p;
 
 int main()
 {
+	int y;
+	int z;
+	int* p;
 	p = NULL;
 	x = -(0 - 5);
 	{
@@ -25,7 +25,7 @@ int main()
 	{
 		p = &y;
 		++p;
-		x = *p;
+		x = --(*p);
 		return 0;
 		x = ~666;
 	}
