@@ -107,6 +107,7 @@ let check_file f =
   let stack = 0xFDFF in
   let flagcount = ref 0 in
   let globvar = ref ["LVALUE_ADDR"; "LVALUE_ISGLOBAL"] in
+  let returnfunmsg = "LDR R7 R5 #-1 ; Restore R7\nLDR R5 R5 #-2 ; Restore R5\nRET\n" in
 
   let incr_flag () = flagcount := !flagcount + 1 in
 
@@ -234,7 +235,7 @@ let check_file f =
 													 																																					 			| C_LE -> "<"
 													 																																					 			| C_EQ -> "=="
 													 																																					 end ^ " e2\n"
-		| EIF(le1,le2,le3) -> incr_flag(); let e = (handle_expr le1 tab) and c1 = handle_expr le2 tab and c2 = handle_expr le2 tab in gen_condition e c1 c2 !flagcount "IF" "z"
+		| EIF(le1,le2,le3) -> incr_flag(); let e = (handle_expr le1 tab) and c1 = handle_expr le2 tab and c2 = handle_expr le3 tab in gen_condition e c1 c2 !flagcount "IF" "z"
 		| ESEQ(lle) -> List.fold_left (fun acc le -> acc ^ (handle_expr le tab)) "" lle
 		| _ -> ""
 	end
@@ -254,7 +255,7 @@ let check_file f =
 				| CEXPR le -> handle_expr le tab
 				| CIF(le, lc1,lc2) -> incr_flag(); let e = (handle_expr le tab) in let c1 = (handle_code lc1 tab r6) in let c2 = (handle_code lc2 tab r6) in gen_condition e c1 c2 !flagcount "IF" "z"
 				| CWHILE(le, lc) -> let flagstring = string_of_int (!flagcount) in incr_flag(); "STARTWHILE" ^ flagstring ^ "\n" ^ (handle_expr le tab) ^ "BRz ENDWHILE" ^ flagstring ^ "\n" ^ (handle_code lc tab r6) ^ "BR STARTWHILE" ^ flagstring ^ "\n" ^ "ENDWHILE" ^ flagstring ^ "\n"
-				| CRETURN (Some le) -> handle_expr le tab
+				| CRETURN (Some le) -> (handle_expr le tab) ^ returnfunmsg
 				| _ -> ""
 		end
 	in
@@ -266,8 +267,7 @@ let check_file f =
 	 	| CFUN(l,s,vl,t,lc)::q -> let funtab = (insert_fun_tab tab s vl) in
 	 														let funbase = "FUN_USER_" ^ s ^ "\nADD R6 R6 #-1\nLDR R5 R6 #0 ; Store R5 on the stack\nADD R6 R6 #-1\nLDR R7 R6 #0 ; Store R7 on the stack\nADD R6 R6 #-1\nAND R5 R5 #0\nADD R5 R5 R6 ; R5 <- R6\n" in
 	 														let c = (handle_code lc funtab 0) in
-	 														let endfun = "LDR R7 R5 #-1 ; Restore R7\nLDR R5 R5 #-2 ; Restore R5\n" in
-	 														funbase ^ c ^ endfun ^ (handle_val_dec q funtab r4)
+	 														funbase ^ c ^ (handle_val_dec q funtab r4)
 	in
 
 	let codebody = handle_val_dec f [] 0 in
