@@ -18,7 +18,7 @@ let hexstring_of_int a = Printf.sprintf "x%x" a
 (* Inserts new variable in the table with its name, address and scope *)
 let insert_var_tab tab s r isglob = match isglob with
 	| true -> SVAR(s,r, isglob)::tab
-	| false -> SVAR(s,-r, isglob)::tab
+	| false -> SVAR(s,r, isglob)::tab
 
 
 let insert_fun_tab tab s vl = 
@@ -92,14 +92,14 @@ let inverse_condition s = match s with
 
 
 let get_var a isglob = 
-	(if isglob then "LDR R0 R4 #" ^ (string_of_int a) ^ "\n" else "LDR R0 R5 #" ^ (string_of_int a) ^ "\n")
+	(if isglob then "LDR R0 R4 #" ^ (string_of_int a) ^ "\n" else "LDR R0 R5 #-" ^ (string_of_int a) ^ "\n")
 
 let set_var a isglob =
-	(if isglob then "STR R0 R4 #" ^ (string_of_int a) else "STR R0 R5 #" ^ (string_of_int a) ) ^ "\n"
+	(if isglob then "STR R0 R4 #" ^ (string_of_int a) else "STR R0 R5 #-" ^ (string_of_int a) ) ^ "\n"
 
 
 let get_val_from_tab id = 
-	(gen_condition "LDR R0 R4 #-2\n" "LDR R0 R4 #-1\nADD R1 R0 R4\nLDR R0 R1 #0\n" "LDR R0 R4 #-1\nADD R1 R0 R5\nLDR R0 R1 #0\n" id "DEREF" "z" )
+	(gen_condition "LDR R0 R4 #-2\n" "LDR R0 R4 #-1\nADD R1 R0 R4\nLDR R0 R1 #0\n" "LDR R0 R4 #-1\nADD R1 R0 #0\nNOT R1 R1\nADD R1 R1 R5\nLDR R0 R1 #0\n" id "DEREF" "z" )
 
 
 let check_file f =
@@ -107,7 +107,7 @@ let check_file f =
   let stack = 0xFDFF in
   let flagcount = ref 0 in
   let globvar = ref ["LVALUE_ADDR"; "LVALUE_ISGLOBAL"] in
-  let returnfunmsg = "LDR R7 R5 #-1 ; Restore R7\nLDR R5 R5 #-2 ; Restore R5\nRET\n" in
+  let returnfunmsg = "LDR R7 R5 #1 ; Restore R7\nLDR R5 R5 #2 ; Restore R5\nRET\n" in
 
   let incr_flag () = flagcount := !flagcount + 1 in
 
@@ -198,7 +198,7 @@ let check_file f =
 		| CST x -> incr_flag() ; "LD R0 CST" ^ (string_of_int !flagcount) ^ " ; R0 <- cst " ^ (string_of_int x) ^ "\n" ^ (print_cst_fill !flagcount x)
 		| NULLPTR -> "AND R0 R0 #0\n"
 		| SET_VAR(s,le) -> let a,isglob = get_addr_tab tab s in (handle_expr le tab) ^ (set_var a isglob)
-		| SET_VAL(s,le) -> let a,isglob = get_addr_tab tab s in (handle_expr le tab) ^ (if isglob then "LDR R0 R4 #" ^ (string_of_int a) ^ "\n" ^ "ADD R1 R0 R4\nSTR R0 R1 #0" else "LDR R0 R5 #" ^ (string_of_int a) ^ "\n" ^ "ADD R1 R0 R5\nSTR R0 R1 #0" ) ^ " ; (variable " ^ s ^ ")* <- R0\n"
+		| SET_VAL(s,le) -> let a,isglob = get_addr_tab tab s in (handle_expr le tab) ^ (if isglob then "LDR R0 R4 #" ^ (string_of_int a) ^ "\n" ^ "ADD R1 R0 R4\nSTR R0 R1 #0" else "LDR R0 R5 #-" ^ (string_of_int a) ^ "\n" ^ "ADD R1 R0 R5\nSTR R0 R1 #0" ) ^ " ; (variable " ^ s ^ ")* <- R0\n"
 		(* | CALL(s,lle) -> gen_call s lle tab (List.length lle) 0 *)
 		| OP1(op, le) -> let msg = (handle_expr le tab) in
 										 msg ^ begin
@@ -265,7 +265,7 @@ let check_file f =
 	 	| [] -> ""
 	 	| CDECL(l,s,t)::q -> globvar := s::(!globvar) ; ( handle_val_dec q (insert_var_tab tab s r4 true) (r4 + 1))
 	 	| CFUN(l,s,vl,t,lc)::q -> let funtab = (insert_fun_tab tab s vl) in
-	 														let funbase = "FUN_USER_" ^ s ^ "\nADD R6 R6 #-1\nLDR R5 R6 #0 ; Store R5 on the stack\nADD R6 R6 #-1\nLDR R7 R6 #0 ; Store R7 on the stack\nADD R6 R6 #-1\nAND R5 R5 #0\nADD R5 R5 R6 ; R5 <- R6\n" in
+	 														let funbase = "FUN_USER_" ^ s ^ "\nADD R6 R6 #-1\nLDR R5 R6 #0 ; Store R5 on the stack\nADD R6 R6 #-1\nLDR R7 R6 #0 ; Store R7 on the stack\nADD R6 R6 #-1\nADD R5 R6 #0 ; R5 <- R6\n" in
 	 														let c = (handle_code lc funtab 0) in
 	 														funbase ^ c ^ (handle_val_dec q funtab r4)
 	in
@@ -273,7 +273,7 @@ let check_file f =
 	let codebody = handle_val_dec f [] 0 in
 
 	incr_flag();
-	let header = ".ORIG " ^ (hexstring_of_int orig) ^ "\nLD R6 CST" ^ (string_of_int !flagcount) ^"\n" ^ (print_cst_fill !flagcount stack) ^ "AND R5 R5 #0\nADD R5 R5 R6\nGLEA R4 STATIC_VAR\nADD R4 R4 #2\nGOTO FUN_USER_main\n" in
+	let header = ".ORIG " ^ (hexstring_of_int orig) ^ "\nLD R6 CST" ^ (string_of_int !flagcount) ^"\n" ^ (print_cst_fill !flagcount stack) ^ "ADD R5 R6 #0\nGLEA R4 STATIC_VAR\nADD R4 R4 #2\nGOTO FUN_USER_main\n" in
 	let rawasm = header
 		^ print_mult_fun()
 		^ print_div_fun()
