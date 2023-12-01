@@ -1,18 +1,33 @@
-int glob;
+
+int x;
+int y;
+int z;
 
 int main()
 {
-	int n;
-	n = 100;
-	int k;
-	k = 0;
-	while(k*k <= n)
+	int* p;
+	p = NULL;
+	x = 0 - 5;
 	{
-		k++;
+		int w;
+		w = 7;
 	}
-
-	glob = k;
-
-	return 0;
+	y = x > 0 ? 3 : -100/2;
+	z = x * y;
+	if(z > y)
+	{
+		while(z > y)
+		{
+			--z;
+		}
+	}
+	else
+	{
+		p = &y;
+		++p;
+		x = *p;
+		return 0;
+		x = ~666;
+	}
+	return 0;		
 }
-

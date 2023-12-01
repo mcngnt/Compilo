@@ -22,15 +22,16 @@ let insert_var_tab tab s r isglob = match isglob with
 
 
 let insert_fun_tab tab s vl = 
-	let rec aux l = match l with
+	let rec convert_decl l = match l with
 		| [] -> []
 		| h::q -> begin match h with
 								| CDECL(l,s,t) ->
-								 s::(aux q)
+								 s::(convert_decl q)
 								| _ -> raise (Error("Function defined in another."))
 							end
 	in
-	let sl = aux vl in SFUN(s,sl)::tab
+	let sl = convert_decl vl in 
+	SFUN(s,sl)::tab
 
 let rec get_args tab sx = match tab with
 	| [] -> raise (Error("Function not found."))
@@ -41,7 +42,7 @@ let rec get_args tab sx = match tab with
 (* Gets the address of the most recent variable whit name s *)
 let get_addr_tab tab sx = 
 	let rec aux ctab = match ctab with
-		| [] -> raise (Error("Variable undefined"))
+		| [] -> raise (Error("Variable " ^ sx ^ " undefined"))
 		| SVAR(s,r,b)::q when s=sx -> r,b
 		| h::q -> aux q
 	in
@@ -233,7 +234,7 @@ let check_file f =
 													 																																					 			| C_LE -> "<"
 													 																																					 			| C_EQ -> "=="
 													 																																					 end ^ " e2\n"
-		| EIF(le1,le2,le3) -> incr_flag(); let e = (handle_expr le1 tab) in let c1 = handle_expr le2 tab in let c2 = handle_expr le2 tab in gen_condition e c1 c2 !flagcount "IF" "z"
+		| EIF(le1,le2,le3) -> incr_flag(); let e = (handle_expr le1 tab) and c1 = handle_expr le2 tab and c2 = handle_expr le3 tab in gen_condition e c1 c2 !flagcount "IF" "z"
 		| ESEQ(lle) -> List.fold_left (fun acc le -> acc ^ (handle_expr le tab)) "" lle
 		| _ -> ""
 	end
