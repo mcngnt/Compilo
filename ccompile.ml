@@ -96,18 +96,9 @@ let get_var a isglob =
 let set_var a isglob =
 	(if isglob then "STR R0 R4 #" ^ (string_of_int a) else "STR R0 R5 #" ^ (string_of_int a) ) ^ "\n"
 
-let set_lvalue_addr a isglob = 
-	int isglobint = match isglob with | true -> 1 | false -> 0 in
-	incr_flag();
-	let set_addr = "LD R0 CST" ^ (string_of_int !flagcount) ^ "\nSTR R0 R4 #0" ^ (print_cst_fill !flagcount a) in
-	incr_flag();
-	let set_isglob = "LD R0 CST" ^ (string_of_int !flagcount) ^ "\nSTR R0 R4 #1" ^ (print_cst_fill !flagcount isglobint) in
-	set_addr ^ set_isglob
 
-let set_lvalue_addr () = 
-	incr_flag();
-	"\nSTR R0 R4 #0" ^ (print_cst_fill !flagcount a)
-
+let get_val_from_tab id = 
+	(gen_condition "LDR R0 R4 #-2\n" "LDR R0 R4 #-1\nADD R1 R0 R4\nLDR R0 R1 #0\n" "LDR R0 R4 #-1\nADD R1 R0 R5\nLDR R0 R1 #0\n" id "DEREF" "z" )
 
 
 let check_file f =
@@ -115,9 +106,17 @@ let check_file f =
   let stack = 0xFDFF in
   let flagcount = ref 0 in
   let globvar = ref ["LVALUE_ADDR"; "LVALUE_ISGLOBAL"] in
-  let lastaddr = ref (0,false) in
 
   let incr_flag () = flagcount := !flagcount + 1 in
+
+  let set_lvalue addr isglob = 
+  	let isglobint = match isglob with | true -> 1 | false -> 0 in
+  	incr_flag();
+  	let set_addr = "LD R0 CST" ^ (string_of_int !flagcount) ^ "\nSTR R0 R4 #-1\n" ^ (print_cst_fill !flagcount addr) in
+  	incr_flag();
+  	let set_isglob = "LD R0 CST" ^ (string_of_int !flagcount) ^ "\nSTR R0 R4 #-2\n" ^ (print_cst_fill !flagcount isglobint) in
+  	set_addr ^ set_isglob
+  in
 
 
   let fun_accessing asm = 
@@ -193,23 +192,23 @@ let check_file f =
 	 *)
 
 	let rec handle_expr le tab = match le with | (l,e) -> begin match e with
-		| VAR s -> let a,isglob = get_addr_tab tab s in (get_var a isglob) ^ (set_lvalue_addr a isglob) (* Set LVALUE_VAR to a and isglob *)
+		| VAR s -> let a,isglob = get_addr_tab tab s in (set_lvalue a isglob) ^ (get_var a isglob) (* Set LVALUE_VAR to a and isglob *)
 		| CST x -> incr_flag() ; "LD R0 CST" ^ (string_of_int !flagcount) ^ " ; R0 <- cst " ^ (string_of_int x) ^ "\n" ^ (print_cst_fill !flagcount x)
 		| NULLPTR -> "AND R0 R0 #0\n"
 		| SET_VAR(s,le) -> let a,isglob = get_addr_tab tab s in (handle_expr le tab) ^ (set_var a isglob)
 		| SET_VAL(s,le) -> let a,isglob = get_addr_tab tab s in (handle_expr le tab) ^ (if isglob then "LDR R0 R4 #" ^ (string_of_int a) ^ "\n" ^ "ADD R1 R0 R4\nSTR R0 R1 #0" else "LDR R0 R5 #" ^ (string_of_int a) ^ "\n" ^ "ADD R1 R0 R5\nSTR R0 R1 #0" ) ^ " ; (variable " ^ s ^ ")* <- R0\n"
 		(* | CALL(s,lle) -> gen_call s lle tab (List.length lle) 0 *)
 		| OP1(op, le) -> let msg = (handle_expr le tab) in
-										 let a,isglob = !lastaddr in msg ^ begin
+										 msg ^ begin
 											match op with
 												| M_MINUS -> negate_r0()
 												| M_NOT -> "NOT R0 R0\n"
-												| M_ADDR ->  incr_flag(); "LD R0 CST" ^ (string_of_int !flagcount) ^ "\n" ^ (print_cst_fill !flagcount a)
-												| M_DEREF -> if isglob then "ADD R1 R4 R0\nLDR R0 R1 #0" else "ADD R1 R5 R0\nLDR R0 R1 #0\n" ^ set_lvalue_addr() (* set LVALUE_VAR to value of R0 *)
-												| M_PRE_INC -> let getmsg = (get_var a isglob) and setmsg = (set_var a isglob) in getmsg ^ "ADD R0 R0 #1\n" ^ setmsg (*fetch address from LVALUE_VAR*)
-												| M_PRE_DEC -> let getmsg = (get_var a isglob) and setmsg = (set_var a isglob) in getmsg ^ "ADD R0 R0 #-1\n" ^ setmsg
-												| M_POST_INC -> let getmsg = (get_var a isglob) and setmsg = (set_var a isglob) in getmsg ^ "ADD R0 R0 #1\n" ^ setmsg ^ "ADD R0 R0 #-1\n"
-												| M_POST_DEC -> let getmsg = (get_var a isglob) and setmsg = (set_var a isglob) in getmsg ^ "ADD R0 R0 #-1\n" ^ setmsg ^ "ADD R0 R0 #1\n"
+												| M_ADDR ->  "LDR R0 R4 #-1\n"
+												| M_DEREF -> incr_flag(); "STR R0 R4 #-1\n" ^ (get_val_from_tab !flagcount)
+												| M_PRE_INC -> incr_flag(); (get_val_from_tab !flagcount) ^ "ADD R0 R0 #1\nSTR R0 R1 #0\n"
+												| M_PRE_DEC -> incr_flag(); (get_val_from_tab !flagcount) ^ "ADD R0 R0 #-1\nSTR R0 R1 #0\n"
+												| M_POST_INC -> incr_flag(); (get_val_from_tab !flagcount) ^ "ADD R0 R0 #1\nSTR R0 R1 #0\nADD R0 R0 #-1\n"
+												| M_POST_DEC -> incr_flag(); (get_val_from_tab !flagcount) ^ "ADD R0 R0 #-1\nSTR R0 R1 #0\nADD R0 R0 #1\n"
 											end
 		| OP2(op, le1, le2) -> (handle_expr le1 tab) ^ "STR R0 R6 #0 ; Store R0 on the stack\nADD R6 R6 #-1 ; Increase the stack\n" ^ (handle_expr le2 tab) ^ "ADD R6 R6 #1 ; Decrease the stack\nLDR R1 R6 #0 ; Retrieve upmost result on the stack in R1\n" ^ begin
 													 match op with
