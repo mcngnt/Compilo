@@ -1,12 +1,3 @@
-(* TODO :
-- Change lastaddr to using static variables LVALUE_ADDR
-- Make LVALUE_ADDR special var
-- ADD CALL
-- Properly add args to env for accessing
- *)
-
-
-
 open Ctable
 open Cast
 
@@ -33,10 +24,11 @@ let insert_fun_tab tab s vl =
 	let sl = convert_decl vl in 
 	SFUN(s,sl)::tab
 
+(* 
 let rec get_args tab sx = match tab with
 	| [] -> raise (Error("Function not found."))
 	| SFUN(s,args)::t when s=sx -> args
-	| h::t -> get_args t sx
+	| h::t -> get_args t sx *)
 
 
 (* Gets the address of the most recent variable whit name s *)
@@ -49,7 +41,6 @@ let get_addr_tab tab sx =
 		aux tab
 
 
-
 let fill_glob_var l = 
 	let rec aux li = match li with 
 		| []-> ""
@@ -58,22 +49,17 @@ let fill_glob_var l =
 	in
 	"STATIC_VAR\n" ^ (aux l)
 
-let rec insert_no_double l x = match l with
-	| [] -> [x]
-	| h::q when h = x -> h::q
-	| h::q -> h::(insert_no_double q x)
-
-
+let fill_strings l = 
+	let rec aux li = match li with 
+		| []-> ""
+		| (s,id)::q ->  (aux q) ^ "STRING" ^ (string_of_int id) ^ " .STRINGZ \"" ^ s ^ "\"\n"
+	in
+	"STRINGS\n" ^ (aux l)
 
 
 let print_cst_fill id x = let idstring = string_of_int id in 
 	"BR IGNORE_CST" ^ idstring ^  "\nCST" ^ idstring ^ " .FILL #" ^ (string_of_int x) ^ "\nIGNORE_CST" ^ idstring ^ "\n"
 
-
-let gen_condition e ctrue cfalse id flagname brtype = let idstring = string_of_int id in
-	e ^ "GOTOC_" ^ brtype ^ " " ^ flagname ^ "_" ^ "ELSE" ^ idstring ^ "\n" ^ ctrue ^ "GOTO " ^ flagname ^ "_" ^ "ENDELSE" ^ idstring ^ "\n" ^ flagname ^ "_" ^  "ELSE" ^ idstring ^ "\n" ^ cfalse ^ flagname ^ "_" ^  "ENDELSE" ^ idstring ^ "\n"
-
-let negate_r0 () = "NOT R0 R0\nADD R0 R0 #1 ;  R0 <- -R0\n"
 
 let print_mult_fun () = "FUN_MULT\nADD R0 R0 #0\nBRn MULT_CHANGE_SIGN\nBR MULT_INIT\nMULT_CHANGE_SIGN\nNOT R0 R0\nADD R0 R0 #1\nNOT R1 R1\nADD R1 R1 #1\nMULT_INIT\nAND R2 R2 #0\nADD R2 R2 R0\nAND R0 R0 #0\nMULT_LOOP\nADD R0 R0 R1\nADD R2 R2 #-1\nBRz MULT_STOP\nBR MULT_LOOP\nMULT_STOP\nRET\n"
 
@@ -91,6 +77,11 @@ let inverse_condition s = match s with
 	| _ -> raise (Error("Can't find an inverse condition for condition : " ^ s))
 
 
+let gen_condition e ctrue cfalse id flagname brtype = let idstring = string_of_int id in
+	let condjmp = "BR" ^ (inverse_condition brtype) ^ " IGNORE_JMP" ^ idstring ^ "\n" ^ "GLEA R3 " ^ flagname ^ "_" ^ "ELSE" ^ idstring ^ "\nJMP R3\n" ^ "IGNORE_JMP" ^ idstring ^ "\n" in
+	e ^ condjmp ^ ctrue ^ "GLEA R3 " ^ flagname ^ "_" ^ "ENDELSE" ^ idstring ^ "\nJMP R3\n" ^ flagname ^ "_" ^  "ELSE" ^ idstring ^ "\n" ^ cfalse ^ flagname ^ "_" ^  "ENDELSE" ^ idstring ^ "\n"
+
+
 let get_var a isglob = 
 	(if isglob then "LDR R0 R4 #" ^ (string_of_int a) ^ "\n" else "LDR R0 R5 #-" ^ (string_of_int a) ^ "\n")
 
@@ -98,7 +89,7 @@ let set_var a isglob =
 	(if isglob then "STR R0 R4 #" ^ (string_of_int a) else "STR R0 R5 #-" ^ (string_of_int a) ) ^ "\n"
 
 
-let get_val_from_tab id = 
+let get_lvalue_val id = 
 	(gen_condition "LDR R0 R4 #-2\n" "LDR R0 R4 #-1\nADD R1 R0 R4\nLDR R0 R1 #0\n" "LDR R0 R4 #-1\nADD R1 R0 #0\nNOT R1 R1\nADD R1 R1 R5\nLDR R0 R1 #0\n" id "DEREF" "z" )
 
 
@@ -107,9 +98,12 @@ let check_file f =
   let stack = 0xFDFF in
   let flagcount = ref 0 in
   let globvar = ref ["LVALUE_ADDR"; "LVALUE_ISGLOBAL"] in
+  let strings = ref [] in
+  let stringcount = ref 0 in
   let returnfunmsg = "LDR R7 R5 #1 ; Restore R7\nLDR R5 R5 #2 ; Restore R5\nRET\n" in
 
   let incr_flag () = flagcount := !flagcount + 1 in
+  let incr_string () = stringcount := !stringcount + 1 in
 
   let set_lvalue addr isglob = 
   	let isglobint = match isglob with | true -> 1 | false -> 0 in
@@ -138,26 +132,22 @@ let check_file f =
 
 		let rec create_env l count = match l with
 			| [] -> []
-			| h::t -> let nbargs = List.length (forget_comments (String.split_on_char ' ' h)) in
-								let decompunderscore = String.split_on_char '_' (List.hd (String.split_on_char ' ' h)) in
-								begin  match List.hd decompunderscore with
+			| h::t -> let args = forget_comments (String.split_on_char ' ' h) in
+								let nbargs = List.length args in
+								if nbargs = 0 then create_env t count else begin
+								let decompunderscore = String.split_on_char '_' (List.hd args) in
+								begin match List.hd decompunderscore with
 									| ".ORIG" -> create_env t count
-									| "GOTORET" -> create_env t (count + 4)
-									| "GOTO" -> create_env t (count + 4)
-									| "GOTOC" -> create_env t (count + 5)
 									| "GLEA" -> create_env t (count + 3)
 									| "RET" | "RTI" -> create_env t (count + 1)
 									| _ when nbargs = 1 -> (h,count)::(create_env t count)
+									| _ when nbargs > 1 && List.nth args 1 = ".STRINGZ" -> (List.hd args,count)::(create_env t (count+1))
 									| _ when nbargs = 0 -> create_env t count
 									| _ -> create_env t (count + 1)
 							  end
+							 end
 			in
 
-		let print_jump h env jmp = 
-			let n = find_pos (List.nth (String.split_on_char ' ' h) 1) env in
-			incr_flag();
-			"LD R3 CST" ^ (string_of_int !flagcount) ^ "\n" ^ jmp ^ " R3 ; Jump to label " ^ ( List.nth (String.split_on_char ' ' h) 1 ) ^ "\n" ^ (print_cst_fill !flagcount n)
-		in
 
 		let rec print_env env = match env with
 			| [] -> "; --DEBUG---\n"
@@ -166,21 +156,14 @@ let check_file f =
 
 		let rec replace_fun l env = match l with
 			| [] -> ""
-			| h::t -> let decompunderscore = String.split_on_char '_' (List.hd (String.split_on_char ' ' h)) in
-								begin match List.hd (String.split_on_char ' ' h) with
-									| "GOTORET" -> let jmpmsg  = print_jump h env "JSRR" in jmpmsg ^ (replace_fun t env)
-									| "GOTO" -> let jmpmsg  = print_jump h env "JMP" in jmpmsg ^ (replace_fun t env)
-									| _ when List.hd decompunderscore = "GOTOC" -> let jmpmsg  = print_jump h env "JMP" in
-															incr_flag();
-															 let condjmp = "BR" ^ (inverse_condition (List.nth decompunderscore 1)) ^ " IGNORE_GOTO" ^ (string_of_int !flagcount) ^ "\n" ^ jmpmsg ^ "IGNORE_GOTO" ^ (string_of_int !flagcount) ^ "\n" in
-															 condjmp ^ (replace_fun t env)
-									| "GLEA" -> let n = find_pos (List.nth (String.split_on_char ' ' h) 2) env in incr_flag();
-															let msg = "LD " ^ (List.nth (String.split_on_char ' ' h) 1) ^ " CST" ^ (string_of_int !flagcount) ^ "\n" ^ (print_cst_fill !flagcount n) in
+			| h::t -> let args = String.split_on_char ' ' h in
+								begin match List.hd args with
+									| "GLEA" -> let n = find_pos (List.nth args 2) env in incr_flag();
+															let msg = "LD " ^ (List.nth args 1) ^ " CST" ^ (string_of_int !flagcount) ^ "\n" ^ (print_cst_fill !flagcount n) in
 															msg ^ (replace_fun t env)
 									| _ -> h ^ "\n" ^ (replace_fun t env)
 								end
 		in
-		(* asm *)
 		let env = create_env asml orig in
 		(replace_fun asml env) ^ (print_env env)
 	in
@@ -196,6 +179,7 @@ let check_file f =
 	let rec handle_expr le tab = match le with | (l,e) -> begin match e with
 		| VAR s -> let a,isglob = get_addr_tab tab s in (set_lvalue a isglob) ^ (get_var a isglob) (* Set LVALUE_VAR to a and isglob *)
 		| CST x -> incr_flag() ; "LD R0 CST" ^ (string_of_int !flagcount) ^ " ; R0 <- cst " ^ (string_of_int x) ^ "\n" ^ (print_cst_fill !flagcount x)
+		| STRING s ->  incr_string(); strings := (s,!stringcount)::!strings ; "GLEA R0 STRING" ^ (string_of_int !stringcount) ^ "\n"
 		| NULLPTR -> "AND R0 R0 #0\n"
 		| SET_VAR(s,le) -> let a,isglob = get_addr_tab tab s in (handle_expr le tab) ^ (set_var a isglob)
 		| SET_VAL(s,le) -> let a,isglob = get_addr_tab tab s in (handle_expr le tab) ^ (if isglob then "LDR R0 R4 #" ^ (string_of_int a) ^ "\n" ^ "ADD R1 R0 R4\nSTR R0 R1 #0" else "LDR R0 R5 #-" ^ (string_of_int a) ^ "\n" ^ "ADD R1 R0 R5\nSTR R0 R1 #0" ) ^ " ; (variable " ^ s ^ ")* <- R0\n"
@@ -203,22 +187,22 @@ let check_file f =
 		| OP1(op, le) -> let msg = (handle_expr le tab) in
 										 msg ^ begin
 											match op with
-												| M_MINUS -> negate_r0()
+												| M_MINUS -> "NOT R0 R0\nADD R0 R0 #1 ;  R0 <- -R0\n"
 												| M_NOT -> "NOT R0 R0\n"
 												| M_ADDR ->  "LDR R0 R4 #-1\n"
-												| M_DEREF -> incr_flag(); "STR R0 R4 #-1\n" ^ (get_val_from_tab !flagcount)
-												| M_PRE_INC -> incr_flag(); (get_val_from_tab !flagcount) ^ "ADD R0 R0 #1\nSTR R0 R1 #0\n"
-												| M_PRE_DEC -> incr_flag(); (get_val_from_tab !flagcount) ^ "ADD R0 R0 #-1\nSTR R0 R1 #0\n"
-												| M_POST_INC -> incr_flag(); (get_val_from_tab !flagcount) ^ "ADD R0 R0 #1\nSTR R0 R1 #0\nADD R0 R0 #-1\n"
-												| M_POST_DEC -> incr_flag(); (get_val_from_tab !flagcount) ^ "ADD R0 R0 #-1\nSTR R0 R1 #0\nADD R0 R0 #1\n"
+												| M_DEREF -> incr_flag(); "STR R0 R4 #-1\n" ^ (get_lvalue_val !flagcount)
+												| M_PRE_INC -> incr_flag(); (get_lvalue_val !flagcount) ^ "ADD R0 R0 #1\nSTR R0 R1 #0\n"
+												| M_PRE_DEC -> incr_flag(); (get_lvalue_val !flagcount) ^ "ADD R0 R0 #-1\nSTR R0 R1 #0\n"
+												| M_POST_INC -> incr_flag(); (get_lvalue_val !flagcount) ^ "ADD R0 R0 #1\nSTR R0 R1 #0\nADD R0 R0 #-1\n"
+												| M_POST_DEC -> incr_flag(); (get_lvalue_val !flagcount) ^ "ADD R0 R0 #-1\nSTR R0 R1 #0\nADD R0 R0 #1\n"
 											end
 		| OP2(op, le1, le2) -> (handle_expr le1 tab) ^ "STR R0 R6 #0 ; Store R0 on the stack\nADD R6 R6 #-1 ; Increase the stack\n" ^ (handle_expr le2 tab) ^ "ADD R6 R6 #1 ; Decrease the stack\nLDR R1 R6 #0 ; Retrieve upmost result on the stack in R1\n" ^ begin
 													 match op with
 													 	| S_ADD -> "ADD R0 R0 R1 ; R0 <- R0 + R1\n"
-													 	| S_SUB -> (negate_r0()) ^ "ADD R0 R0 R1 ; R0 <- R1 - R0\n"
-													 	| S_MUL -> "GOTORET FUN_MULT\n"
-													 	| S_DIV -> "GOTORET FUN_DIV\n"
-													 	| S_MOD -> "GOTORET FUN_MOD\n"
+													 	| S_SUB -> "NOT R0 R0\nADD R0 R0 #1 ;  R0 <- -R0\nADD R0 R0 R1 ; R0 <- R1 - R0\n"
+													 	| S_MUL -> "GLEA R3 FUN_MULT\nJSRR R3\n"
+													 	| S_DIV -> "GLEA R3 FUN_DIV\nJSRR R3\n"
+													 	| S_MOD -> "GLEA R3 FUN_MOD\nJSRR R3\n"
 													 end
 		| CMP(op, le1, le2) -> (handle_expr le1 tab) ^ "STR R0 R6 #0 ; Store R0 on the stack\nADD R6 R6 #-1 ; Increase the stack\n" ^ (handle_expr le2 tab) ^ "ADD R6 R6 #1 ; Decrease the stack\nLDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1\n" ^
 													 let brtype = match op with
@@ -226,7 +210,7 @@ let check_file f =
 													 										| C_LE -> "p"
 													 										| C_EQ -> "np"
 													 							in 
-													 let e = (negate_r0()) ^ "ADD R0 R0 R1 ; Compute R1 - R0 for comparison\n" in
+													 let e = "NOT R0 R0\nADD R0 R0 #1 ;  R0 <- -R0\nADD R0 R0 R1 ; Compute R1 - R0 for comparison\n" in
 													 let ctrue = "AND R0 R0 #0\nADD R0 R0 #1 ; If comparison true, set R0 to 1\n" in 
 													 let cfalse = "AND R0 R0 #0 ; If comparison false, set R0 to 0\n" in
 													 incr_flag();
@@ -273,14 +257,15 @@ let check_file f =
 	let codebody = handle_val_dec f [] 0 in
 
 	incr_flag();
-	let header = ".ORIG " ^ (hexstring_of_int orig) ^ "\nLD R6 CST" ^ (string_of_int !flagcount) ^"\n" ^ (print_cst_fill !flagcount stack) ^ "ADD R5 R6 #0\nGLEA R4 STATIC_VAR\nADD R4 R4 #2\nGOTO FUN_USER_main\n" in
+	let header = ".ORIG " ^ (hexstring_of_int orig) ^ "\nLD R6 CST" ^ (string_of_int !flagcount) ^"\n" ^ (print_cst_fill !flagcount stack) ^ "ADD R5 R6 #0\nGLEA R4 STATIC_VAR\nADD R4 R4 #2\nGLEA R3 FUN_USER_main\nJMP R3\n" in
 	let rawasm = header
 		^ print_mult_fun()
 		^ print_div_fun()
 		^ print_mod_fun()
 	  ^ codebody
-	  ^ (fill_glob_var !globvar) ^
-	  ".END" in
+	  ^ (fill_glob_var !globvar)
+	  ^ (fill_strings !strings)
+	  ^ ".END" in
 	let funasm = fun_accessing rawasm in
 	funasm
 

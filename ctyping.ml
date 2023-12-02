@@ -208,7 +208,7 @@ let rec handle_val_dec f env = match f with
 
 (* Here I start the AST traversing *)
 (* During the traversing, I check ervery typing rule and I return the typed version of the AST, that can then be pretty printed*)
-let check_file f = handle_val_dec f [];;
+let check_file f = handle_val_dec f [FUNT("puts",[TTPTR TTINT],TTINT);FUNT("getc",[],TTINT)];;
 
 (* Here I represent the environment as a list of variables and functions declaration, the environment being updated
 when passed as a parameter to recursive functions. *)
