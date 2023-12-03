@@ -1,12 +1,3 @@
-(* 
-TODO : 
-
-- Add CALL
-- Make address global instead of local
-- Buggy address (stativ vs on the stack)
-
- *)
-
 open Ctable
 open Cast
 
@@ -15,12 +6,10 @@ exception Error of string
 let hexstring_of_int a = Printf.sprintf "x%x" a
 
 
-(* Inserts new variable in the table with its name, address and scope *)
-let insert_var_tab tab s r isglob = match isglob with
-	| true -> SVAR(s,r, isglob)::tab
-	| false -> SVAR(s,r, isglob)::tab
+(* Inserts new variable in the table with its name, absolute offest relative to base and scope *)
+let insert_var_tab tab s r isglob = SVAR(s,r, isglob)::tab
 
-
+(* Inserts a function in the environment *)
 let insert_fun_tab tab s vl = 
 	let rec convert_decl l = match l with
 		| [] -> []
@@ -49,7 +38,7 @@ let get_addr_tab tab sx =
 	in
 		aux tab
 
-
+(* Create static declarations of global variables *)
 let fill_glob_var l = 
 	let rec aux li = match li with 
 		| []-> ""
@@ -58,6 +47,7 @@ let fill_glob_var l =
 	in
 	"STATIC_VAR\n" ^ (aux l)
 
+(* Create declarations for every strings encountered *)
 let fill_strings l = 
 	let rec aux li = match li with 
 		| []-> ""
@@ -269,8 +259,8 @@ let check_file f =
 		^ print_div_fun()
 		^ print_mod_fun()
 	  ^ codebody
-	  ^ (fill_glob_var !globvar)
 	  ^ (fill_strings !strings)
+	  ^ (fill_glob_var !globvar)
 	  ^ ".END" in
 	let funasm = fun_accessing rawasm in
 	funasm
