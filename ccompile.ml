@@ -198,9 +198,9 @@ let check_file f =
 												| M_ADDR ->  "LDR R0 R4 #-1\n"
 												| M_DEREF -> "STR R0 R4 #-1\nLDR R0 R0 #0\n"
 												| M_PRE_INC -> "LDR R1 R4 #-1\nLDR R0 R1 #0\nADD R0 R0 #1\nSTR R0 R1 #0\n"
-												(* | M_PRE_DEC -> "LDR R1 R4 #-1\nLDR R0 R0 #0\nADD R0 R0 #-1\nSTR R0 R1 #0\n" *)
-												(* | M_POST_INC -> "LDR R1 R4 #-1\nLDR R0 R0 #0\nADD R0 R0 #1\nSTR R0 R1 #0\nADD R0 R0 #-1\n" *)
-												(* | M_POST_DEC -> "LDR R1 R4 #-1\nLDR R0 R0 #0\nADD R0 R0 #-1\nSTR R0 R1 #0\nADD R0 R0 #1\n" *)
+												| M_PRE_DEC -> "LDR R1 R4 #-1\nLDR R0 R1 #0\nADD R0 R0 #-1\nSTR R0 R1 #0\n"
+												| M_POST_INC -> "LDR R1 R4 #-1\nLDR R0 R1 #0\nADD R0 R0 #1\nSTR R0 R1 #0\nADD R0 R0 #-1\n"
+												| M_POST_DEC -> "LDR R1 R4 #-1\nLDR R0 R1 #0\nADD R0 R0 #-1\nSTR R0 R1 #0\nADD R0 R0 #1\n"
 												| _ -> ""
 											end
 		| OP2(op, le1, le2) -> (handle_expr le1 tab) ^ "STR R0 R6 #0 ; Store R0 on the stack\nADD R6 R6 #-1 ; Increase the stack\n" ^ (handle_expr le2 tab) ^ "ADD R6 R6 #1 ; Decrease the stack\nLDR R1 R6 #0 ; Retrieve upmost result on the stack in R1\n" ^ begin
