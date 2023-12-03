@@ -1,32 +1,22 @@
-
-int x;
-int y;
-int z;
+int res;
+int mem;
 
 int main()
 {
-	int* p;
-	p = NULL;
-	x = -(0 - 5);
-	{
-		int w;
-		w = 7;
-	}
-	y = x > 0 ? 3 : -100/2;
-	z = (x * y) % 9;
-	if(z < y)
-	{
-		while(z > y)
-		{
-			--z;
-		}
-	}
-	else
-	{
-		p = &y;
-		++p;
-		x = --(*p);
-		// x = ~666;
-	}
-	return 0;		
+        int* p;
+        int* start;
+        int n;
+        n = 12;
+        start = &mem;
+        p = &mem;
+        *p = 0;
+        ++p;
+        *p = 1;
+        while(p < start + n)
+        {
+                ++p;
+                *p = *(p-1) + *(p-2);
+        }
+        res = *p;
+        return 0;
 }

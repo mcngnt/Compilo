@@ -1,3 +1,12 @@
+(* 
+TODO : 
+
+- Add CALL
+- Make address global instead of local
+- Buggy address (stativ vs on the stack)
+
+ *)
+
 open Ctable
 open Cast
 
@@ -89,10 +98,6 @@ let set_var a isglob =
 	(if isglob then "STR R0 R4 #" ^ (string_of_int a) else "STR R0 R5 #-" ^ (string_of_int a) ) ^ "\n"
 
 
-let get_lvalue_val id = 
-	(gen_condition "LDR R0 R4 #-2\n" "LDR R0 R4 #-1\nADD R1 R0 R4\nLDR R0 R1 #0\n" "LDR R0 R4 #-1\nADD R1 R0 #0\nNOT R1 R1\nADD R1 R1 R5\nLDR R0 R1 #0\n" id "DEREF" "z" )
-
-
 let check_file f =
   let orig = 0x3000 in
   let stack = 0xFDFF in
@@ -108,7 +113,7 @@ let check_file f =
   let set_lvalue addr isglob = 
   	let isglobint = match isglob with | true -> 1 | false -> 0 in
   	incr_flag();
-  	let set_addr = "LD R0 CST" ^ (string_of_int !flagcount) ^ "\nSTR R0 R4 #-1\n" ^ (print_cst_fill !flagcount addr) in
+  	let set_addr = "LD R0 CST" ^ (string_of_int !flagcount) ^ "\n" ^ ( if isglob then "ADD R0 R0 R4\n" else "NOT R0 R0\nADD R0 R0 #1\nADD R0 R0 R5\n" ) ^ "STR R0 R4 #-1\n" ^ (print_cst_fill !flagcount addr) in
   	incr_flag();
   	let set_isglob = "LD R0 CST" ^ (string_of_int !flagcount) ^ "\nSTR R0 R4 #-2\n" ^ (print_cst_fill !flagcount isglobint) in
   	set_addr ^ set_isglob
@@ -135,14 +140,12 @@ let check_file f =
 			| h::t -> let args = forget_comments (String.split_on_char ' ' h) in
 								let nbargs = List.length args in
 								if nbargs = 0 then create_env t count else begin
-								let decompunderscore = String.split_on_char '_' (List.hd args) in
-								begin match List.hd decompunderscore with
+								begin match List.hd args with
 									| ".ORIG" -> create_env t count
 									| "GLEA" -> create_env t (count + 3)
 									| "RET" | "RTI" -> create_env t (count + 1)
 									| _ when nbargs = 1 -> (h,count)::(create_env t count)
 									| _ when nbargs > 1 && List.nth args 1 = ".STRINGZ" -> (List.hd args,count)::(create_env t (count+1))
-									| _ when nbargs = 0 -> create_env t count
 									| _ -> create_env t (count + 1)
 							  end
 							 end
@@ -151,7 +154,9 @@ let check_file f =
 
 		let rec print_env env = match env with
 			| [] -> "; --DEBUG---\n"
-			| (s,c)::t -> "; " ^ s ^ " " ^ (hexstring_of_int c) ^ "\n" ^ (print_env t)
+			| (s,c)::t when s = "STATIC_VAR" -> "; mem " ^ (string_of_int c) ^ " " ^ (print_env t)
+			| (s,c)::t when s = "STRINGS" -> (string_of_int c)
+			| (s,c)::t -> (print_env t)
 		in
 
 		let rec replace_fun l env = match l with
@@ -177,24 +182,26 @@ let check_file f =
 	 *)
 
 	let rec handle_expr le tab = match le with | (l,e) -> begin match e with
-		| VAR s -> let a,isglob = get_addr_tab tab s in (set_lvalue a isglob) ^ (get_var a isglob) (* Set LVALUE_VAR to a and isglob *)
+		| VAR s -> let a,isglob = get_addr_tab tab s in let slvalue = (set_lvalue a isglob) in slvalue ^ (get_var a isglob) (* Set LVALUE_VAR to a and isglob *)
 		| CST x -> incr_flag() ; "LD R0 CST" ^ (string_of_int !flagcount) ^ " ; R0 <- cst " ^ (string_of_int x) ^ "\n" ^ (print_cst_fill !flagcount x)
 		| STRING s ->  incr_string(); strings := (s,!stringcount)::!strings ; "GLEA R0 STRING" ^ (string_of_int !stringcount) ^ "\n"
 		| NULLPTR -> "AND R0 R0 #0\n"
-		| SET_VAR(s,le) -> let a,isglob = get_addr_tab tab s in (handle_expr le tab) ^ (set_var a isglob)
-		| SET_VAL(s,le) -> let a,isglob = get_addr_tab tab s in (handle_expr le tab) ^ (if isglob then "LDR R0 R4 #" ^ (string_of_int a) ^ "\n" ^ "ADD R1 R0 R4\nSTR R0 R1 #0" else "LDR R0 R5 #-" ^ (string_of_int a) ^ "\n" ^ "ADD R1 R0 R5\nSTR R0 R1 #0" ) ^ " ; (variable " ^ s ^ ")* <- R0\n"
+		| SET_VAR(s,le) -> let a,isglob = get_addr_tab tab s in let e = (handle_expr le tab) in e ^ (set_var a isglob)
+		| SET_VAL(s,le) -> let a,isglob = get_addr_tab tab s in let e = (handle_expr le tab) in e ^ (if isglob then "LDR R1 R4 #" ^ (string_of_int a) else "LDR R1 R5 #-" ^ (string_of_int a) ) ^  "\nSTR R0 R1 #0\n"
 		(* | CALL(s,lle) -> gen_call s lle tab (List.length lle) 0 *)
+		| CALL(s,lle) -> ""
 		| OP1(op, le) -> let msg = (handle_expr le tab) in
 										 msg ^ begin
 											match op with
 												| M_MINUS -> "NOT R0 R0\nADD R0 R0 #1 ;  R0 <- -R0\n"
 												| M_NOT -> "NOT R0 R0\n"
 												| M_ADDR ->  "LDR R0 R4 #-1\n"
-												| M_DEREF -> incr_flag(); "STR R0 R4 #-1\n" ^ (get_lvalue_val !flagcount)
-												| M_PRE_INC -> incr_flag(); (get_lvalue_val !flagcount) ^ "ADD R0 R0 #1\nSTR R0 R1 #0\n"
-												| M_PRE_DEC -> incr_flag(); (get_lvalue_val !flagcount) ^ "ADD R0 R0 #-1\nSTR R0 R1 #0\n"
-												| M_POST_INC -> incr_flag(); (get_lvalue_val !flagcount) ^ "ADD R0 R0 #1\nSTR R0 R1 #0\nADD R0 R0 #-1\n"
-												| M_POST_DEC -> incr_flag(); (get_lvalue_val !flagcount) ^ "ADD R0 R0 #-1\nSTR R0 R1 #0\nADD R0 R0 #1\n"
+												| M_DEREF -> "STR R0 R4 #-1\nLDR R0 R0 #0\n"
+												| M_PRE_INC -> "LDR R1 R4 #-1\nLDR R0 R1 #0\nADD R0 R0 #1\nSTR R0 R1 #0\n"
+												(* | M_PRE_DEC -> "LDR R1 R4 #-1\nLDR R0 R0 #0\nADD R0 R0 #-1\nSTR R0 R1 #0\n" *)
+												(* | M_POST_INC -> "LDR R1 R4 #-1\nLDR R0 R0 #0\nADD R0 R0 #1\nSTR R0 R1 #0\nADD R0 R0 #-1\n" *)
+												(* | M_POST_DEC -> "LDR R1 R4 #-1\nLDR R0 R0 #0\nADD R0 R0 #-1\nSTR R0 R1 #0\nADD R0 R0 #1\n" *)
+												| _ -> ""
 											end
 		| OP2(op, le1, le2) -> (handle_expr le1 tab) ^ "STR R0 R6 #0 ; Store R0 on the stack\nADD R6 R6 #-1 ; Increase the stack\n" ^ (handle_expr le2 tab) ^ "ADD R6 R6 #1 ; Decrease the stack\nLDR R1 R6 #0 ; Retrieve upmost result on the stack in R1\n" ^ begin
 													 match op with
@@ -221,7 +228,6 @@ let check_file f =
 													 																																					 end ^ " e2\n"
 		| EIF(le1,le2,le3) -> incr_flag(); let e = (handle_expr le1 tab) and c1 = handle_expr le2 tab and c2 = handle_expr le3 tab in gen_condition e c1 c2 !flagcount "IF" "z"
 		| ESEQ(lle) -> List.fold_left (fun acc le -> acc ^ (handle_expr le tab)) "" lle
-		| _ -> ""
 	end
 	in
 
@@ -238,7 +244,7 @@ let check_file f =
 	 			| CBLOCK(vdl, lcl) -> handle_block vdl lcl tab r6
 				| CEXPR le -> handle_expr le tab
 				| CIF(le, lc1,lc2) -> incr_flag(); let e = (handle_expr le tab) in let c1 = (handle_code lc1 tab r6) in let c2 = (handle_code lc2 tab r6) in gen_condition e c1 c2 !flagcount "IF" "z"
-				| CWHILE(le, lc) -> let flagstring = string_of_int (!flagcount) in incr_flag(); "STARTWHILE" ^ flagstring ^ "\n" ^ (handle_expr le tab) ^ "BRz ENDWHILE" ^ flagstring ^ "\n" ^ (handle_code lc tab r6) ^ "BR STARTWHILE" ^ flagstring ^ "\n" ^ "ENDWHILE" ^ flagstring ^ "\n"
+				| CWHILE(le, lc) -> let idstring = string_of_int (!flagcount) in incr_flag(); "STARTWHILE" ^ idstring ^ "\n" ^ (handle_expr le tab) ^ "BRz ENDWHILE" ^ idstring ^ "\n" ^ (handle_code lc tab r6) ^ "BR STARTWHILE" ^ idstring ^ "\n" ^ "ENDWHILE" ^ idstring ^ "\n"
 				| CRETURN (Some le) -> (handle_expr le tab) ^ returnfunmsg
 				| _ -> ""
 		end

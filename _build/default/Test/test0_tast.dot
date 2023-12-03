@@ -1,246 +1,230 @@
 digraph ast {
 node [shape=plaintext];
 root [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >*</b></td></tr></table>>]
-CDECL_1 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CDECL</b></td></tr><tr ><td colspan = '1'>v_name = "x"</td></tr><tr ><td port='v_typ'>v_typ</td></tr></table>>]
+CDECL_1 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CDECL</b></td></tr><tr ><td colspan = '1'>v_name = "res"</td></tr><tr ><td port='v_typ'>v_typ</td></tr></table>>]
 root -> CDECL_1
 TINT_2 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
 CDECL_1:v_typ -> TINT_2
-CDECL_3 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CDECL</b></td></tr><tr ><td colspan = '1'>v_name = "y"</td></tr><tr ><td port='v_typ'>v_typ</td></tr></table>>]
+CDECL_3 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CDECL</b></td></tr><tr ><td colspan = '1'>v_name = "mem"</td></tr><tr ><td port='v_typ'>v_typ</td></tr></table>>]
 root -> CDECL_3
 TINT_4 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
 CDECL_3:v_typ -> TINT_4
-CDECL_5 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CDECL</b></td></tr><tr ><td colspan = '1'>v_name = "z"</td></tr><tr ><td port='v_typ'>v_typ</td></tr></table>>]
-root -> CDECL_5
+CFUN_5 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '3'><b >CFUN</b></td></tr><tr ><td colspan = '3'>f_name = "main"</td></tr><tr ><td port='f_params'>f_params</td><td port='f_rtyp'>f_rtyp</td><td port='f_code'>f_code</td></tr></table>>]
+root -> CFUN_5
 TINT_6 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-CDECL_5:v_typ -> TINT_6
-CFUN_7 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '3'><b >CFUN</b></td></tr><tr ><td colspan = '3'>f_name = "main"</td></tr><tr ><td port='f_params'>f_params</td><td port='f_rtyp'>f_rtyp</td><td port='f_code'>f_code</td></tr></table>>]
-root -> CFUN_7
-TINT_8 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-CFUN_7:f_rtyp -> TINT_8
-CBLOCK_9 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >CBLOCK</b></td></tr><tr ><td port='var_decl_list'>var_decl_list</td><td port='loc_code_list'>loc_code_list</td></tr></table>>]
-CFUN_7:f_code -> CBLOCK_9
-CDECL_10 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CDECL</b></td></tr><tr ><td colspan = '1'>v_name = "p"</td></tr><tr ><td port='v_typ'>v_typ</td></tr></table>>]
-CBLOCK_9:var_decl_list -> CDECL_10
-TPTR_11 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TPTR</b></td></tr><tr ><td port='ptyp'>ptyp</td></tr></table>>]
-CDECL_10:v_typ -> TPTR_11
-TINT_12 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-TPTR_11:ptyp -> TINT_12
-CEXPR_13 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CEXPR</b></td></tr><tr ><td port='pexpr'>pexpr</td></tr></table>>]
-CBLOCK_9:loc_code_list -> CEXPR_13
-SET_VAR_14 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >SET_VAR</b></td></tr><tr ><td colspan = '2'>vg = "p"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='type'>type</td></tr></table>>]
-CEXPR_13:pexpr -> SET_VAR_14
-NULL_15 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >NULL</b></td></tr><tr ><td port='type'>type</td></tr></table>>]
-SET_VAR_14:pexpr_left -> NULL_15
-TNULL_16 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TNULL</b></td></tr></table>>]
-NULL_15:type -> TNULL_16
-TNULL_17 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TNULL</b></td></tr></table>>]
-SET_VAR_14:type -> TNULL_17
-CEXPR_18 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CEXPR</b></td></tr><tr ><td port='pexpr'>pexpr</td></tr></table>>]
-CBLOCK_9:loc_code_list -> CEXPR_18
-SET_VAR_19 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >SET_VAR</b></td></tr><tr ><td colspan = '2'>vg = "x"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='type'>type</td></tr></table>>]
-CEXPR_18:pexpr -> SET_VAR_19
-OP1_20 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >OP1</b></td></tr><tr ><td colspan = '2'>unop = "-"</td></tr><tr ><td port='pexpr'>pexpr</td><td port='type'>type</td></tr></table>>]
-SET_VAR_19:pexpr_left -> OP1_20
-OP2_21 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '3'><b >OP2</b></td></tr><tr ><td colspan = '3'>binop = "-"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='pexpr_right'>pexpr_right</td><td port='type'>type</td></tr></table>>]
-OP1_20:pexpr -> OP2_21
-CST_22 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "0"</td></tr><tr ><td port='type'>type</td></tr></table>>]
-OP2_21:pexpr_left -> CST_22
-TINT_23 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-CST_22:type -> TINT_23
-CST_24 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "5"</td></tr><tr ><td port='type'>type</td></tr></table>>]
-OP2_21:pexpr_right -> CST_24
+CFUN_5:f_rtyp -> TINT_6
+CBLOCK_7 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >CBLOCK</b></td></tr><tr ><td port='var_decl_list'>var_decl_list</td><td port='loc_code_list'>loc_code_list</td></tr></table>>]
+CFUN_5:f_code -> CBLOCK_7
+CDECL_8 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CDECL</b></td></tr><tr ><td colspan = '1'>v_name = "p"</td></tr><tr ><td port='v_typ'>v_typ</td></tr></table>>]
+CBLOCK_7:var_decl_list -> CDECL_8
+TPTR_9 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TPTR</b></td></tr><tr ><td port='ptyp'>ptyp</td></tr></table>>]
+CDECL_8:v_typ -> TPTR_9
+TINT_10 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+TPTR_9:ptyp -> TINT_10
+CDECL_11 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CDECL</b></td></tr><tr ><td colspan = '1'>v_name = "start"</td></tr><tr ><td port='v_typ'>v_typ</td></tr></table>>]
+CBLOCK_7:var_decl_list -> CDECL_11
+TPTR_12 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TPTR</b></td></tr><tr ><td port='ptyp'>ptyp</td></tr></table>>]
+CDECL_11:v_typ -> TPTR_12
+TINT_13 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+TPTR_12:ptyp -> TINT_13
+CDECL_14 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CDECL</b></td></tr><tr ><td colspan = '1'>v_name = "n"</td></tr><tr ><td port='v_typ'>v_typ</td></tr></table>>]
+CBLOCK_7:var_decl_list -> CDECL_14
+TINT_15 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+CDECL_14:v_typ -> TINT_15
+CEXPR_16 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CEXPR</b></td></tr><tr ><td port='pexpr'>pexpr</td></tr></table>>]
+CBLOCK_7:loc_code_list -> CEXPR_16
+SET_VAR_17 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >SET_VAR</b></td></tr><tr ><td colspan = '2'>vg = "n"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='type'>type</td></tr></table>>]
+CEXPR_16:pexpr -> SET_VAR_17
+CST_18 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "10"</td></tr><tr ><td port='type'>type</td></tr></table>>]
+SET_VAR_17:pexpr_left -> CST_18
+TINT_19 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+CST_18:type -> TINT_19
+TINT_20 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+SET_VAR_17:type -> TINT_20
+CEXPR_21 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CEXPR</b></td></tr><tr ><td port='pexpr'>pexpr</td></tr></table>>]
+CBLOCK_7:loc_code_list -> CEXPR_21
+SET_VAR_22 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >SET_VAR</b></td></tr><tr ><td colspan = '2'>vg = "start"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='type'>type</td></tr></table>>]
+CEXPR_21:pexpr -> SET_VAR_22
+OP1_23 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >OP1</b></td></tr><tr ><td colspan = '2'>unop = "&"</td></tr><tr ><td port='pexpr'>pexpr</td><td port='type'>type</td></tr></table>>]
+SET_VAR_22:pexpr_left -> OP1_23
+VAR_24 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >VAR</b></td></tr><tr ><td colspan = '1'>name = "mem"</td></tr><tr ><td port='type'>type</td></tr></table>>]
+OP1_23:pexpr -> VAR_24
 TINT_25 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-CST_24:type -> TINT_25
-TINT_26 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-OP2_21:type -> TINT_26
+VAR_24:type -> TINT_25
+TPTR_26 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TPTR</b></td></tr><tr ><td port='ptyp'>ptyp</td></tr></table>>]
+OP1_23:type -> TPTR_26
 TINT_27 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-OP1_20:type -> TINT_27
-TINT_28 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-SET_VAR_19:type -> TINT_28
-CBLOCK_29 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >CBLOCK</b></td></tr><tr ><td port='var_decl_list'>var_decl_list</td><td port='loc_code_list'>loc_code_list</td></tr></table>>]
-CBLOCK_9:loc_code_list -> CBLOCK_29
-CDECL_30 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CDECL</b></td></tr><tr ><td colspan = '1'>v_name = "w"</td></tr><tr ><td port='v_typ'>v_typ</td></tr></table>>]
-CBLOCK_29:var_decl_list -> CDECL_30
-TINT_31 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-CDECL_30:v_typ -> TINT_31
-CEXPR_32 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CEXPR</b></td></tr><tr ><td port='pexpr'>pexpr</td></tr></table>>]
-CBLOCK_29:loc_code_list -> CEXPR_32
-SET_VAR_33 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >SET_VAR</b></td></tr><tr ><td colspan = '2'>vg = "w"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='type'>type</td></tr></table>>]
-CEXPR_32:pexpr -> SET_VAR_33
-CST_34 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "7"</td></tr><tr ><td port='type'>type</td></tr></table>>]
-SET_VAR_33:pexpr_left -> CST_34
-TINT_35 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-CST_34:type -> TINT_35
+TPTR_26:ptyp -> TINT_27
+TPTR_28 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TPTR</b></td></tr><tr ><td port='ptyp'>ptyp</td></tr></table>>]
+SET_VAR_22:type -> TPTR_28
+TINT_29 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+TPTR_28:ptyp -> TINT_29
+CEXPR_30 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CEXPR</b></td></tr><tr ><td port='pexpr'>pexpr</td></tr></table>>]
+CBLOCK_7:loc_code_list -> CEXPR_30
+SET_VAR_31 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >SET_VAR</b></td></tr><tr ><td colspan = '2'>vg = "p"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='type'>type</td></tr></table>>]
+CEXPR_30:pexpr -> SET_VAR_31
+OP1_32 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >OP1</b></td></tr><tr ><td colspan = '2'>unop = "&"</td></tr><tr ><td port='pexpr'>pexpr</td><td port='type'>type</td></tr></table>>]
+SET_VAR_31:pexpr_left -> OP1_32
+VAR_33 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >VAR</b></td></tr><tr ><td colspan = '1'>name = "mem"</td></tr><tr ><td port='type'>type</td></tr></table>>]
+OP1_32:pexpr -> VAR_33
+TINT_34 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+VAR_33:type -> TINT_34
+TPTR_35 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TPTR</b></td></tr><tr ><td port='ptyp'>ptyp</td></tr></table>>]
+OP1_32:type -> TPTR_35
 TINT_36 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-SET_VAR_33:type -> TINT_36
-CEXPR_37 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CEXPR</b></td></tr><tr ><td port='pexpr'>pexpr</td></tr></table>>]
-CBLOCK_9:loc_code_list -> CEXPR_37
-SET_VAR_38 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >SET_VAR</b></td></tr><tr ><td colspan = '2'>vg = "y"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='type'>type</td></tr></table>>]
-CEXPR_37:pexpr -> SET_VAR_38
-EIF_39 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '4'><b >EIF</b></td></tr><tr ><td port='pexpr_cond'>pexpr_cond</td><td port='pexpr_if'>pexpr_if</td><td port='pexpr_else'>pexpr_else</td><td port='type'>type</td></tr></table>>]
-SET_VAR_38:pexpr_left -> EIF_39
-CMP_40 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '3'><b >CMP</b></td></tr><tr ><td colspan = '3'>cmpop = "&lt;"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='pexpr_right'>pexpr_right</td><td port='type'>type</td></tr></table>>]
-EIF_39:pexpr_cond -> CMP_40
+TPTR_35:ptyp -> TINT_36
+TPTR_37 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TPTR</b></td></tr><tr ><td port='ptyp'>ptyp</td></tr></table>>]
+SET_VAR_31:type -> TPTR_37
+TINT_38 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+TPTR_37:ptyp -> TINT_38
+CEXPR_39 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CEXPR</b></td></tr><tr ><td port='pexpr'>pexpr</td></tr></table>>]
+CBLOCK_7:loc_code_list -> CEXPR_39
+SET_VAL_40 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >SET_VAL</b></td></tr><tr ><td colspan = '2'>vg = *"p"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='type'>type</td></tr></table>>]
+CEXPR_39:pexpr -> SET_VAL_40
 CST_41 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "0"</td></tr><tr ><td port='type'>type</td></tr></table>>]
-CMP_40:pexpr_left -> CST_41
+SET_VAL_40:pexpr_left -> CST_41
 TINT_42 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
 CST_41:type -> TINT_42
-VAR_43 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >VAR</b></td></tr><tr ><td colspan = '1'>name = "x"</td></tr><tr ><td port='type'>type</td></tr></table>>]
-CMP_40:pexpr_right -> VAR_43
-TINT_44 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-VAR_43:type -> TINT_44
-TINT_45 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-CMP_40:type -> TINT_45
-CST_46 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "3"</td></tr><tr ><td port='type'>type</td></tr></table>>]
-EIF_39:pexpr_if -> CST_46
-TINT_47 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-CST_46:type -> TINT_47
-OP2_48 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '3'><b >OP2</b></td></tr><tr ><td colspan = '3'>binop = "/"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='pexpr_right'>pexpr_right</td><td port='type'>type</td></tr></table>>]
-EIF_39:pexpr_else -> OP2_48
-OP1_49 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >OP1</b></td></tr><tr ><td colspan = '2'>unop = "-"</td></tr><tr ><td port='pexpr'>pexpr</td><td port='type'>type</td></tr></table>>]
-OP2_48:pexpr_left -> OP1_49
-CST_50 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "100"</td></tr><tr ><td port='type'>type</td></tr></table>>]
-OP1_49:pexpr -> CST_50
-TINT_51 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-CST_50:type -> TINT_51
-TINT_52 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-OP1_49:type -> TINT_52
-CST_53 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "2"</td></tr><tr ><td port='type'>type</td></tr></table>>]
-OP2_48:pexpr_right -> CST_53
+TINT_43 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+SET_VAL_40:type -> TINT_43
+CEXPR_44 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CEXPR</b></td></tr><tr ><td port='pexpr'>pexpr</td></tr></table>>]
+CBLOCK_7:loc_code_list -> CEXPR_44
+OP1_45 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >OP1</b></td></tr><tr ><td colspan = '2'>unop = "++"</td></tr><tr ><td port='pexpr'>pexpr</td><td port='type'>type</td></tr></table>>]
+CEXPR_44:pexpr -> OP1_45
+VAR_46 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >VAR</b></td></tr><tr ><td colspan = '1'>name = "p"</td></tr><tr ><td port='type'>type</td></tr></table>>]
+OP1_45:pexpr -> VAR_46
+TPTR_47 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TPTR</b></td></tr><tr ><td port='ptyp'>ptyp</td></tr></table>>]
+VAR_46:type -> TPTR_47
+TINT_48 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+TPTR_47:ptyp -> TINT_48
+TPTR_49 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TPTR</b></td></tr><tr ><td port='ptyp'>ptyp</td></tr></table>>]
+OP1_45:type -> TPTR_49
+TINT_50 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+TPTR_49:ptyp -> TINT_50
+CEXPR_51 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CEXPR</b></td></tr><tr ><td port='pexpr'>pexpr</td></tr></table>>]
+CBLOCK_7:loc_code_list -> CEXPR_51
+SET_VAL_52 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >SET_VAL</b></td></tr><tr ><td colspan = '2'>vg = *"p"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='type'>type</td></tr></table>>]
+CEXPR_51:pexpr -> SET_VAL_52
+CST_53 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "1"</td></tr><tr ><td port='type'>type</td></tr></table>>]
+SET_VAL_52:pexpr_left -> CST_53
 TINT_54 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
 CST_53:type -> TINT_54
 TINT_55 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-OP2_48:type -> TINT_55
-TINT_56 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-EIF_39:type -> TINT_56
-TINT_57 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-SET_VAR_38:type -> TINT_57
-CEXPR_58 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CEXPR</b></td></tr><tr ><td port='pexpr'>pexpr</td></tr></table>>]
-CBLOCK_9:loc_code_list -> CEXPR_58
-SET_VAR_59 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >SET_VAR</b></td></tr><tr ><td colspan = '2'>vg = "z"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='type'>type</td></tr></table>>]
-CEXPR_58:pexpr -> SET_VAR_59
-OP2_60 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '3'><b >OP2</b></td></tr><tr ><td colspan = '3'>binop = "%"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='pexpr_right'>pexpr_right</td><td port='type'>type</td></tr></table>>]
-SET_VAR_59:pexpr_left -> OP2_60
-OP2_61 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '3'><b >OP2</b></td></tr><tr ><td colspan = '3'>binop = "*"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='pexpr_right'>pexpr_right</td><td port='type'>type</td></tr></table>>]
-OP2_60:pexpr_left -> OP2_61
-VAR_62 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >VAR</b></td></tr><tr ><td colspan = '1'>name = "x"</td></tr><tr ><td port='type'>type</td></tr></table>>]
+SET_VAL_52:type -> TINT_55
+CWHILE_56 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >CWHILE</b></td></tr><tr ><td port='loc_expr_cond'>loc_expr_cond</td><td port='loc_code_while'>loc_code_while</td></tr></table>>]
+CBLOCK_7:loc_code_list -> CWHILE_56
+CMP_57 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '3'><b >CMP</b></td></tr><tr ><td colspan = '3'>cmpop = "&lt;"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='pexpr_right'>pexpr_right</td><td port='type'>type</td></tr></table>>]
+CWHILE_56:loc_expr_cond -> CMP_57
+VAR_58 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >VAR</b></td></tr><tr ><td colspan = '1'>name = "p"</td></tr><tr ><td port='type'>type</td></tr></table>>]
+CMP_57:pexpr_left -> VAR_58
+TPTR_59 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TPTR</b></td></tr><tr ><td port='ptyp'>ptyp</td></tr></table>>]
+VAR_58:type -> TPTR_59
+TINT_60 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+TPTR_59:ptyp -> TINT_60
+OP2_61 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '3'><b >OP2</b></td></tr><tr ><td colspan = '3'>binop = "+"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='pexpr_right'>pexpr_right</td><td port='type'>type</td></tr></table>>]
+CMP_57:pexpr_right -> OP2_61
+VAR_62 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >VAR</b></td></tr><tr ><td colspan = '1'>name = "start"</td></tr><tr ><td port='type'>type</td></tr></table>>]
 OP2_61:pexpr_left -> VAR_62
-TINT_63 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-VAR_62:type -> TINT_63
-VAR_64 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >VAR</b></td></tr><tr ><td colspan = '1'>name = "y"</td></tr><tr ><td port='type'>type</td></tr></table>>]
-OP2_61:pexpr_right -> VAR_64
-TINT_65 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-VAR_64:type -> TINT_65
+TPTR_63 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TPTR</b></td></tr><tr ><td port='ptyp'>ptyp</td></tr></table>>]
+VAR_62:type -> TPTR_63
+TINT_64 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+TPTR_63:ptyp -> TINT_64
+VAR_65 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >VAR</b></td></tr><tr ><td colspan = '1'>name = "n"</td></tr><tr ><td port='type'>type</td></tr></table>>]
+OP2_61:pexpr_right -> VAR_65
 TINT_66 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-OP2_61:type -> TINT_66
-CST_67 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "9"</td></tr><tr ><td port='type'>type</td></tr></table>>]
-OP2_60:pexpr_right -> CST_67
+VAR_65:type -> TINT_66
+TPTR_67 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TPTR</b></td></tr><tr ><td port='ptyp'>ptyp</td></tr></table>>]
+OP2_61:type -> TPTR_67
 TINT_68 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-CST_67:type -> TINT_68
+TPTR_67:ptyp -> TINT_68
 TINT_69 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-OP2_60:type -> TINT_69
-TINT_70 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-SET_VAR_59:type -> TINT_70
-CIF_71 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '3'><b >CIF</b></td></tr><tr ><td port='loc_expr_cond'>loc_expr_cond</td><td port='loc_code_if'>loc_code_if</td><td port='loc_code_else'>loc_code_else</td></tr></table>>]
-CBLOCK_9:loc_code_list -> CIF_71
-CMP_72 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '3'><b >CMP</b></td></tr><tr ><td colspan = '3'>cmpop = "&lt;"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='pexpr_right'>pexpr_right</td><td port='type'>type</td></tr></table>>]
-CIF_71:loc_expr_cond -> CMP_72
-VAR_73 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >VAR</b></td></tr><tr ><td colspan = '1'>name = "z"</td></tr><tr ><td port='type'>type</td></tr></table>>]
-CMP_72:pexpr_left -> VAR_73
-TINT_74 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-VAR_73:type -> TINT_74
-VAR_75 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >VAR</b></td></tr><tr ><td colspan = '1'>name = "y"</td></tr><tr ><td port='type'>type</td></tr></table>>]
-CMP_72:pexpr_right -> VAR_75
-TINT_76 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-VAR_75:type -> TINT_76
+CMP_57:type -> TINT_69
+CBLOCK_70 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >CBLOCK</b></td></tr><tr ><td port='var_decl_list'>var_decl_list</td><td port='loc_code_list'>loc_code_list</td></tr></table>>]
+CWHILE_56:loc_code_while -> CBLOCK_70
+CEXPR_71 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CEXPR</b></td></tr><tr ><td port='pexpr'>pexpr</td></tr></table>>]
+CBLOCK_70:loc_code_list -> CEXPR_71
+OP1_72 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >OP1</b></td></tr><tr ><td colspan = '2'>unop = "++"</td></tr><tr ><td port='pexpr'>pexpr</td><td port='type'>type</td></tr></table>>]
+CEXPR_71:pexpr -> OP1_72
+VAR_73 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >VAR</b></td></tr><tr ><td colspan = '1'>name = "p"</td></tr><tr ><td port='type'>type</td></tr></table>>]
+OP1_72:pexpr -> VAR_73
+TPTR_74 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TPTR</b></td></tr><tr ><td port='ptyp'>ptyp</td></tr></table>>]
+VAR_73:type -> TPTR_74
+TINT_75 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+TPTR_74:ptyp -> TINT_75
+TPTR_76 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TPTR</b></td></tr><tr ><td port='ptyp'>ptyp</td></tr></table>>]
+OP1_72:type -> TPTR_76
 TINT_77 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-CMP_72:type -> TINT_77
-CBLOCK_78 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >CBLOCK</b></td></tr><tr ><td port='var_decl_list'>var_decl_list</td><td port='loc_code_list'>loc_code_list</td></tr></table>>]
-CIF_71:loc_code_if -> CBLOCK_78
-CWHILE_79 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >CWHILE</b></td></tr><tr ><td port='loc_expr_cond'>loc_expr_cond</td><td port='loc_code_while'>loc_code_while</td></tr></table>>]
-CBLOCK_78:loc_code_list -> CWHILE_79
-CMP_80 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '3'><b >CMP</b></td></tr><tr ><td colspan = '3'>cmpop = "&lt;"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='pexpr_right'>pexpr_right</td><td port='type'>type</td></tr></table>>]
-CWHILE_79:loc_expr_cond -> CMP_80
-VAR_81 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >VAR</b></td></tr><tr ><td colspan = '1'>name = "y"</td></tr><tr ><td port='type'>type</td></tr></table>>]
-CMP_80:pexpr_left -> VAR_81
-TINT_82 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-VAR_81:type -> TINT_82
-VAR_83 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >VAR</b></td></tr><tr ><td colspan = '1'>name = "z"</td></tr><tr ><td port='type'>type</td></tr></table>>]
-CMP_80:pexpr_right -> VAR_83
-TINT_84 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-VAR_83:type -> TINT_84
+TPTR_76:ptyp -> TINT_77
+CEXPR_78 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CEXPR</b></td></tr><tr ><td port='pexpr'>pexpr</td></tr></table>>]
+CBLOCK_70:loc_code_list -> CEXPR_78
+SET_VAL_79 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >SET_VAL</b></td></tr><tr ><td colspan = '2'>vg = *"p"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='type'>type</td></tr></table>>]
+CEXPR_78:pexpr -> SET_VAL_79
+OP2_80 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '3'><b >OP2</b></td></tr><tr ><td colspan = '3'>binop = "+"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='pexpr_right'>pexpr_right</td><td port='type'>type</td></tr></table>>]
+SET_VAL_79:pexpr_left -> OP2_80
+OP1_81 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >OP1</b></td></tr><tr ><td colspan = '2'>unop = "*"</td></tr><tr ><td port='pexpr'>pexpr</td><td port='type'>type</td></tr></table>>]
+OP2_80:pexpr_left -> OP1_81
+OP2_82 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '3'><b >OP2</b></td></tr><tr ><td colspan = '3'>binop = "-"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='pexpr_right'>pexpr_right</td><td port='type'>type</td></tr></table>>]
+OP1_81:pexpr -> OP2_82
+VAR_83 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >VAR</b></td></tr><tr ><td colspan = '1'>name = "p"</td></tr><tr ><td port='type'>type</td></tr></table>>]
+OP2_82:pexpr_left -> VAR_83
+TPTR_84 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TPTR</b></td></tr><tr ><td port='ptyp'>ptyp</td></tr></table>>]
+VAR_83:type -> TPTR_84
 TINT_85 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-CMP_80:type -> TINT_85
-CBLOCK_86 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >CBLOCK</b></td></tr><tr ><td port='var_decl_list'>var_decl_list</td><td port='loc_code_list'>loc_code_list</td></tr></table>>]
-CWHILE_79:loc_code_while -> CBLOCK_86
-CEXPR_87 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CEXPR</b></td></tr><tr ><td port='pexpr'>pexpr</td></tr></table>>]
-CBLOCK_86:loc_code_list -> CEXPR_87
-OP1_88 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >OP1</b></td></tr><tr ><td colspan = '2'>unop = "--"</td></tr><tr ><td port='pexpr'>pexpr</td><td port='type'>type</td></tr></table>>]
-CEXPR_87:pexpr -> OP1_88
-VAR_89 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >VAR</b></td></tr><tr ><td colspan = '1'>name = "z"</td></tr><tr ><td port='type'>type</td></tr></table>>]
-OP1_88:pexpr -> VAR_89
+TPTR_84:ptyp -> TINT_85
+CST_86 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "1"</td></tr><tr ><td port='type'>type</td></tr></table>>]
+OP2_82:pexpr_right -> CST_86
+TINT_87 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+CST_86:type -> TINT_87
+TPTR_88 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TPTR</b></td></tr><tr ><td port='ptyp'>ptyp</td></tr></table>>]
+OP2_82:type -> TPTR_88
+TINT_89 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+TPTR_88:ptyp -> TINT_89
 TINT_90 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-VAR_89:type -> TINT_90
-TINT_91 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-OP1_88:type -> TINT_91
-CBLOCK_92 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >CBLOCK</b></td></tr><tr ><td port='var_decl_list'>var_decl_list</td><td port='loc_code_list'>loc_code_list</td></tr></table>>]
-CIF_71:loc_code_else -> CBLOCK_92
-CEXPR_93 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CEXPR</b></td></tr><tr ><td port='pexpr'>pexpr</td></tr></table>>]
-CBLOCK_92:loc_code_list -> CEXPR_93
-SET_VAR_94 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >SET_VAR</b></td></tr><tr ><td colspan = '2'>vg = "p"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='type'>type</td></tr></table>>]
-CEXPR_93:pexpr -> SET_VAR_94
-OP1_95 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >OP1</b></td></tr><tr ><td colspan = '2'>unop = "&"</td></tr><tr ><td port='pexpr'>pexpr</td><td port='type'>type</td></tr></table>>]
-SET_VAR_94:pexpr_left -> OP1_95
-VAR_96 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >VAR</b></td></tr><tr ><td colspan = '1'>name = "y"</td></tr><tr ><td port='type'>type</td></tr></table>>]
-OP1_95:pexpr -> VAR_96
+OP1_81:type -> TINT_90
+OP1_91 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >OP1</b></td></tr><tr ><td colspan = '2'>unop = "*"</td></tr><tr ><td port='pexpr'>pexpr</td><td port='type'>type</td></tr></table>>]
+OP2_80:pexpr_right -> OP1_91
+OP2_92 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '3'><b >OP2</b></td></tr><tr ><td colspan = '3'>binop = "-"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='pexpr_right'>pexpr_right</td><td port='type'>type</td></tr></table>>]
+OP1_91:pexpr -> OP2_92
+VAR_93 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >VAR</b></td></tr><tr ><td colspan = '1'>name = "p"</td></tr><tr ><td port='type'>type</td></tr></table>>]
+OP2_92:pexpr_left -> VAR_93
+TPTR_94 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TPTR</b></td></tr><tr ><td port='ptyp'>ptyp</td></tr></table>>]
+VAR_93:type -> TPTR_94
+TINT_95 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+TPTR_94:ptyp -> TINT_95
+CST_96 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "2"</td></tr><tr ><td port='type'>type</td></tr></table>>]
+OP2_92:pexpr_right -> CST_96
 TINT_97 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-VAR_96:type -> TINT_97
+CST_96:type -> TINT_97
 TPTR_98 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TPTR</b></td></tr><tr ><td port='ptyp'>ptyp</td></tr></table>>]
-OP1_95:type -> TPTR_98
+OP2_92:type -> TPTR_98
 TINT_99 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
 TPTR_98:ptyp -> TINT_99
-TPTR_100 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TPTR</b></td></tr><tr ><td port='ptyp'>ptyp</td></tr></table>>]
-SET_VAR_94:type -> TPTR_100
+TINT_100 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+OP1_91:type -> TINT_100
 TINT_101 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-TPTR_100:ptyp -> TINT_101
-CEXPR_102 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CEXPR</b></td></tr><tr ><td port='pexpr'>pexpr</td></tr></table>>]
-CBLOCK_92:loc_code_list -> CEXPR_102
-OP1_103 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >OP1</b></td></tr><tr ><td colspan = '2'>unop = "++"</td></tr><tr ><td port='pexpr'>pexpr</td><td port='type'>type</td></tr></table>>]
-CEXPR_102:pexpr -> OP1_103
-VAR_104 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >VAR</b></td></tr><tr ><td colspan = '1'>name = "p"</td></tr><tr ><td port='type'>type</td></tr></table>>]
-OP1_103:pexpr -> VAR_104
-TPTR_105 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TPTR</b></td></tr><tr ><td port='ptyp'>ptyp</td></tr></table>>]
-VAR_104:type -> TPTR_105
-TINT_106 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-TPTR_105:ptyp -> TINT_106
+OP2_80:type -> TINT_101
+TINT_102 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+SET_VAL_79:type -> TINT_102
+CEXPR_103 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CEXPR</b></td></tr><tr ><td port='pexpr'>pexpr</td></tr></table>>]
+CBLOCK_7:loc_code_list -> CEXPR_103
+SET_VAR_104 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >SET_VAR</b></td></tr><tr ><td colspan = '2'>vg = "res"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='type'>type</td></tr></table>>]
+CEXPR_103:pexpr -> SET_VAR_104
+OP1_105 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >OP1</b></td></tr><tr ><td colspan = '2'>unop = "*"</td></tr><tr ><td port='pexpr'>pexpr</td><td port='type'>type</td></tr></table>>]
+SET_VAR_104:pexpr_left -> OP1_105
+VAR_106 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >VAR</b></td></tr><tr ><td colspan = '1'>name = "p"</td></tr><tr ><td port='type'>type</td></tr></table>>]
+OP1_105:pexpr -> VAR_106
 TPTR_107 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TPTR</b></td></tr><tr ><td port='ptyp'>ptyp</td></tr></table>>]
-OP1_103:type -> TPTR_107
+VAR_106:type -> TPTR_107
 TINT_108 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
 TPTR_107:ptyp -> TINT_108
-CEXPR_109 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CEXPR</b></td></tr><tr ><td port='pexpr'>pexpr</td></tr></table>>]
-CBLOCK_92:loc_code_list -> CEXPR_109
-SET_VAR_110 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >SET_VAR</b></td></tr><tr ><td colspan = '2'>vg = "x"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='type'>type</td></tr></table>>]
-CEXPR_109:pexpr -> SET_VAR_110
-OP1_111 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >OP1</b></td></tr><tr ><td colspan = '2'>unop = "--"</td></tr><tr ><td port='pexpr'>pexpr</td><td port='type'>type</td></tr></table>>]
-SET_VAR_110:pexpr_left -> OP1_111
-OP1_112 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >OP1</b></td></tr><tr ><td colspan = '2'>unop = "*"</td></tr><tr ><td port='pexpr'>pexpr</td><td port='type'>type</td></tr></table>>]
-OP1_111:pexpr -> OP1_112
-VAR_113 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >VAR</b></td></tr><tr ><td colspan = '1'>name = "p"</td></tr><tr ><td port='type'>type</td></tr></table>>]
-OP1_112:pexpr -> VAR_113
-TPTR_114 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TPTR</b></td></tr><tr ><td port='ptyp'>ptyp</td></tr></table>>]
-VAR_113:type -> TPTR_114
-TINT_115 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-TPTR_114:ptyp -> TINT_115
-TINT_116 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-OP1_112:type -> TINT_116
-TINT_117 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-OP1_111:type -> TINT_117
-TINT_118 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-SET_VAR_110:type -> TINT_118
-CRETURN_119 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CRETURN</b></td></tr><tr ><td port='loc_expr'>loc_expr</td></tr></table>>]
-CBLOCK_9:loc_code_list -> CRETURN_119
-CST_120 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "0"</td></tr><tr ><td port='type'>type</td></tr></table>>]
-CRETURN_119:loc_expr -> CST_120
-TINT_121 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-CST_120:type -> TINT_121
+TINT_109 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+OP1_105:type -> TINT_109
+TINT_110 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+SET_VAR_104:type -> TINT_110
+CRETURN_111 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CRETURN</b></td></tr><tr ><td port='loc_expr'>loc_expr</td></tr></table>>]
+CBLOCK_7:loc_code_list -> CRETURN_111
+CST_112 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "0"</td></tr><tr ><td port='type'>type</td></tr></table>>]
+CRETURN_111:loc_expr -> CST_112
+TINT_113 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+CST_112:type -> TINT_113
 }

@@ -35,10 +35,8 @@ let () =
       close_out tast_dot_file;
     end;
 
-    print_string "No typing error !\n";
-
     let code = Ccompile.check_file f in
-    let oc = open_out (Filename.chop_suffix file ".c" ^ ".s") in
+    let oc = open_out (Filename.chop_suffix file ".c" ^ ".asm") in
     Printf.fprintf oc "%s\n" code;
     close_out oc;
 
