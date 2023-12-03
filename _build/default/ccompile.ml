@@ -1,12 +1,3 @@
-(* 
-TODO : 
-
-- Add CALL
-- Make address global instead of local
-- Buggy address (stativ vs on the stack)
-
- *)
-
 open Ctable
 open Cast
 
@@ -15,12 +6,10 @@ exception Error of string
 let hexstring_of_int a = Printf.sprintf "x%x" a
 
 
-(* Inserts new variable in the table with its name, address and scope *)
-let insert_var_tab tab s r isglob = match isglob with
-	| true -> SVAR(s,r, isglob)::tab
-	| false -> SVAR(s,r, isglob)::tab
+(* Inserts new variable in the table with its name, absolute offest relative to base and scope *)
+let insert_var_tab tab s r isglob = SVAR(s,r, isglob)::tab
 
-
+(* Inserts a function in the environment *)
 let insert_fun_tab tab s vl = 
 	let rec convert_decl l = match l with
 		| [] -> []
@@ -49,7 +38,7 @@ let get_addr_tab tab sx =
 	in
 		aux tab
 
-
+(* Generates declarations for static variables *)
 let fill_glob_var l = 
 	let rec aux li = match li with 
 		| []-> ""
@@ -58,6 +47,7 @@ let fill_glob_var l =
 	in
 	"STATIC_VAR\n" ^ (aux l)
 
+(* Generate declarations for strings constants encountered during compilation *)
 let fill_strings l = 
 	let rec aux li = match li with 
 		| []-> ""
@@ -65,17 +55,16 @@ let fill_strings l =
 	in
 	"STRINGS\n" ^ (aux l)
 
-
+(* Creates a CST label as well as a BR to avoid treating the constant as an instruction *)
 let print_cst_fill id x = let idstring = string_of_int id in 
 	"BR IGNORE_CST" ^ idstring ^  "\nCST" ^ idstring ^ " .FILL #" ^ (string_of_int x) ^ "\nIGNORE_CST" ^ idstring ^ "\n"
 
-
+(* LC3 code for arithmetic functions *)
 let print_mult_fun () = "FUN_MULT\nADD R0 R0 #0\nBRn MULT_CHANGE_SIGN\nBR MULT_INIT\nMULT_CHANGE_SIGN\nNOT R0 R0\nADD R0 R0 #1\nNOT R1 R1\nADD R1 R1 #1\nMULT_INIT\nAND R2 R2 #0\nADD R2 R2 R0\nAND R0 R0 #0\nMULT_LOOP\nADD R0 R0 R1\nADD R2 R2 #-1\nBRz MULT_STOP\nBR MULT_LOOP\nMULT_STOP\nRET\n"
-
 let print_div_fun () = "FUN_DIV\nAND R2 R2 #0 ; Q\nLD R2 DIV_ISNEG ; Set is_neg to 0\nADD R1 R1 #0\nBRn DIV_A_NEG\nBR DIV_A_POS\nDIV_A_NEG\nNOT R1 R1 ; Change A sign when negative\nADD R1 R1 #1\nADD R0 R0 #0\nBRn DIV_AN_BN\nBR DIV_AN_BP\nDIV_A_POS\nADD R0 R0 #0\nBRn DIV_AP_BN\nBR DIV_AP_BP\nDIV_AN_BN\nNOT R0 R0\nADD R0 R0 #1\nBR DIV_POS\nDIV_AN_BP\nBR DIV_NEG\nDIV_AP_BN\nNOT R0 R0\nADD R0 R0 #1\nBR DIV_NEG\nDIV_AP_BP\nBR DIV_POS\nDIV_NEG\nADD R3 R2 #1\nST R3 DIV_ISNEG ; IS_NEG <- 1\nBR DIV_ENDSIGN\nDIV_POS\nBR DIV_ENDSIGN\nDIV_ENDSIGN\n; Compute the sign of the result in DIV_ISNEG\nDIV_LOOP\nNOT R3 R1\nADD R3 R3 #1\nADD R3 R3 R0 ; R3 <- R0 - R1 = B - R\nBRp DIV_END_LOOP\nAND R3 R3 #0\nADD R3 R3 R0\nNOT R3 R3\nADD R3 R3 #1 ; R3 <- -B\nADD R1 R1 R3 ; R <- R - B\nADD R2 R2 #1\nBR DIV_LOOP\nDIV_END_LOOP\nADD R0 R2 #0\nLD R3 DIV_ISNEG\nBRz DIV_END\nNOT R0 R0\nADD R0 R0 #1\nDIV_END\nRET\nDIV_ISNEG .BLKW #1\n"
-
 let print_mod_fun () = "FUN_MOD\nAND R2 R2 #0 ; Q\nADD R1 R1 #0\nBRn MOD_A_NEG\nBR MOD_ENDSIGN\nMOD_A_NEG\nADD R1 R1 R0\nBRn MOD_A_NEG\nMOD_ENDSIGN\n; Compute the sign of the result in MOD_ISNEG\nMOD_LOOP\nNOT R3 R1\nADD R3 R3 #1\nADD R3 R3 R0 ; R3 <- R0 - R1 = B - R\nBRp MOD_END_LOOP\nAND R3 R3 #0\nADD R3 R3 R0\nNOT R3 R3\nADD R3 R3 #1 ; R3 <- -B\nADD R1 R1 R3 ; R <- R - B\nADD R2 R2 #1\nBR MOD_LOOP\nMOD_END_LOOP\nADD R0 R1 #0\nMOD_END\nRET\n"
 
+(* Useful for BR to negative conditions *)
 let inverse_condition s = match s with
 	| "z" -> "np"
 	| "n" -> "zp"
@@ -85,42 +74,42 @@ let inverse_condition s = match s with
 	| "np" -> "z"
 	| _ -> raise (Error("Can't find an inverse condition for condition : " ^ s))
 
-
+(* Generates an if e then ctrue else cfalse statement where is treated differently based on the brtype flag *)
 let gen_condition e ctrue cfalse id flagname brtype = let idstring = string_of_int id in
 	let condjmp = "BR" ^ (inverse_condition brtype) ^ " IGNORE_JMP" ^ idstring ^ "\n" ^ "GLEA R3 " ^ flagname ^ "_" ^ "ELSE" ^ idstring ^ "\nJMP R3\n" ^ "IGNORE_JMP" ^ idstring ^ "\n" in
 	e ^ condjmp ^ ctrue ^ "GLEA R3 " ^ flagname ^ "_" ^ "ENDELSE" ^ idstring ^ "\nJMP R3\n" ^ flagname ^ "_" ^  "ELSE" ^ idstring ^ "\n" ^ cfalse ^ flagname ^ "_" ^  "ENDELSE" ^ idstring ^ "\n"
 
-
+(* Puts the value of a variable in R0 *)
 let get_var a isglob = 
 	(if isglob then "LDR R0 R4 #" ^ (string_of_int a) ^ "\n" else "LDR R0 R5 #-" ^ (string_of_int a) ^ "\n")
 
+(* Sets the value of a variable to the content of R0 *)
 let set_var a isglob =
 	(if isglob then "STR R0 R4 #" ^ (string_of_int a) else "STR R0 R5 #-" ^ (string_of_int a) ) ^ "\n"
 
-
+(* Base function used to handle the code generation *)
 let check_file f =
   let orig = 0x3000 in
   let stack = 0xFDFF in
+  (* Counter used to generate labels injectively *)
   let flagcount = ref 0 in
-  let globvar = ref ["LVALUE_ADDR"; "LVALUE_ISGLOBAL"] in
+  (* List of every global variables : the list is non-empty because it contains pseudo-variables used to handle lvalues *)
+  let globvar = ref ["LVALUE_ADDR"] in
   let strings = ref [] in
   let stringcount = ref 0 in
+  (* Code used to properly return from a function *)
   let returnfunmsg = "LDR R7 R5 #1 ; Restore R7\nLDR R5 R5 #2 ; Restore R5\nRET\n" in
 
   let incr_flag () = flagcount := !flagcount + 1 in
   let incr_string () = stringcount := !stringcount + 1 in
 
+  (* Puts in LVALUE_ADDR the real address of the variable based on its scope and offset *)
   let set_lvalue addr isglob = 
-  	let isglobint = match isglob with | true -> 1 | false -> 0 in
-  	incr_flag();
-  	let set_addr = "LD R0 CST" ^ (string_of_int !flagcount) ^ "\n" ^ ( if isglob then "ADD R0 R0 R4\n" else "NOT R0 R0\nADD R0 R0 #1\nADD R0 R0 R5\n" ) ^ "STR R0 R4 #-1\n" ^ (print_cst_fill !flagcount addr) in
-  	incr_flag();
-  	let set_isglob = "LD R0 CST" ^ (string_of_int !flagcount) ^ "\nSTR R0 R4 #-2\n" ^ (print_cst_fill !flagcount isglobint) in
-  	set_addr ^ set_isglob
+  	"LD R0 CST" ^ (string_of_int !flagcount) ^ "\n" ^ ( if isglob then "ADD R0 R0 R4\n" else "NOT R0 R0\nADD R0 R0 #1\nADD R0 R0 R5\n" ) ^ "STR R0 R4 #-1\n" ^ (print_cst_fill !flagcount addr)
   in
 
-
-  let fun_accessing asm = 
+  (* Compute the second pass of compilation, translating made up instruction like GLEA to real LC3 code *)
+  let secondpass asm = 
 		let asml = String.split_on_char '\n' asm in
 
 		let rec find_pos sx env = match env with
@@ -155,7 +144,7 @@ let check_file f =
 		let rec print_env env = match env with
 			| [] -> "; --DEBUG---\n"
 			| (s,c)::t when s = "STATIC_VAR" -> "; mem " ^ (string_of_int c) ^ " " ^ (print_env t)
-			| (s,c)::t when s = "STRINGS" -> (string_of_int c)
+			| (s,c)::t when s = ".END" -> (string_of_int c)
 			| (s,c)::t -> (print_env t)
 		in
 
@@ -182,7 +171,7 @@ let check_file f =
 	 *)
 
 	let rec handle_expr le tab = match le with | (l,e) -> begin match e with
-		| VAR s -> let a,isglob = get_addr_tab tab s in let slvalue = (set_lvalue a isglob) in slvalue ^ (get_var a isglob) (* Set LVALUE_VAR to a and isglob *)
+		| VAR s -> let a,isglob = get_addr_tab tab s in incr_flag(); let slvalue = (set_lvalue a isglob) in slvalue ^ (get_var a isglob) (* Set LVALUE_VAR to a and isglob *)
 		| CST x -> incr_flag() ; "LD R0 CST" ^ (string_of_int !flagcount) ^ " ; R0 <- cst " ^ (string_of_int x) ^ "\n" ^ (print_cst_fill !flagcount x)
 		| STRING s ->  incr_string(); strings := (s,!stringcount)::!strings ; "GLEA R0 STRING" ^ (string_of_int !stringcount) ^ "\n"
 		| NULLPTR -> "AND R0 R0 #0\n"
@@ -198,10 +187,9 @@ let check_file f =
 												| M_ADDR ->  "LDR R0 R4 #-1\n"
 												| M_DEREF -> "STR R0 R4 #-1\nLDR R0 R0 #0\n"
 												| M_PRE_INC -> "LDR R1 R4 #-1\nLDR R0 R1 #0\nADD R0 R0 #1\nSTR R0 R1 #0\n"
-												(* | M_PRE_DEC -> "LDR R1 R4 #-1\nLDR R0 R0 #0\nADD R0 R0 #-1\nSTR R0 R1 #0\n" *)
-												(* | M_POST_INC -> "LDR R1 R4 #-1\nLDR R0 R0 #0\nADD R0 R0 #1\nSTR R0 R1 #0\nADD R0 R0 #-1\n" *)
-												(* | M_POST_DEC -> "LDR R1 R4 #-1\nLDR R0 R0 #0\nADD R0 R0 #-1\nSTR R0 R1 #0\nADD R0 R0 #1\n" *)
-												| _ -> ""
+												| M_PRE_DEC -> "LDR R1 R4 #-1\nLDR R0 R1 #0\nADD R0 R0 #-1\nSTR R0 R1 #0\n"
+												| M_POST_INC -> "LDR R1 R4 #-1\nLDR R0 R1 #0\nADD R0 R0 #1\nSTR R0 R1 #0\nADD R0 R0 #-1\n"
+												| M_POST_DEC -> "LDR R1 R4 #-1\nLDR R0 R1 #0\nADD R0 R0 #-1\nSTR R0 R1 #0\nADD R0 R0 #1\n"
 											end
 		| OP2(op, le1, le2) -> (handle_expr le1 tab) ^ "STR R0 R6 #0 ; Store R0 on the stack\nADD R6 R6 #-1 ; Increase the stack\n" ^ (handle_expr le2 tab) ^ "ADD R6 R6 #1 ; Decrease the stack\nLDR R1 R6 #0 ; Retrieve upmost result on the stack in R1\n" ^ begin
 													 match op with
@@ -263,15 +251,15 @@ let check_file f =
 	let codebody = handle_val_dec f [] 0 in
 
 	incr_flag();
-	let header = ".ORIG " ^ (hexstring_of_int orig) ^ "\nLD R6 CST" ^ (string_of_int !flagcount) ^"\n" ^ (print_cst_fill !flagcount stack) ^ "ADD R5 R6 #0\nGLEA R4 STATIC_VAR\nADD R4 R4 #2\nGLEA R3 FUN_USER_main\nJMP R3\n" in
-	let rawasm = header
+	let header = ".ORIG " ^ (hexstring_of_int orig) ^ "\nLD R6 CST" ^ (string_of_int !flagcount) ^"\n" ^ (print_cst_fill !flagcount stack) ^ "ADD R5 R6 #0\nGLEA R4 STATIC_VAR\nADD R4 R4 #1\nGLEA R3 FUN_USER_main\nJMP R3\n" in
+	let protoasm = header
 		^ print_mult_fun()
 		^ print_div_fun()
 		^ print_mod_fun()
 	  ^ codebody
-	  ^ (fill_glob_var !globvar)
 	  ^ (fill_strings !strings)
+	  ^ (fill_glob_var !globvar)
 	  ^ ".END" in
-	let funasm = fun_accessing rawasm in
-	funasm
+	let finalasm = secondpass protoasm in
+	finalasm
 

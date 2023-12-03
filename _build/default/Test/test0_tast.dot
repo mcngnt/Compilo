@@ -35,7 +35,7 @@ CEXPR_16 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4
 CBLOCK_7:loc_code_list -> CEXPR_16
 SET_VAR_17 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >SET_VAR</b></td></tr><tr ><td colspan = '2'>vg = "n"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='type'>type</td></tr></table>>]
 CEXPR_16:pexpr -> SET_VAR_17
-CST_18 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "10"</td></tr><tr ><td port='type'>type</td></tr></table>>]
+CST_18 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "12"</td></tr><tr ><td port='type'>type</td></tr></table>>]
 SET_VAR_17:pexpr_left -> CST_18
 TINT_19 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
 CST_18:type -> TINT_19
