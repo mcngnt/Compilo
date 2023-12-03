@@ -97,8 +97,6 @@ let check_file f =
   let globvar = ref ["LVALUE_ADDR"] in
   let strings = ref [] in
   let stringcount = ref 0 in
-  (* Code used to properly return from a function *)
-  let returnfunmsg = "LDR R7 R5 #1 ; Restore R7\nLDR R5 R5 #2 ; Restore R5\nRET\n" in
 
   let incr_flag () = flagcount := !flagcount + 1 in
   let incr_string () = stringcount := !stringcount + 1 in
@@ -112,10 +110,10 @@ let check_file f =
   let secondpass asm = 
 		let asml = String.split_on_char '\n' asm in
 
-		let rec find_pos sx env = match env with
+		let rec find_line sx env = match env with
 			| [] -> raise (Error("Label " ^ sx ^ " not defined."))
 			| (s,n)::t when s = sx -> n
-			| h::t -> find_pos sx t
+			| h::t -> find_line sx t
 		in
 
 		let rec forget_comments li = match li with
@@ -124,6 +122,7 @@ let check_file f =
 			| h::t -> h::(forget_comments t)
 		in
 
+		(* Stores every label and string declaration with their line number in the code *)
 		let rec create_env l count = match l with
 			| [] -> []
 			| h::t -> let args = forget_comments (String.split_on_char ' ' h) in
@@ -134,25 +133,27 @@ let check_file f =
 									| "GLEA" -> create_env t (count + 3)
 									| "RET" | "RTI" -> create_env t (count + 1)
 									| _ when nbargs = 1 -> (h,count)::(create_env t count)
-									| _ when nbargs > 1 && List.nth args 1 = ".STRINGZ" -> (List.hd args,count)::(create_env t (count+1))
+									| _ when nbargs > 1 && List.nth args 1 = ".STRINGZ" -> let lsize = String.length (String.concat " " (List.tl args)) in (List.hd args,count)::(create_env t (count + lsize - 10))
 									| _ -> create_env t (count + 1)
 							  end
 							 end
 			in
 
-
+		(* Print the line numbers of static variables : DEBUG *)
 		let rec print_env env = match env with
-			| [] -> "; --DEBUG---\n"
+			| [] -> ""
 			| (s,c)::t when s = "STATIC_VAR" -> "; mem " ^ (string_of_int c) ^ " " ^ (print_env t)
 			| (s,c)::t when s = ".END" -> (string_of_int c)
 			| (s,c)::t -> (print_env t)
 		in
 
+		(* Replace GLEA, an instruction used for accessing labels and strings more than 256 lines away, with real LC3 code *)
 		let rec replace_fun l env = match l with
 			| [] -> ""
 			| h::t -> let args = String.split_on_char ' ' h in
 								begin match List.hd args with
-									| "GLEA" -> let n = find_pos (List.nth args 2) env in incr_flag();
+										(* Instruction example -> GLEA RX LABEL where x \in {0,1,2,3} *)
+									| "GLEA" -> let n = find_line (List.nth args 2) env in incr_flag();
 															let msg = "LD " ^ (List.nth args 1) ^ " CST" ^ (string_of_int !flagcount) ^ "\n" ^ (print_cst_fill !flagcount n) in
 															msg ^ (replace_fun t env)
 									| _ -> h ^ "\n" ^ (replace_fun t env)
@@ -171,6 +172,7 @@ let check_file f =
 	 *)
 
 	let rec handle_expr le tab = match le with | (l,e) -> begin match e with
+																																(* Change the current lvalue address to the variable's address and set R0 to its value*)
 		| VAR s -> let a,isglob = get_addr_tab tab s in incr_flag(); let slvalue = (set_lvalue a isglob) in slvalue ^ (get_var a isglob) (* Set LVALUE_VAR to a and isglob *)
 		| CST x -> incr_flag() ; "LD R0 CST" ^ (string_of_int !flagcount) ^ " ; R0 <- cst " ^ (string_of_int x) ^ "\n" ^ (print_cst_fill !flagcount x)
 		| STRING s ->  incr_string(); strings := (s,!stringcount)::!strings ; "GLEA R0 STRING" ^ (string_of_int !stringcount) ^ "\n"
@@ -184,17 +186,22 @@ let check_file f =
 											match op with
 												| M_MINUS -> "NOT R0 R0\nADD R0 R0 #1 ;  R0 <- -R0\n"
 												| M_NOT -> "NOT R0 R0\n"
+												(* The address of the expression will be the address of the last lvalue encountered *)
 												| M_ADDR ->  "LDR R0 R4 #-1\n"
+												(* After dereferencing, the new address of lvalue will become the result of the expression and the deref will return M[R0] *)
 												| M_DEREF -> "STR R0 R4 #-1\nLDR R0 R0 #0\n"
+												(* For INC and DEC, get the value of the last lvalue, incr or decr and change its value in memory *)
 												| M_PRE_INC -> "LDR R1 R4 #-1\nLDR R0 R1 #0\nADD R0 R0 #1\nSTR R0 R1 #0\n"
 												| M_PRE_DEC -> "LDR R1 R4 #-1\nLDR R0 R1 #0\nADD R0 R0 #-1\nSTR R0 R1 #0\n"
 												| M_POST_INC -> "LDR R1 R4 #-1\nLDR R0 R1 #0\nADD R0 R0 #1\nSTR R0 R1 #0\nADD R0 R0 #-1\n"
 												| M_POST_DEC -> "LDR R1 R4 #-1\nLDR R0 R1 #0\nADD R0 R0 #-1\nSTR R0 R1 #0\nADD R0 R0 #1\n"
 											end
+														(* I compute binary operations by storing the result of the first one on the stack and reusing it after computing the second one *)
 		| OP2(op, le1, le2) -> (handle_expr le1 tab) ^ "STR R0 R6 #0 ; Store R0 on the stack\nADD R6 R6 #-1 ; Increase the stack\n" ^ (handle_expr le2 tab) ^ "ADD R6 R6 #1 ; Decrease the stack\nLDR R1 R6 #0 ; Retrieve upmost result on the stack in R1\n" ^ begin
 													 match op with
 													 	| S_ADD -> "ADD R0 R0 R1 ; R0 <- R0 + R1\n"
 													 	| S_SUB -> "NOT R0 R0\nADD R0 R0 #1 ;  R0 <- -R0\nADD R0 R0 R1 ; R0 <- R1 - R0\n"
+													 	(* For calling a memoryless subroutine, I charge its address in R3 and jump to it after changing R7 *)
 													 	| S_MUL -> "GLEA R3 FUN_MULT\nJSRR R3\n"
 													 	| S_DIV -> "GLEA R3 FUN_DIV\nJSRR R3\n"
 													 	| S_MOD -> "GLEA R3 FUN_MOD\nJSRR R3\n"
@@ -225,6 +232,7 @@ let check_file f =
 					| h::q -> (handle_code h tab r6) ^ (handle_block [] q tab r6)
 				end
 		| h::q -> begin match h with
+							(* When encountering a declaration, I allocate memory for it on the stack by increasing R6 and adding it to my symbols table *)
 							| CDECL(l,s,t) -> "ADD R6 R6 #-1 ; Add variable " ^ s ^ " to the stack \n" ^ handle_block q lcl ( insert_var_tab tab s r6 false ) (r6+1)
 							| _ -> ""
 						end
@@ -233,7 +241,7 @@ let check_file f =
 				| CEXPR le -> handle_expr le tab
 				| CIF(le, lc1,lc2) -> incr_flag(); let e = (handle_expr le tab) in let c1 = (handle_code lc1 tab r6) in let c2 = (handle_code lc2 tab r6) in gen_condition e c1 c2 !flagcount "IF" "z"
 				| CWHILE(le, lc) -> let idstring = string_of_int (!flagcount) in incr_flag(); "STARTWHILE" ^ idstring ^ "\n" ^ (handle_expr le tab) ^ "BRz ENDWHILE" ^ idstring ^ "\n" ^ (handle_code lc tab r6) ^ "BR STARTWHILE" ^ idstring ^ "\n" ^ "ENDWHILE" ^ idstring ^ "\n"
-				| CRETURN (Some le) -> (handle_expr le tab) ^ returnfunmsg
+				| CRETURN (Some le) -> (handle_expr le tab) ^ "LDR R7 R5 #1 ; Restore R7\nLDR R5 R5 #2 ; Restore R5\nRET\n"
 				| _ -> ""
 		end
 	in

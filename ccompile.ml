@@ -5,6 +5,12 @@ exception Error of string
 
 let hexstring_of_int a = Printf.sprintf "x%x" a
 
+(* 
+Current limitations:
+- Can't have more than 256 global variables and no more than 256 local variables in the same function
+- No true function call (only memoryless subroutines for now)
+ *)
+
 
 (* Inserts new variable in the table with its name, absolute offest relative to base and scope *)
 let insert_var_tab tab s r isglob = SVAR(s,r, isglob)::tab
@@ -133,7 +139,7 @@ let check_file f =
 									| "GLEA" -> create_env t (count + 3)
 									| "RET" | "RTI" -> create_env t (count + 1)
 									| _ when nbargs = 1 -> (h,count)::(create_env t count)
-									| _ when nbargs > 1 && List.nth args 1 = ".STRINGZ" -> (List.hd args,count)::(create_env t (count+1))
+									| _ when nbargs > 1 && List.nth args 1 = ".STRINGZ" -> let lsize = String.length (String.concat " " (List.tl args)) in (List.hd args,count)::(create_env t (count + lsize - 10))
 									| _ -> create_env t (count + 1)
 							  end
 							 end

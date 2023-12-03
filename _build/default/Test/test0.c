@@ -7,6 +7,7 @@ int main()
         int* start;
         int n;
         n = 12;
+        start = "Test string to see if string length calculation works";
         start = &mem;
         p = &mem;
         *p = 0;
