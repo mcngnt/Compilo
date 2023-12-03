@@ -97,7 +97,7 @@ let check_file f =
   (* Counter used to generate labels injectively *)
   let flagcount = ref 0 in
   (* List of every global variables : the list is non-empty because it contains pseudo-variables used to handle lvalues *)
-  let globvar = ref ["LVALUE_ADDR"] in
+  let globvar = ref ["LVALUE_ADDR" ; "LVALUE_ISGLOBAL"] in
   let strings = ref [] in
   let stringcount = ref 0 in
 
@@ -130,8 +130,12 @@ let check_file f =
 
   (* Puts in LVALUE_ADDR the real address of the variable based on its scope and offset *)
   let set_lvalue addr isglob = 
-  	incr_flag();
-  	"LD R0 CST" ^ (string_of_int !flagcount) ^ "\n" ^ ( if isglob then "ADD R0 R0 R4\n" else "NOT R0 R0\nADD R0 R0 #1\nADD R0 R0 R5\n" ) ^ "STR R0 R4 #-1\n" ^ (print_cst_fill !flagcount addr)
+  	let isglobint = match isglob with | true -> 1 | false -> 0 in
+    incr_flag();
+    let set_addr = "LD R0 CST" ^ (string_of_int !flagcount) ^ "\n" ^ ( if isglob then "ADD R0 R0 R4\n" else "NOT R0 R0\nADD R0 R0 #1\nADD R0 R0 R5\n" ) ^ "STR R0 R4 #-1\n" ^ (print_cst_fill !flagcount addr) in
+    incr_flag();
+    let set_isglob = "LD R0 CST" ^ (string_of_int !flagcount) ^ "\nSTR R0 R4 #-2\n" ^ (print_cst_fill !flagcount isglobint) in
+    set_addr ^ set_isglob
   in
 
 
@@ -283,7 +287,7 @@ let check_file f =
 
 	incr_flag();
 																											(* Init R6 value to the address of the stack *)                      (*Init R5 and R4 and leave space to store LVALUE_ADDR at offset -1*)   (*Jump to main*)
-	let header = ".ORIG " ^ (hexstring_of_int orig) ^ "\nLD R6 CST" ^ (string_of_int !flagcount) ^"\n" ^ (print_cst_fill !flagcount stack) ^ "ADD R5 R6 #0\nGLEA R4 STATIC_VAR\nADD R4 R4 #1\nGLEA R3 FUN_USER_main\nJMP R3\n" in
+	let header = ".ORIG " ^ (hexstring_of_int orig) ^ "\nLD R6 CST" ^ (string_of_int !flagcount) ^"\n" ^ (print_cst_fill !flagcount stack) ^ "ADD R5 R6 #0\nGLEA R4 STATIC_VAR\nADD R4 R4 #2\nGLEA R3 FUN_USER_main\nJMP R3\n" in
 	let protoasm = header
 		^ print_mult_fun()
 		^ print_div_fun()
@@ -291,10 +295,9 @@ let check_file f =
 	  ^ codebody
 	  ^ (fill_strings !strings)
 	  ^ (fill_glob_var !globvar)
-	  ^ ".END" in
+	  ^ "\n.END" in
 	let finalasm = secondpass protoasm in
 	finalasm
-
 
 
 (* 
