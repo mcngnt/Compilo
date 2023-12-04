@@ -11,7 +11,8 @@ n ?= 0
 
 test: $(EXE)
 	./ccomp --debug Test/test${n}.c
-	tail -1 Test/test${n}.asm | cut -c3- | xclip -i -selection clipboard
+# 	dot -v -Tpng -O Test/test${n}_ast.dot
+# 	tail -1 Test/test${n}.asm | cut -c3- | xclip -i -selection clipboard
 	~/lc3tools/build/bin/assembler Test/test${n}.asm
 	~/lc3tools/build/bin/simulator Test/test${n}.obj
 

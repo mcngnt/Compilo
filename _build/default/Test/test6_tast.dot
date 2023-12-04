@@ -1,0 +1,48 @@
+digraph ast {
+node [shape=plaintext];
+root [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >*</b></td></tr></table>>]
+CDECL_1 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CDECL</b></td></tr><tr ><td colspan = '1'>v_name = "res"</td></tr><tr ><td port='v_typ'>v_typ</td></tr></table>>]
+root -> CDECL_1
+TINT_2 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+CDECL_1:v_typ -> TINT_2
+CFUN_3 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '3'><b >CFUN</b></td></tr><tr ><td colspan = '3'>f_name = "main"</td></tr><tr ><td port='f_params'>f_params</td><td port='f_rtyp'>f_rtyp</td><td port='f_code'>f_code</td></tr></table>>]
+root -> CFUN_3
+TINT_4 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+CFUN_3:f_rtyp -> TINT_4
+CBLOCK_5 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >CBLOCK</b></td></tr><tr ><td port='var_decl_list'>var_decl_list</td><td port='loc_code_list'>loc_code_list</td></tr></table>>]
+CFUN_3:f_code -> CBLOCK_5
+CWHILE_6 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >CWHILE</b></td></tr><tr ><td port='loc_expr_cond'>loc_expr_cond</td><td port='loc_code_while'>loc_code_while</td></tr></table>>]
+CBLOCK_5:loc_code_list -> CWHILE_6
+EIF_7 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '4'><b >EIF</b></td></tr><tr ><td port='pexpr_cond'>pexpr_cond</td><td port='pexpr_if'>pexpr_if</td><td port='pexpr_else'>pexpr_else</td><td port='type'>type</td></tr></table>>]
+CWHILE_6:loc_expr_cond -> EIF_7
+CMP_8 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '3'><b >CMP</b></td></tr><tr ><td colspan = '3'>cmpop = "=="</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='pexpr_right'>pexpr_right</td><td port='type'>type</td></tr></table>>]
+EIF_7:pexpr_cond -> CMP_8
+CALL_9 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >CALL</b></td></tr><tr ><td colspan = '2'>fname = "getc"</td></tr><tr ><td port='pexpr_list'>pexpr_list</td><td port='type'>type</td></tr></table>>]
+CMP_8:pexpr_left -> CALL_9
+TINT_10 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+CALL_9:type -> TINT_10
+CST_11 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "101"</td></tr><tr ><td port='type'>type</td></tr></table>>]
+CMP_8:pexpr_right -> CST_11
+TINT_12 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+CST_11:type -> TINT_12
+TINT_13 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+CMP_8:type -> TINT_13
+CST_14 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "0"</td></tr><tr ><td port='type'>type</td></tr></table>>]
+EIF_7:pexpr_if -> CST_14
+TINT_15 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+CST_14:type -> TINT_15
+CST_16 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "1"</td></tr><tr ><td port='type'>type</td></tr></table>>]
+EIF_7:pexpr_else -> CST_16
+TINT_17 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+CST_16:type -> TINT_17
+TINT_18 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+EIF_7:type -> TINT_18
+CBLOCK_19 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >CBLOCK</b></td></tr><tr ><td port='var_decl_list'>var_decl_list</td><td port='loc_code_list'>loc_code_list</td></tr></table>>]
+CWHILE_6:loc_code_while -> CBLOCK_19
+CRETURN_20 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CRETURN</b></td></tr><tr ><td port='loc_expr'>loc_expr</td></tr></table>>]
+CBLOCK_5:loc_code_list -> CRETURN_20
+CST_21 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "0"</td></tr><tr ><td port='type'>type</td></tr></table>>]
+CRETURN_20:loc_expr -> CST_21
+TINT_22 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+CST_21:type -> TINT_22
+}
