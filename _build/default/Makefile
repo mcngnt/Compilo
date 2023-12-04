@@ -7,14 +7,13 @@ $(EXE): *.ml*
 	dune build @all
 	cp $(EXE) ccomp
 
-test: $(EXE) Test/test0.c
-	./ccomp --debug Test/test0.c
-	tail -1 Test/test0.asm | cut -c3- | xclip -i -selection clipboard
-	~/lc3tools/build/bin/assembler Test/test0.asm
-	~/lc3tools/build/bin/simulator Test/test0.obj
-# 	dot -v -Tpng -O Test/test0_tast.dot
-# 	echo "\n\n\n\n\n"	
-# 	(cat Test/test0.ams)
+n ?= 0
+
+test: $(EXE)
+	./ccomp --debug Test/test${n}.c
+	tail -1 Test/test${n}.asm | cut -c3- | xclip -i -selection clipboard
+	~/lc3tools/build/bin/assembler Test/test${n}.asm
+	~/lc3tools/build/bin/simulator Test/test${n}.obj
 
 .PHONY: clean
 clean:

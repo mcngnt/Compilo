@@ -5,11 +5,13 @@ exception Error of string
 
 let hexstring_of_int a = Printf.sprintf "x%x" a
 
-(* 
-Current limitations:
-- No true function call (only memoryless subroutines for now)
- *)
-
+let ignore_specials s = 
+	let rec aux l = match l with
+		| [] -> ""
+		| h::t when h = '\n' -> "\\n" ^ (aux t)
+		| h::t -> (String.make 1 h) ^ (aux t)
+	in
+	aux (List.init (String.length s) (String.get s))
 
 (* Inserts new variable in the table with its name, absolute offest relative to base and scope *)
 let insert_var_tab tab s r isglob = SVAR(s,r, isglob)::tab
@@ -26,7 +28,7 @@ let insert_fun_tab tab s vl =
 	in
 	let rec convert_args l i = match l with
 		| [] -> []
-		| h::t -> SVAR(s,i,false)::(convert_args l (i-1))
+		| h::t -> SVAR(h,i,false)::(convert_args t (i-1))
 	in
 	let sl = convert_decl vl in 
 	SFUN(s,sl)::( (convert_args sl (-3)) @ tab)
@@ -51,7 +53,7 @@ let get_addr_tab tab sx =
 let fill_glob_var l = 
 	let rec aux li = match li with 
 		| []-> ""
-		| h::q when h = "LVALUE_ADDR" || h = "LVALUE_ISGLOBAL" -> (aux q) ^ h ^ " .BLKW #1\n"
+		| h::q when h = "LVALUE_ADDR" -> (aux q) ^ h ^ " .BLKW #1\n"
 		| h::q ->  (aux q) ^ "V_" ^ h ^ " .BLKW #1\n"
 	in
 	"STATIC_VAR\n" ^ (aux l)
@@ -60,7 +62,7 @@ let fill_glob_var l =
 let fill_strings l = 
 	let rec aux li = match li with 
 		| []-> ""
-		| (s,id)::q ->  (aux q) ^ "STRING" ^ (string_of_int id) ^ " .STRINGZ \"" ^ s ^ "\"\n"
+		| (s,label,n)::q ->  (aux q) ^ label ^ " .STRINGZ \"" ^ (ignore_specials s) ^ "\"" ^ " ; " ^ (string_of_int n) ^ "\n"
 	in
 	"STRINGS\n" ^ (aux l)
 
@@ -97,7 +99,7 @@ let check_file f =
   (* Counter used to generate labels injectively *)
   let flagcount = ref 0 in
   (* List of every global variables : the list is non-empty because it contains pseudo-variables used to handle lvalues *)
-  let globvar = ref ["LVALUE_ADDR" ; "LVALUE_ISGLOBAL"] in
+  let globvar = ref ["LVALUE_ADDR"] in
   let strings = ref [] in
   let stringcount = ref 0 in
 
@@ -118,24 +120,29 @@ let check_file f =
   limiting the number of static variables to 32 *)
   let get_var a isglob inR0 = 
   	incr_flag();
-  	"LD R1 CST" ^ (string_of_int !flagcount) ^ "\n" ^ (if isglob then "ADD R1 R4 R1\nLDR R1 R1 #0\n" else "NOT R1 R1\nADD R1 R1 #1\nADD R1 R5 R1\nLDR R1 R1 #0\n") ^ (if inR0 then "ADD R0 R1 #0\n" else "") ^ (print_cst_fill !flagcount a)
+  	"LD R1 CST" ^ (string_of_int !flagcount) ^ "\n" ^ (if isglob then "ADD R1 R4 R1\nLDR R1 R1 #0 ; Put variable content in R0\n" else "NOT R1 R1\nADD R1 R1 #1\nADD R1 R5 R1\nLDR R1 R1 #0 ; Put variable content in R0\n") ^ (if inR0 then "ADD R0 R1 #0\n" else "") ^ (print_cst_fill !flagcount a)
   in
 
   (* Sets the value of a variable to the content of R0 by first storing the address in R1 *)
   let set_var a isglob =
   	incr_flag();
-  	"LD R1 CST" ^ (string_of_int !flagcount) ^ "\n" ^ (if isglob then "ADD R1 R4 R1\nSTR R0 R1 #0\n" else "NOT R1 R1\nADD R1 R1 #1\nADD R1 R5 R1\nSTR R0 R1 #0\n") ^ (print_cst_fill !flagcount a)
+  	"LD R1 CST" ^ (string_of_int !flagcount) ^ "\n" ^ (if isglob then "ADD R1 R4 R1\nSTR R0 R1 #0 ; Change variable content to R0\n" else "NOT R1 R1\nADD R1 R1 #1\nADD R1 R5 R1\nSTR R0 R1 #0 ; Change variable content to R0\n") ^ (print_cst_fill !flagcount a)
   in
 
 
   (* Puts in LVALUE_ADDR the real address of the variable based on its scope and offset *)
   let set_lvalue addr isglob = 
-  	let isglobint = match isglob with | true -> 1 | false -> 0 in
     incr_flag();
-    let set_addr = "LD R0 CST" ^ (string_of_int !flagcount) ^ "\n" ^ ( if isglob then "ADD R0 R0 R4\n" else "NOT R0 R0\nADD R0 R0 #1\nADD R0 R0 R5\n" ) ^ "STR R0 R4 #-1\n" ^ (print_cst_fill !flagcount addr) in
-    incr_flag();
-    let set_isglob = "LD R0 CST" ^ (string_of_int !flagcount) ^ "\nSTR R0 R4 #-2\n" ^ (print_cst_fill !flagcount isglobint) in
-    set_addr ^ set_isglob
+    "LD R0 CST" ^ (string_of_int !flagcount) ^ "\n" ^ ( if isglob then "ADD R0 R0 R4\n" else "NOT R0 R0\nADD R0 R0 #1\nADD R0 R0 R5\n" ) ^ "STR R0 R4 #-1 ; Change lvalue\n" ^ (print_cst_fill !flagcount addr)
+  in
+
+  let get_string_len lab = 
+  	let rec aux l = match l with
+  		| [] -> raise (Error("String " ^ lab ^ " does not exist."))
+  		| (_,labx, n)::t when labx = lab -> n
+  		|h::t -> aux t
+  	in
+  	aux !strings
   in
 
 
@@ -159,9 +166,9 @@ let check_file f =
 								begin match List.hd args with
 									| ".ORIG" -> create_env t count
 									| "GLEA" -> create_env t (count + 3)
-									| "RET" | "RTI" -> create_env t (count + 1)
+									| "RET" | "RTI" | "PUTS" | "GETC" | "OUT" | "HALT" -> create_env t (count + 1)
 									| _ when nbargs = 1 -> (h,count)::(create_env t count)
-									| _ when nbargs > 1 && List.nth args 1 = ".STRINGZ" -> let lsize = String.length (String.concat " " (List.tl args)) in (List.hd args,count)::(create_env t (count + lsize - 10))
+									| _ when nbargs > 1 && List.nth args 1 = ".STRINGZ" -> let size = get_string_len (List.hd args) in (List.hd args,count)::(create_env t (count + size + 1))
 									| _ -> create_env t (count + 1)
 							  end
 							 end
@@ -181,8 +188,11 @@ let check_file f =
 			| h::t -> let args = String.split_on_char ' ' h in
 								begin match List.hd args with
 										(* Instruction example -> GLEA RX LABEL where x \in {0,1,2,3} *)
-									| "GLEA" -> let n = find_line (List.nth args 2) env in incr_flag();
-															let msg = "LD " ^ (List.nth args 1) ^ " CST" ^ (string_of_int !flagcount) ^ "\n" ^ (print_cst_fill !flagcount n) in
+									| "GLEA" -> 
+															let label = (List.nth args 2) in
+															let r = (List.nth args 1) in
+															let n = find_line label env in incr_flag();
+															let msg = "LD " ^ r ^ " CST" ^ (string_of_int !flagcount) ^ " ; " ^ r ^ " <- address of label " ^ label ^ "\n" ^ (print_cst_fill !flagcount n) in
 															msg ^ (replace_fun t env)
 									| _ -> h ^ "\n" ^ (replace_fun t env)
 								end
@@ -191,38 +201,39 @@ let check_file f =
 		(replace_fun asml env) ^ (print_env env)
 	in
 
-(*TODO : add local variables to the environment *)
-	(* let rec gen_call s lle tab n k = match lle with
+	let rec gen_call s lle tab n = match lle with
 			(* I limit functions to 15 args *)
-			| [] -> "GOTORET FUN_USER_" ^ s ^ "\nADD R6 R6 #" ^ (string_of_int n)
+			| [] -> "GLEA R3 FUN_USER_" ^ s ^ "\nJSRR R3\nADD R6 R6 #" ^ (string_of_int n) ^ "\n"
 			| h::t -> let msge = handle_expr h tab in
-								msge ^ "ADD R6 R6 #-1\nLDR R0 R6 #0\n" ^ (gen_call s t tab n (k+1))
-	 *)
+								msge ^ "ADD R6 R6 #-1\nSTR R0 R6 #0\n" ^ (gen_call s t tab n)
+	
 
-	let rec handle_expr le tab = match le with | (l,e) -> begin match e with
+	and handle_expr le tab = match le with | (l,e) -> begin match e with
 																																(* Change the current lvalue address to the variable's address and set R0 to its value*)
 		| VAR s -> let a,isglob = get_addr_tab tab s in let slvalue = (set_lvalue a isglob) in slvalue ^ (get_var a isglob  true) (* Set LVALUE_VAR to a and isglob *)
 		| CST x -> incr_flag() ; "LD R0 CST" ^ (string_of_int !flagcount) ^ " ; R0 <- cst " ^ (string_of_int x) ^ "\n" ^ (print_cst_fill !flagcount x)
-		| STRING s ->  incr_string(); strings := (s,!stringcount)::!strings ; "GLEA R0 STRING" ^ (string_of_int !stringcount) ^ "\n"
+		| STRING s ->  incr_string(); strings := (s,"STRING" ^ (string_of_int !stringcount), String.length s)::!strings ; "GLEA R0 STRING" ^ (string_of_int !stringcount) ^ "\n"
 		| NULLPTR -> "AND R0 R0 #0\n"
 		| SET_VAR(s,le) -> let a,isglob = get_addr_tab tab s in let e = (handle_expr le tab) in e ^ (set_var a isglob )
-		| SET_VAL(s,le) -> let a,isglob = get_addr_tab tab s in let e = (handle_expr le tab) in e ^ (get_var a isglob  false) ^  "\nSTR R0 R1 #0\n"
-		(* | CALL(s,lle) -> gen_call s lle tab (List.length lle) 0 *)
-		| CALL(s,lle) -> ""
+		| SET_VAL(s,le) -> let a,isglob = get_addr_tab tab s in let e = (handle_expr le tab) in e ^ (get_var a isglob  false) ^  "\nSTR R0 R1 #0 ; R0 <- M[R1]\n"
+		| CALL(s,lle) when s = "puts" -> let e = handle_expr (List.hd lle) tab in e ^ "PUTS\n"
+		| CALL(s,lle) when s = "getc" -> "GETC\n"
+		(* | CALL(s,lle) -> "" *)
+		| CALL(s,lle) -> gen_call s lle tab (List.length lle)
 		| OP1(op, le) -> let msg = (handle_expr le tab) in
 										 msg ^ begin
 											match op with
 												| M_MINUS -> "NOT R0 R0\nADD R0 R0 #1 ;  R0 <- -R0\n"
 												| M_NOT -> "NOT R0 R0\n"
 												(* The address of the expression will be the address of the last lvalue encountered *)
-												| M_ADDR ->  "LDR R0 R4 #-1\n"
+												| M_ADDR ->  "LDR R0 R4 #-1 ; Get address of the last lvalue\n"
 												(* After dereferencing, the new address of lvalue will become the result of the expression and the deref will return M[R0] *)
-												| M_DEREF -> "STR R0 R4 #-1\nLDR R0 R0 #0\n"
+												| M_DEREF -> "STR R0 R4 #-1\nLDR R0 R0 #0 ; Deref the last lvalue\n"
 												(* For INC and DEC, get the value of the last lvalue, incr or decr and change its value in memory *)
-												| M_PRE_INC -> "LDR R1 R4 #-1\nLDR R0 R1 #0\nADD R0 R0 #1\nSTR R0 R1 #0\n"
-												| M_PRE_DEC -> "LDR R1 R4 #-1\nLDR R0 R1 #0\nADD R0 R0 #-1\nSTR R0 R1 #0\n"
-												| M_POST_INC -> "LDR R1 R4 #-1\nLDR R0 R1 #0\nADD R0 R0 #1\nSTR R0 R1 #0\nADD R0 R0 #-1\n"
-												| M_POST_DEC -> "LDR R1 R4 #-1\nLDR R0 R1 #0\nADD R0 R0 #-1\nSTR R0 R1 #0\nADD R0 R0 #1\n"
+												| M_PRE_INC -> "LDR R1 R4 #-1\nLDR R0 R1 #0\nADD R0 R0 #1\nSTR R0 R1 #0 ; ++(lvalue)\n"
+												| M_PRE_DEC -> "LDR R1 R4 #-1\nLDR R0 R1 #0\nADD R0 R0 #-1\nSTR R0 R1 #0 ; --(lvalue)\n"
+												| M_POST_INC -> "LDR R1 R4 #-1\nLDR R0 R1 #0\nADD R0 R0 #1\nSTR R0 R1 #0\nADD R0 R0 #-1 ; (lvalue)++\n"
+												| M_POST_DEC -> "LDR R1 R4 #-1\nLDR R0 R1 #0\nADD R0 R0 #-1\nSTR R0 R1 #0\nADD R0 R0 #1 ; (lvalue)--\n"
 											end
 														(* I compute binary operations by storing the result of the first one on the stack and reusing it after computing the second one *)
 		| OP2(op, le1, le2) -> (handle_expr le1 tab) ^ "STR R0 R6 #0 ; Store R0 on the stack\nADD R6 R6 #-1 ; Increase the stack\n" ^ (handle_expr le2 tab) ^ "ADD R6 R6 #1 ; Decrease the stack\nLDR R1 R6 #0 ; Retrieve upmost result on the stack in R1\n" ^ begin
@@ -230,9 +241,9 @@ let check_file f =
 													 	| S_ADD -> "ADD R0 R0 R1 ; R0 <- R0 + R1\n"
 													 	| S_SUB -> "NOT R0 R0\nADD R0 R0 #1 ;  R0 <- -R0\nADD R0 R0 R1 ; R0 <- R1 - R0\n"
 													 	(* For calling a memoryless subroutine, I charge its address in R3 and jump to it after changing R7 *)
-													 	| S_MUL -> "GLEA R3 FUN_MULT\nJSRR R3\n"
-													 	| S_DIV -> "GLEA R3 FUN_DIV\nJSRR R3\n"
-													 	| S_MOD -> "GLEA R3 FUN_MOD\nJSRR R3\n"
+													 	| S_MUL -> "GLEA R3 FUN_MULT\nJSRR R3 ; Multiply R0 and R1\n"
+													 	| S_DIV -> "GLEA R3 FUN_DIV\nJSRR R3 ; Divide R1 by R0\n"
+													 	| S_MOD -> "GLEA R3 FUN_MOD\nJSRR R3 ; Compute R1 % R0\n"
 													 end
 		| CMP(op, le1, le2) -> (handle_expr le1 tab) ^ "STR R0 R6 #0 ; Store R0 on the stack\nADD R6 R6 #-1 ; Increase the stack\n" ^ (handle_expr le2 tab) ^ "ADD R6 R6 #1 ; Decrease the stack\nLDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1\n" ^
 													 let brtype = match op with
@@ -264,7 +275,7 @@ let check_file f =
 							| _ -> ""
 						end
 	and handle_code lc tab r6 = match lc with | (l,c) -> begin match c with
-	 			| CBLOCK(vdl, lcl) -> handle_block vdl lcl tab r6
+	 			| CBLOCK(vdl, lcl) -> handle_block (List.rev vdl) lcl tab r6
 				| CEXPR le -> handle_expr le tab
 				| CIF(le, lc1,lc2) -> let e = (handle_expr le tab) in let c1 = (handle_code lc1 tab r6) in let c2 = (handle_code lc2 tab r6) in gen_condition e c1 c2 "IF" "z"
 				| CWHILE(le, lc) -> let idstring = string_of_int (!flagcount) in incr_flag(); "STARTWHILE" ^ idstring ^ "\n" ^ (handle_expr le tab) ^ "BRz ENDWHILE" ^ idstring ^ "\n" ^ (handle_code lc tab r6) ^ "BR STARTWHILE" ^ idstring ^ "\n" ^ "ENDWHILE" ^ idstring ^ "\n"
@@ -278,7 +289,7 @@ let check_file f =
 	 	| [] -> ""
 	 	| CDECL(l,s,t)::q -> globvar := s::(!globvar) ; ( handle_val_dec q (insert_var_tab tab s r4 true) (r4 + 1))
 	 	| CFUN(l,s,vl,t,lc)::q -> let funtab = (insert_fun_tab tab s vl) in
-	 														let funbase = "FUN_USER_" ^ s ^ "\nADD R6 R6 #-1\nLDR R5 R6 #0 ; Store R5 on the stack\nADD R6 R6 #-1\nLDR R7 R6 #0 ; Store R7 on the stack\nADD R6 R6 #-1\nADD R5 R6 #0 ; R5 <- R6\n" in
+	 														let funbase = "FUN_USER_" ^ s ^ "\nADD R6 R6 #-1\nSTR R5 R6 #0 ; Store R5 on the stack\nADD R6 R6 #-1\nSTR R7 R6 #0 ; Store R7 on the stack\nADD R6 R6 #-1\nADD R5 R6 #0 ; R5 <- R6\n" in
 	 														let c = (handle_code lc funtab 0) in
 	 														funbase ^ c ^ (handle_val_dec q funtab r4)
 	in
@@ -287,7 +298,7 @@ let check_file f =
 
 	incr_flag();
 																											(* Init R6 value to the address of the stack *)                      (*Init R5 and R4 and leave space to store LVALUE_ADDR at offset -1*)   (*Jump to main*)
-	let header = ".ORIG " ^ (hexstring_of_int orig) ^ "\nLD R6 CST" ^ (string_of_int !flagcount) ^"\n" ^ (print_cst_fill !flagcount stack) ^ "ADD R5 R6 #0\nGLEA R4 STATIC_VAR\nADD R4 R4 #2\nGLEA R3 FUN_USER_main\nJMP R3\n" in
+	let header = ".ORIG " ^ (hexstring_of_int orig) ^ "\nLD R6 CST" ^ (string_of_int !flagcount) ^ " ; Init R6 value to the start of the stack\n" ^ (print_cst_fill !flagcount stack) ^ "ADD R5 R6 #0\nGLEA R4 STATIC_VAR\nADD R4 R4 #1\nGLEA R3 FUN_USER_main\nJMP R3\n" in
 	let protoasm = header
 		^ print_mult_fun()
 		^ print_div_fun()
@@ -307,3 +318,9 @@ Features :
 		- Division, multiplication and modulo operation implemented in a subroutine to be more lines-efficient
 		- Can handle IF and WHILE statements more than 256 lines long by using GLEA and JMP
  *)
+
+ (* 
+Possible opti :
+	- Dont calculate lvalue everytime
+	- Use naive instruction when small offset
+  *)
