@@ -30,34 +30,51 @@ int copy_grid()
 	return;
 }
 
-
-int print_grid(int* p)
+int print_int(int t, int n)
 {
-	while(p < grid + 16)
+	int k;
+	if(t <= 9)
 	{
-		if( ((p - grid) % 4) == 0)
+		if(t == 0 && n == 0)
 		{
-			putc('\n');
-		}
-		if(*p == 0)
-		{
-			putc('o');
-		}
-		else if(*p == 2)
-		{
-			putc('2');
-		}
-		else if(*p == 4)
-		{
-			putc('4');
+			putc(' ');
 		}
 		else
 		{
-			putc('8');
+			putc('0' + t);
+		}
+		return n;
+	}
+	k = print_int(t/10, n+1);
+	putc('0' + (t % 10));
+	return k;
+}
+
+
+int print_grid(int* p)
+{
+	int k;
+	puts("----------------------\n|");
+	while(p < grid + 16)
+	{
+		if( (p-grid) > 0 && ((p - grid) % 4) == 0)
+		{
+			putc('|');
+			putc('\n');
+			puts("|                    |\n");
+			putc('|');
+		}
+		putc(' ');
+		k = print_int(*p, 0);
+		while(3 - k > 0)
+		{
+			putc(' ');
+			k++;
 		}
 		p++;
 	}
-	putc('\n');
+	puts("|\n");
+	puts("----------------------\n");
 	return;
 }
 
@@ -74,16 +91,22 @@ int init_grid(int* p)
 	return;
 }
 
-int put_sq(int* p)
+int put_sq(int* p, int k)
 {
-	*p = 2;
+	*p = k;
 	return;
 }
 
 int spawn_sq(int* p)
 {
-	p = p + (rnd % 16);
-	put_sq(p);
+	int* q;
+	q = p + (rnd % 16);
+	while(*q > 0)
+	{
+		gen_rnd();
+		q = p + (rnd % 16);
+	}
+	put_sq(q, 2);
 	gen_rnd();
 	return;
 }
@@ -94,31 +117,35 @@ int move_grid(int d)
 	int a;
 	int i;
 	int* p;
+	int* q;
+	int b;
 
-	nb = 4;
+	nb = 12;
 	while(nb > 0)
 	{
-		init_grid(altgrid);
 		i = 0;
 		while(i < 16)
 		{
-			a = *(grid + i);
-			if(a > 0 && 0 <= i + d && i + d < 16 && *(grid + i + d) == 0 && (  d == 4 || d == -4 || ( (d == 1 || d == -1) && (i / 4) == ((i + d)/4) )  ) )
+			q = grid + i;
+			p = grid + i + d;
+			a = *q;
+			if(a > 0 && 0 <= i + d && i + d < 16 && (  d == 4 || d == -4 || ( (d == 1 || d == -1) && (i / 4) == ((i + d)/4) )  ) )
 			{
-				p = altgrid + i + d;
-			}
-			else
-			{
-				p = altgrid + i;
-			}
-			if(a > 0)
-			{
-				*p = a;
+				if(*p == 0)
+				{
+					*p = a;
+					*q = 0;
+
+				}
+				else if(*p == a)
+				{
+					*q = 0;
+					*p = a * 2;
+				}
 			}
 
 			++i;
 		}
-		copy_grid();
 		nb--;
 	}
 	
@@ -137,13 +164,12 @@ int main()
 
 	// spawn_sq(grid);
 	// spawn_sq(grid);
-	// spawn_sq(grid);
-	// spawn_sq(grid);
-	// spawn_sq(grid);
 
-	put_sq(grid + 4);
-	put_sq(grid + 8);
-	put_sq(grid + 12);
+	put_sq(grid,2);
+	put_sq(grid+1,2);
+	put_sq(grid+2,4);
+	put_sq(grid+3,4);
+
 
 
 	clear();
@@ -154,18 +180,22 @@ int main()
 		if(input == 'z')
 		{
 			move_grid(-4);
+			spawn_sq(grid);
 		}
 		if(input == 's')
 		{
 			move_grid(4);
+			spawn_sq(grid);
 		}
 		if(input == 'd')
 		{
 			move_grid(1);
+			spawn_sq(grid);
 		}
 		if(input == 'q')
 		{
 			move_grid(-1);
+			spawn_sq(grid);
 		}
 		clear();
 		print_grid(grid);

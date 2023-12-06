@@ -123,40 +123,29 @@ int move_grid(int d)
 	nb = 12;
 	while(nb > 0)
 	{
-		init_grid(altgrid);
 		i = 0;
-		b = 1;
 		while(i < 16)
 		{
-			a = *(grid + i);
-			p = altgrid + i;
 			q = grid + i;
+			p = grid + i + d;
+			a = *q;
 			if(a > 0 && 0 <= i + d && i + d < 16 && (  d == 4 || d == -4 || ( (d == 1 || d == -1) && (i / 4) == ((i + d)/4) )  ) )
 			{
-				if(*(grid + i + d) == 0)
+				if(*p == 0)
 				{
-					p = altgrid + i + d;
+					*p = a;
+					*q = 0;
+
 				}
-				if(b && *(grid + i + d) == a)
+				else if(*p == a)
 				{
-					b = 0;
 					*q = 0;
-					q = q + d;
-					*q = 0;
-					q = p + d;
-					*q = 0;
-					p = altgrid + i + d;
-					a = a * 2;
+					*p = a * 2;
 				}
-			}
-			if(a > 0)
-			{
-				*p = a;
 			}
 
 			++i;
 		}
-		copy_grid();
 		nb--;
 	}
 	
@@ -173,13 +162,14 @@ int main()
 	puts("Enter seed : \n");
 	rnd = getc();
 
-	// spawn_sq(grid);
-	// spawn_sq(grid);
+	spawn_sq(grid);
+	spawn_sq(grid);
 
-	put_sq(grid, 2);
-	put_sq(grid+1, 2);
-	put_sq(grid+2, 4);
-	put_sq(grid+3, 4);
+	// put_sq(grid,2);
+	// put_sq(grid+1,2);
+	// put_sq(grid+2,4);
+	// put_sq(grid+3,4);
+
 
 
 	clear();

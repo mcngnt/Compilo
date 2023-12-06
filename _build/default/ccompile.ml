@@ -105,7 +105,7 @@ let check_file f =
   let gen_condition e ctrue cfalse flagname brtype = 
   	incr_flag();	
   	let idstring = string_of_int !flagcount in
-  	let condjmp = "BR" ^ (inverse_condition brtype) ^ " IGNORE_JMP" ^ idstring ^ "\n" ^ "GLEA R3 " ^ flagname ^ "_" ^ "ELSE" ^ idstring ^ "\nJMP R3\n" ^ "IGNORE_JMP" ^ idstring ^ "\n" in
+  	let condjmp = "BR" ^ (inverse_condition brtype) ^ " IGNORE_JMP_IF" ^ idstring ^ "\n" ^ "GLEA R3 " ^ flagname ^ "_" ^ "ELSE" ^ idstring ^ "\nJMP R3\n" ^ "IGNORE_JMP_IF" ^ idstring ^ "\n" in
   	e ^ "ADD R0 R0 #0\n" ^ condjmp ^ ctrue ^ "GLEA R3 " ^ flagname ^ "_" ^ "ENDELSE" ^ idstring ^ "\nJMP R3\n" ^ flagname ^ "_" ^  "ELSE" ^ idstring ^ "\n" ^ cfalse ^ flagname ^ "_" ^  "ENDELSE" ^ idstring ^ "\n"
   in
 
@@ -198,22 +198,22 @@ let check_file f =
 
 	let rec gen_call s lle tab n = match lle with
 			| [] -> incr_flag(); "GLEA R3 FUN_USER_" ^ s ^ "\nJSRR R3\nLD R1 CST" ^ (string_of_int !flagcount) ^ "\nADD R6 R6 R1 ; Remove " ^ s ^ "'s args from the stack\n" ^ (print_cst_fill !flagcount n)
-			| h::t -> let msge = handle_expr h tab in
+			| h::t -> let msge = handle_expr h tab false in
 								msge ^ "STR R0 R6 #0 ; Adding arg on the stack to call " ^ s ^ "\nADD R6 R6 #-1\n" ^ (gen_call s t tab n)
 
-	and handle_expr le tab = match le with | (l,e) -> begin match e with
+	and handle_expr le tab get_lvalue = match le with | (l,e) -> begin match e with
 																																(* Change the current lvalue address to the variable's address and set R0 to its value*)
 		| VAR s -> let a,isglob = get_addr_tab tab s in let slvalue = (set_lvalue a isglob) in slvalue ^ (get_var a isglob  true) (* Set LVALUE_VAR to a and isglob *)
 		| CST x -> incr_flag() ; "LD R0 CST" ^ (string_of_int !flagcount) ^ " ; R0 <- cst " ^ (string_of_int x) ^ "\n" ^ (print_cst_fill !flagcount x)
 		| STRING s ->  incr_string(); strings := (s,"STRING" ^ (string_of_int !stringcount), String.length s)::!strings ; "GLEA R0 STRING" ^ (string_of_int !stringcount) ^ "\n"
 		| NULLPTR -> "AND R0 R0 #0\n"
-		| SET_VAR(s,le) -> let a,isglob = get_addr_tab tab s in let e = (handle_expr le tab) in e ^ (set_var a isglob )
-		| SET_VAL(s,le) -> let a,isglob = get_addr_tab tab s in let e = (handle_expr le tab) in e ^ (get_var a isglob  false) ^  "\nSTR R0 R1 #0 ; R0 <- M[R1]\n"
-		| CALL(s,lle) when s = "puts" -> let e = handle_expr (List.hd lle) tab in e ^ "PUTS\n"
-		| CALL(s,lle) when s = "putc" -> let e = handle_expr (List.hd lle) tab in e ^ "OUT\n"
+		| SET_VAR(s,le) -> let a,isglob = get_addr_tab tab s in let e = (handle_expr le tab false) in e ^ (set_var a isglob )
+		| SET_VAL(s,le) -> let a,isglob = get_addr_tab tab s in let e = (handle_expr le tab false) in e ^ (get_var a isglob  false) ^  "STR R0 R1 #0 ; R0 <- M[R1]\n"
+		| CALL(s,lle) when s = "puts" -> let e = handle_expr (List.hd lle) tab false in e ^ "PUTS\n"
+		| CALL(s,lle) when s = "putc" -> let e = handle_expr (List.hd lle) tab false in e ^ "OUT\n"
 		| CALL(s,lle) when s = "getc" -> "GETC\n"
 		| CALL(s,lle) -> "; Call function " ^ s ^ "\n" ^ gen_call s lle tab (List.length lle)
-		| OP1(op, le) -> let msg = (handle_expr le tab) in
+		| OP1(op, le) -> let msg = (handle_expr le tab false) in
 										 msg ^ begin
 											match op with
 												| M_MINUS -> "NOT R0 R0\nADD R0 R0 #1 ;  R0 <- -R0\n"
@@ -229,7 +229,7 @@ let check_file f =
 												| M_POST_DEC -> "LDR R1 R4 #-1\nLDR R0 R1 #0\nADD R0 R0 #-1\nSTR R0 R1 #0\nADD R0 R0 #1 ; (lvalue)--\n"
 											end
 														(* I compute binary operations by storing the result of the first one on the stack and reusing it after computing the second one *)
-		| OP2(op, le1, le2) -> let e1 =  (handle_expr le1 tab) and e2 = (handle_expr le2 tab) in
+		| OP2(op, le1, le2) -> let e1 =  (handle_expr le1 tab false) and e2 = (handle_expr le2 tab false) in
 													 "; e1\n" ^ e1 ^ "STR R0 R6 #0 ; Store R0 on the stack\nADD R6 R6 #-1 ; Increase the stack\n; e2\n" ^ e2 ^ "ADD R6 R6 #1 ; Decrease the stack\nLDR R1 R6 #0 ; Retrieve upmost result on the stack in R1\n" ^ begin
 													 match op with
 													 	| S_ADD -> "ADD R0 R0 R1 ; R0 <- R0 + R1\n"
@@ -238,7 +238,7 @@ let check_file f =
 													 	| S_DIV -> "GLEA R3 FUN_DIV\nJSRR R3 ; Divide R1 by R0\n"
 													 	| S_MOD -> "GLEA R3 FUN_MOD\nJSRR R3 ; Compute R1 % R0\n"
 													 end
-		| CMP(op, le1, le2) -> let e1 = (handle_expr le1 tab) and e2 = (handle_expr le2 tab) in
+		| CMP(op, le1, le2) -> let e1 = (handle_expr le1 tab false) and e2 = (handle_expr le2 tab false) in
 													 e1 ^ "STR R0 R6 #0 ; Store R0 on the stack\nADD R6 R6 #-1 ; Increase the stack\n" ^ e2 ^ "ADD R6 R6 #1 ; Decrease the stack\nLDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1\n" ^
 													 let brtype = match op with
 													 										| C_LT -> "zp"
@@ -253,8 +253,8 @@ let check_file f =
 													 																																					 			| C_LE -> "<"
 													 																																					 			| C_EQ -> "=="
 													 																																					 end ^ " e2\n"
-		| EIF(le1,le2,le3) -> let e = (handle_expr le1 tab) and c1 = handle_expr le2 tab and c2 = handle_expr le3 tab in gen_condition e c1 c2 "EIF" "z"
-		| ESEQ(lle) -> List.fold_left (fun acc le -> acc ^ (handle_expr le tab)) "" lle
+		| EIF(le1,le2,le3) -> let e = (handle_expr le1 tab false) and c1 = handle_expr le2 tab false and c2 = handle_expr le3 tab false in gen_condition e c1 c2 "EIF" "z"
+		| ESEQ(lle) -> List.fold_left (fun acc le -> acc ^ (handle_expr le tab false)) "" lle
 	end
 	in
 
@@ -270,15 +270,15 @@ let check_file f =
 						end
 	and handle_code lc tab r6 = match lc with | (l,c) -> begin match c with
 	 			| CBLOCK(vdl, lcl) -> handle_block (List.rev vdl) lcl tab r6
-				| CEXPR le -> handle_expr le tab
-				| CIF(le, lc1,lc2) -> let e = (handle_expr le tab) in let c1 = (handle_code lc1 tab r6) in let c2 = (handle_code lc2 tab r6) in gen_condition e c1 c2 "IF" "z"
+				| CEXPR le -> handle_expr le tab false
+				| CIF(le, lc1,lc2) -> let e = (handle_expr le tab false) in let c1 = (handle_code lc1 tab r6) in let c2 = (handle_code lc2 tab r6) in gen_condition e c1 c2 "IF" "z"
 				| CWHILE(le, lc) -> let idstring = string_of_int (!flagcount) in
 				incr_flag();
 				let condjmp = "BR" ^ (inverse_condition "z") ^ " IGNORE_JMP_WHILE" ^ idstring ^ "\n" ^ "GLEA R3 ENDWHILE" ^ idstring ^ "\nJMP R3\n" ^ "IGNORE_JMP_WHILE" ^ idstring ^ "\n" in
-				let e = handle_expr le tab in
+				let e = handle_expr le tab false in
 				let c = handle_code lc tab r6 in
 				 "STARTWHILE" ^ idstring ^ "\n" ^ e ^ "ADD R0 R0 #0\n" ^ condjmp ^ c ^ "GLEA R3 STARTWHILE" ^ idstring ^ "\nJMP R3\n" ^ "ENDWHILE" ^ idstring ^ "\n"
-				| CRETURN (Some le) -> (handle_expr le tab) ^ "LDR R7 R5 #1 ; Restore R7\nLDR R6 R5 #2 ; Restore R6\nLDR R5 R5 #3 ; Restore R5\nRET\n"
+				| CRETURN (Some le) -> (handle_expr le tab false) ^ "LDR R7 R5 #1 ; Restore R7\nLDR R6 R5 #2 ; Restore R6\nLDR R5 R5 #3 ; Restore R5\nRET\n"
 				| CRETURN None ->  "AND R0 R0 #0\nLDR R7 R5 #1 ; Restore R7\nLDR R6 R5 #2 ; Restore R6\nLDR R5 R5 #3 ; Restore R5\nRET\n"
 		end
 	in
