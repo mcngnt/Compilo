@@ -136,7 +136,7 @@ let rec handle_expr le env = match le with | (l,e) -> begin match e with
 															| _ -> raise (Error(l, "Illegal pointer-int operation."))
 														end
 									| (TTPTR t1, TTPTR t2) when equals_type t1 t2 -> begin match op with
-																			| S_SUB -> TTPTR t1
+																			| S_SUB -> TTINT
 																			| _ -> raise (Error(l, "Illegal pointer-pointer operation."))
 																		end
 									| (TTINT, TTNULL) -> begin match op with

@@ -1,16 +1,22 @@
 int res;
 
-int f(int n)
+int f(int a, int b)
 {
-	if(n == 1)
+	if(a == 1)
 	{
-		return 1;
+		return b;
 	}
-	return 1 + f(n-1);
+	if(b == 1)
+	{
+		return a;
+	}
+	return a + b - 1 + f(a-1,b-1);
 }
 
 int main()
 {
-	res = f(2);
-	return;
+	res = f(2,500);
+	return res;
 }
+
+

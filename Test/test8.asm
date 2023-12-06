@@ -1,0 +1,4335 @@
+.ORIG x3000
+LD R6 CST390 ; Init R6 value to the start of the stack
+BR IGNORE_CST390
+CST390 .FILL #65023
+IGNORE_CST390
+ADD R5 R6 #0
+LD R4 CST391 ; R4 <- address of label STATIC_VAR
+BR IGNORE_CST391
+CST391 .FILL #15896
+IGNORE_CST391
+ADD R4 R4 #1
+LD R3 CST392 ; R3 <- address of label FUN_USER_main
+BR IGNORE_CST392
+CST392 .FILL #15105
+IGNORE_CST392
+JMP R3
+FUN_MULT
+ADD R0 R0 #0
+BRn MULT_CHANGE_SIGN
+BR MULT_INIT
+MULT_CHANGE_SIGN
+NOT R0 R0
+ADD R0 R0 #1
+NOT R1 R1
+ADD R1 R1 #1
+MULT_INIT
+AND R2 R2 #0
+ADD R2 R2 R0
+AND R0 R0 #0
+MULT_LOOP
+ADD R0 R0 R1
+ADD R2 R2 #-1
+BRz MULT_STOP
+BR MULT_LOOP
+MULT_STOP
+RET
+FUN_DIV
+AND R2 R2 #0 ; Q
+LD R2 DIV_ISNEG ; Set is_neg to 0
+ADD R1 R1 #0
+BRn DIV_A_NEG
+BR DIV_A_POS
+DIV_A_NEG
+NOT R1 R1 ; Change A sign when negative
+ADD R1 R1 #1
+ADD R0 R0 #0
+BRn DIV_AN_BN
+BR DIV_AN_BP
+DIV_A_POS
+ADD R0 R0 #0
+BRn DIV_AP_BN
+BR DIV_AP_BP
+DIV_AN_BN
+NOT R0 R0
+ADD R0 R0 #1
+BR DIV_POS
+DIV_AN_BP
+BR DIV_NEG
+DIV_AP_BN
+NOT R0 R0
+ADD R0 R0 #1
+BR DIV_NEG
+DIV_AP_BP
+BR DIV_POS
+DIV_NEG
+ADD R3 R2 #1
+ST R3 DIV_ISNEG ; IS_NEG <- 1
+BR DIV_ENDSIGN
+DIV_POS
+BR DIV_ENDSIGN
+DIV_ENDSIGN
+; Compute the sign of the result in DIV_ISNEG
+DIV_LOOP
+NOT R3 R1
+ADD R3 R3 #1
+ADD R3 R3 R0 ; R3 <- R0 - R1 = B - R
+BRp DIV_END_LOOP
+AND R3 R3 #0
+ADD R3 R3 R0
+NOT R3 R3
+ADD R3 R3 #1 ; R3 <- -B
+ADD R1 R1 R3 ; R <- R - B
+ADD R2 R2 #1
+BR DIV_LOOP
+DIV_END_LOOP
+ADD R0 R2 #0
+LD R3 DIV_ISNEG
+BRz DIV_END
+NOT R0 R0
+ADD R0 R0 #1
+DIV_END
+RET
+DIV_ISNEG .BLKW #1
+FUN_MOD
+AND R2 R2 #0 ; Q
+ADD R1 R1 #0
+BRn MOD_A_NEG
+BR MOD_ENDSIGN
+MOD_A_NEG
+ADD R1 R1 R0
+BRn MOD_A_NEG
+MOD_ENDSIGN
+; Compute the sign of the result in MOD_ISNEG
+MOD_LOOP
+NOT R3 R1
+ADD R3 R3 #1
+ADD R3 R3 R0 ; R3 <- R0 - R1 = B - R
+BRp MOD_END_LOOP
+AND R3 R3 #0
+ADD R3 R3 R0
+NOT R3 R3
+ADD R3 R3 #1 ; R3 <- -B
+ADD R1 R1 R3 ; R <- R - B
+ADD R2 R2 #1
+BR MOD_LOOP
+MOD_END_LOOP
+ADD R0 R1 #0
+MOD_END
+RET
+FUN_USER_gen_rnd
+STR R5 R6 #0 ; Store R5 on the stack
+ADD R6 R6 #-1
+ADD R1 R6 #1
+STR R1 R6 #0 ; Store R6 on the stack
+ADD R6 R6 #-1
+STR R7 R6 #0 ; Store R7 on the stack
+ADD R6 R6 #-1
+ADD R5 R6 #0 ; R5 <- R6
+; e1
+; e1
+; e1
+LD R0 CST1
+ADD R0 R0 R4
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST1
+CST1 .FILL #0
+IGNORE_CST1
+LD R1 CST2
+ADD R1 R4 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST2
+CST2 .FILL #0
+IGNORE_CST2
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST3 ; R0 <- cst 9769
+BR IGNORE_CST3
+CST3 .FILL #9769
+IGNORE_CST3
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+LD R3 CST393 ; R3 <- address of label FUN_MULT
+BR IGNORE_CST393
+CST393 .FILL #12300
+IGNORE_CST393
+JSRR R3 ; Multiply R0 and R1
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST4 ; R0 <- cst 431
+BR IGNORE_CST4
+CST4 .FILL #431
+IGNORE_CST4
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+ADD R0 R0 R1 ; R0 <- R0 + R1
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST5 ; R0 <- cst 32000
+BR IGNORE_CST5
+CST5 .FILL #32000
+IGNORE_CST5
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+LD R3 CST394 ; R3 <- address of label FUN_MOD
+BR IGNORE_CST394
+CST394 .FILL #12358
+IGNORE_CST394
+JSRR R3 ; Compute R1 % R0
+LD R1 CST6
+ADD R1 R4 R1
+STR R0 R1 #0 ; Change variable content to R0
+BR IGNORE_CST6
+CST6 .FILL #0
+IGNORE_CST6
+AND R0 R0 #0
+LDR R7 R5 #1 ; Restore R7
+LDR R6 R5 #2 ; Restore R6
+LDR R5 R5 #3 ; Restore R5
+RET
+FUN_USER_clear
+STR R5 R6 #0 ; Store R5 on the stack
+ADD R6 R6 #-1
+ADD R1 R6 #1
+STR R1 R6 #0 ; Store R6 on the stack
+ADD R6 R6 #-1
+STR R7 R6 #0 ; Store R7 on the stack
+ADD R6 R6 #-1
+ADD R5 R6 #0 ; R5 <- R6
+LD R0 CST395 ; R0 <- address of label STRING1
+BR IGNORE_CST395
+CST395 .FILL #15762
+IGNORE_CST395
+PUTS
+AND R0 R0 #0
+LDR R7 R5 #1 ; Restore R7
+LDR R6 R5 #2 ; Restore R6
+LDR R5 R5 #3 ; Restore R5
+RET
+FUN_USER_copy_grid
+STR R5 R6 #0 ; Store R5 on the stack
+ADD R6 R6 #-1
+ADD R1 R6 #1
+STR R1 R6 #0 ; Store R6 on the stack
+ADD R6 R6 #-1
+STR R7 R6 #0 ; Store R7 on the stack
+ADD R6 R6 #-1
+ADD R5 R6 #0 ; R5 <- R6
+ADD R6 R6 #-1 ; Add variable p to the stack 
+ADD R6 R6 #-1 ; Add variable i to the stack 
+LD R0 CST23
+ADD R0 R0 R4
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST23
+CST23 .FILL #1
+IGNORE_CST23
+LD R1 CST24
+ADD R1 R4 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST24
+CST24 .FILL #1
+IGNORE_CST24
+LD R1 CST25
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+STR R0 R1 #0 ; Change variable content to R0
+BR IGNORE_CST25
+CST25 .FILL #0
+IGNORE_CST25
+LD R0 CST21 ; R0 <- cst 0
+BR IGNORE_CST21
+CST21 .FILL #0
+IGNORE_CST21
+LD R1 CST22
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+STR R0 R1 #0 ; Change variable content to R0
+BR IGNORE_CST22
+CST22 .FILL #1
+IGNORE_CST22
+STARTWHILE6
+LD R0 CST8
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST8
+CST8 .FILL #1
+IGNORE_CST8
+LD R1 CST9
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST9
+CST9 .FILL #1
+IGNORE_CST9
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+LD R0 CST10 ; R0 <- cst 16
+BR IGNORE_CST10
+CST10 .FILL #16
+IGNORE_CST10
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R0 R0 R1 ; Compute R1 - R0 for comparison
+ADD R0 R0 #0
+BRn IGNORE_JMP11
+LD R3 CST396 ; R3 <- address of label CMP_ELSE11
+BR IGNORE_CST396
+CST396 .FILL #12528
+IGNORE_CST396
+JMP R3
+IGNORE_JMP11
+AND R0 R0 #0
+ADD R0 R0 #1 ; If comparison true, set R0 to 1
+LD R3 CST397 ; R3 <- address of label CMP_ENDELSE11
+BR IGNORE_CST397
+CST397 .FILL #12529
+IGNORE_CST397
+JMP R3
+CMP_ELSE11
+AND R0 R0 #0 ; If comparison false, set R0 to 0
+CMP_ENDELSE11
+; R0 <-  e1 > e2
+ADD R0 R0 #0
+BRnp IGNORE_JMP_WHILE6
+LD R3 CST398 ; R3 <- address of label ENDWHILE6
+BR IGNORE_CST398
+CST398 .FILL #12618
+IGNORE_CST398
+JMP R3
+IGNORE_JMP_WHILE6
+; e1
+LD R0 CST16
+ADD R0 R0 R4
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST16
+CST16 .FILL #2
+IGNORE_CST16
+LD R1 CST17
+ADD R1 R4 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST17
+CST17 .FILL #2
+IGNORE_CST17
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST18
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST18
+CST18 .FILL #1
+IGNORE_CST18
+LD R1 CST19
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST19
+CST19 .FILL #1
+IGNORE_CST19
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+ADD R0 R0 R1 ; R0 <- R0 + R1
+STR R0 R4 #-1
+LDR R0 R0 #0 ; Deref the last lvalue
+LD R1 CST20
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+BR IGNORE_CST20
+CST20 .FILL #0
+IGNORE_CST20
+
+STR R0 R1 #0 ; R0 <- M[R1]
+LD R0 CST14
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST14
+CST14 .FILL #1
+IGNORE_CST14
+LD R1 CST15
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST15
+CST15 .FILL #1
+IGNORE_CST15
+LDR R1 R4 #-1
+LDR R0 R1 #0
+ADD R0 R0 #1
+STR R0 R1 #0 ; ++(lvalue)
+LD R0 CST12
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST12
+CST12 .FILL #0
+IGNORE_CST12
+LD R1 CST13
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST13
+CST13 .FILL #0
+IGNORE_CST13
+LDR R1 R4 #-1
+LDR R0 R1 #0
+ADD R0 R0 #1
+STR R0 R1 #0 ; ++(lvalue)
+LD R3 CST399 ; R3 <- address of label STARTWHILE6
+BR IGNORE_CST399
+CST399 .FILL #12491
+IGNORE_CST399
+JMP R3
+ENDWHILE6
+AND R0 R0 #0
+LDR R7 R5 #1 ; Restore R7
+LDR R6 R5 #2 ; Restore R6
+LDR R5 R5 #3 ; Restore R5
+RET
+FUN_USER_print_int
+STR R5 R6 #0 ; Store R5 on the stack
+ADD R6 R6 #-1
+ADD R1 R6 #1
+STR R1 R6 #0 ; Store R6 on the stack
+ADD R6 R6 #-1
+STR R7 R6 #0 ; Store R7 on the stack
+ADD R6 R6 #-1
+ADD R5 R6 #0 ; R5 <- R6
+ADD R6 R6 #-1 ; Add variable k to the stack 
+LD R0 CST40
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST40
+CST40 .FILL #-5
+IGNORE_CST40
+LD R1 CST41
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST41
+CST41 .FILL #-5
+IGNORE_CST41
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+LD R0 CST42 ; R0 <- cst 9
+BR IGNORE_CST42
+CST42 .FILL #9
+IGNORE_CST42
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R0 R0 R1 ; Compute R1 - R0 for comparison
+ADD R0 R0 #0
+BRnz IGNORE_JMP43
+LD R3 CST400 ; R3 <- address of label CMP_ELSE43
+BR IGNORE_CST400
+CST400 .FILL #12669
+IGNORE_CST400
+JMP R3
+IGNORE_JMP43
+AND R0 R0 #0
+ADD R0 R0 #1 ; If comparison true, set R0 to 1
+LD R3 CST401 ; R3 <- address of label CMP_ENDELSE43
+BR IGNORE_CST401
+CST401 .FILL #12670
+IGNORE_CST401
+JMP R3
+CMP_ELSE43
+AND R0 R0 #0 ; If comparison false, set R0 to 0
+CMP_ENDELSE43
+; R0 <-  e1 < e2
+ADD R0 R0 #0
+BRnp IGNORE_JMP61
+LD R3 CST402 ; R3 <- address of label IF_ELSE61
+BR IGNORE_CST402
+CST402 .FILL #12826
+IGNORE_CST402
+JMP R3
+IGNORE_JMP61
+LD R0 CST46
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST46
+CST46 .FILL #-5
+IGNORE_CST46
+LD R1 CST47
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST47
+CST47 .FILL #-5
+IGNORE_CST47
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+LD R0 CST48 ; R0 <- cst 0
+BR IGNORE_CST48
+CST48 .FILL #0
+IGNORE_CST48
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R0 R0 R1 ; Compute R1 - R0 for comparison
+ADD R0 R0 #0
+BRz IGNORE_JMP49
+LD R3 CST403 ; R3 <- address of label CMP_ELSE49
+BR IGNORE_CST403
+CST403 .FILL #12713
+IGNORE_CST403
+JMP R3
+IGNORE_JMP49
+AND R0 R0 #0
+ADD R0 R0 #1 ; If comparison true, set R0 to 1
+LD R3 CST404 ; R3 <- address of label CMP_ENDELSE49
+BR IGNORE_CST404
+CST404 .FILL #12714
+IGNORE_CST404
+JMP R3
+CMP_ELSE49
+AND R0 R0 #0 ; If comparison false, set R0 to 0
+CMP_ENDELSE49
+; R0 <-  e1 == e2
+ADD R0 R0 #0
+BRnp IGNORE_JMP55
+LD R3 CST405 ; R3 <- address of label EIF_ELSE55
+BR IGNORE_CST405
+CST405 .FILL #12762
+IGNORE_CST405
+JMP R3
+IGNORE_JMP55
+LD R0 CST50
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST50
+CST50 .FILL #-4
+IGNORE_CST50
+LD R1 CST51
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST51
+CST51 .FILL #-4
+IGNORE_CST51
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+LD R0 CST52 ; R0 <- cst 0
+BR IGNORE_CST52
+CST52 .FILL #0
+IGNORE_CST52
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R0 R0 R1 ; Compute R1 - R0 for comparison
+ADD R0 R0 #0
+BRz IGNORE_JMP53
+LD R3 CST406 ; R3 <- address of label CMP_ELSE53
+BR IGNORE_CST406
+CST406 .FILL #12757
+IGNORE_CST406
+JMP R3
+IGNORE_JMP53
+AND R0 R0 #0
+ADD R0 R0 #1 ; If comparison true, set R0 to 1
+LD R3 CST407 ; R3 <- address of label CMP_ENDELSE53
+BR IGNORE_CST407
+CST407 .FILL #12758
+IGNORE_CST407
+JMP R3
+CMP_ELSE53
+AND R0 R0 #0 ; If comparison false, set R0 to 0
+CMP_ENDELSE53
+; R0 <-  e1 == e2
+LD R3 CST408 ; R3 <- address of label EIF_ENDELSE55
+BR IGNORE_CST408
+CST408 .FILL #12765
+IGNORE_CST408
+JMP R3
+EIF_ELSE55
+LD R0 CST54 ; R0 <- cst 0
+BR IGNORE_CST54
+CST54 .FILL #0
+IGNORE_CST54
+EIF_ENDELSE55
+ADD R0 R0 #0
+BRnp IGNORE_JMP60
+LD R3 CST409 ; R3 <- address of label IF_ELSE60
+BR IGNORE_CST409
+CST409 .FILL #12779
+IGNORE_CST409
+JMP R3
+IGNORE_JMP60
+LD R0 CST56 ; R0 <- cst 32
+BR IGNORE_CST56
+CST56 .FILL #32
+IGNORE_CST56
+OUT
+LD R3 CST410 ; R3 <- address of label IF_ENDELSE60
+BR IGNORE_CST410
+CST410 .FILL #12803
+IGNORE_CST410
+JMP R3
+IF_ELSE60
+; e1
+LD R0 CST57 ; R0 <- cst 48
+BR IGNORE_CST57
+CST57 .FILL #48
+IGNORE_CST57
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST58
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST58
+CST58 .FILL #-5
+IGNORE_CST58
+LD R1 CST59
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST59
+CST59 .FILL #-5
+IGNORE_CST59
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+ADD R0 R0 R1 ; R0 <- R0 + R1
+OUT
+IF_ENDELSE60
+LD R0 CST44
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST44
+CST44 .FILL #-4
+IGNORE_CST44
+LD R1 CST45
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST45
+CST45 .FILL #-4
+IGNORE_CST45
+LDR R7 R5 #1 ; Restore R7
+LDR R6 R5 #2 ; Restore R6
+LDR R5 R5 #3 ; Restore R5
+RET
+LD R3 CST411 ; R3 <- address of label IF_ENDELSE61
+BR IGNORE_CST411
+CST411 .FILL #12826
+IGNORE_CST411
+JMP R3
+IF_ELSE61
+IF_ENDELSE61
+; Call function print_int
+; e1
+LD R0 CST32
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST32
+CST32 .FILL #-5
+IGNORE_CST32
+LD R1 CST33
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST33
+CST33 .FILL #-5
+IGNORE_CST33
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST34 ; R0 <- cst 10
+BR IGNORE_CST34
+CST34 .FILL #10
+IGNORE_CST34
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+LD R3 CST412 ; R3 <- address of label FUN_DIV
+BR IGNORE_CST412
+CST412 .FILL #12315
+IGNORE_CST412
+JSRR R3 ; Divide R1 by R0
+STR R0 R6 #0 ; Adding arg on the stack to call print_int
+ADD R6 R6 #-1
+; e1
+LD R0 CST35
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST35
+CST35 .FILL #-4
+IGNORE_CST35
+LD R1 CST36
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST36
+CST36 .FILL #-4
+IGNORE_CST36
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST37 ; R0 <- cst 1
+BR IGNORE_CST37
+CST37 .FILL #1
+IGNORE_CST37
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+ADD R0 R0 R1 ; R0 <- R0 + R1
+STR R0 R6 #0 ; Adding arg on the stack to call print_int
+ADD R6 R6 #-1
+LD R3 CST413 ; R3 <- address of label FUN_USER_print_int
+BR IGNORE_CST413
+CST413 .FILL #12623
+IGNORE_CST413
+JSRR R3
+LD R1 CST38
+ADD R6 R6 R1 ; Remove print_int's args from the stack
+BR IGNORE_CST38
+CST38 .FILL #2
+IGNORE_CST38
+LD R1 CST39
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+STR R0 R1 #0 ; Change variable content to R0
+BR IGNORE_CST39
+CST39 .FILL #0
+IGNORE_CST39
+; e1
+LD R0 CST28 ; R0 <- cst 48
+BR IGNORE_CST28
+CST28 .FILL #48
+IGNORE_CST28
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+; e1
+LD R0 CST29
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST29
+CST29 .FILL #-5
+IGNORE_CST29
+LD R1 CST30
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST30
+CST30 .FILL #-5
+IGNORE_CST30
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST31 ; R0 <- cst 10
+BR IGNORE_CST31
+CST31 .FILL #10
+IGNORE_CST31
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+LD R3 CST414 ; R3 <- address of label FUN_MOD
+BR IGNORE_CST414
+CST414 .FILL #12358
+IGNORE_CST414
+JSRR R3 ; Compute R1 % R0
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+ADD R0 R0 R1 ; R0 <- R0 + R1
+OUT
+LD R0 CST26
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST26
+CST26 .FILL #0
+IGNORE_CST26
+LD R1 CST27
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST27
+CST27 .FILL #0
+IGNORE_CST27
+LDR R7 R5 #1 ; Restore R7
+LDR R6 R5 #2 ; Restore R6
+LDR R5 R5 #3 ; Restore R5
+RET
+FUN_USER_print_grid
+STR R5 R6 #0 ; Store R5 on the stack
+ADD R6 R6 #-1
+ADD R1 R6 #1
+STR R1 R6 #0 ; Store R6 on the stack
+ADD R6 R6 #-1
+STR R7 R6 #0 ; Store R7 on the stack
+ADD R6 R6 #-1
+ADD R5 R6 #0 ; R5 <- R6
+ADD R6 R6 #-1 ; Add variable k to the stack 
+LD R0 CST415 ; R0 <- address of label STRING5
+BR IGNORE_CST415
+CST415 .FILL #15822
+IGNORE_CST415
+PUTS
+STARTWHILE61
+LD R0 CST63
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST63
+CST63 .FILL #-4
+IGNORE_CST63
+LD R1 CST64
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST64
+CST64 .FILL #-4
+IGNORE_CST64
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e1
+LD R0 CST65
+ADD R0 R0 R4
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST65
+CST65 .FILL #1
+IGNORE_CST65
+LD R1 CST66
+ADD R1 R4 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST66
+CST66 .FILL #1
+IGNORE_CST66
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST67 ; R0 <- cst 16
+BR IGNORE_CST67
+CST67 .FILL #16
+IGNORE_CST67
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+ADD R0 R0 R1 ; R0 <- R0 + R1
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R0 R0 R1 ; Compute R1 - R0 for comparison
+ADD R0 R0 #0
+BRn IGNORE_JMP68
+LD R3 CST416 ; R3 <- address of label CMP_ELSE68
+BR IGNORE_CST416
+CST416 .FILL #13014
+IGNORE_CST416
+JMP R3
+IGNORE_JMP68
+AND R0 R0 #0
+ADD R0 R0 #1 ; If comparison true, set R0 to 1
+LD R3 CST417 ; R3 <- address of label CMP_ENDELSE68
+BR IGNORE_CST417
+CST417 .FILL #13015
+IGNORE_CST417
+JMP R3
+CMP_ELSE68
+AND R0 R0 #0 ; If comparison false, set R0 to 0
+CMP_ENDELSE68
+; R0 <-  e1 > e2
+ADD R0 R0 #0
+BRnp IGNORE_JMP_WHILE61
+LD R3 CST418 ; R3 <- address of label ENDWHILE61
+BR IGNORE_CST418
+CST418 .FILL #13332
+IGNORE_CST418
+JMP R3
+IGNORE_JMP_WHILE61
+LD R0 CST86 ; R0 <- cst 0
+BR IGNORE_CST86
+CST86 .FILL #0
+IGNORE_CST86
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e1
+LD R0 CST87
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST87
+CST87 .FILL #-4
+IGNORE_CST87
+LD R1 CST88
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST88
+CST88 .FILL #-4
+IGNORE_CST88
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST89
+ADD R0 R0 R4
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST89
+CST89 .FILL #1
+IGNORE_CST89
+LD R1 CST90
+ADD R1 R4 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST90
+CST90 .FILL #1
+IGNORE_CST90
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R0 R0 R1 ; R0 <- R1 - R0
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R0 R0 R1 ; Compute R1 - R0 for comparison
+ADD R0 R0 #0
+BRn IGNORE_JMP91
+LD R3 CST419 ; R3 <- address of label CMP_ELSE91
+BR IGNORE_CST419
+CST419 .FILL #13076
+IGNORE_CST419
+JMP R3
+IGNORE_JMP91
+AND R0 R0 #0
+ADD R0 R0 #1 ; If comparison true, set R0 to 1
+LD R3 CST420 ; R3 <- address of label CMP_ENDELSE91
+BR IGNORE_CST420
+CST420 .FILL #13077
+IGNORE_CST420
+JMP R3
+CMP_ELSE91
+AND R0 R0 #0 ; If comparison false, set R0 to 0
+CMP_ENDELSE91
+; R0 <-  e1 > e2
+ADD R0 R0 #0
+BRnp IGNORE_JMP100
+LD R3 CST421 ; R3 <- address of label EIF_ELSE100
+BR IGNORE_CST421
+CST421 .FILL #13154
+IGNORE_CST421
+JMP R3
+IGNORE_JMP100
+; e1
+; e1
+LD R0 CST92
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST92
+CST92 .FILL #-4
+IGNORE_CST92
+LD R1 CST93
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST93
+CST93 .FILL #-4
+IGNORE_CST93
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST94
+ADD R0 R0 R4
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST94
+CST94 .FILL #1
+IGNORE_CST94
+LD R1 CST95
+ADD R1 R4 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST95
+CST95 .FILL #1
+IGNORE_CST95
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R0 R0 R1 ; R0 <- R1 - R0
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST96 ; R0 <- cst 4
+BR IGNORE_CST96
+CST96 .FILL #4
+IGNORE_CST96
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+LD R3 CST422 ; R3 <- address of label FUN_MOD
+BR IGNORE_CST422
+CST422 .FILL #12358
+IGNORE_CST422
+JSRR R3 ; Compute R1 % R0
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+LD R0 CST97 ; R0 <- cst 0
+BR IGNORE_CST97
+CST97 .FILL #0
+IGNORE_CST97
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R0 R0 R1 ; Compute R1 - R0 for comparison
+ADD R0 R0 #0
+BRz IGNORE_JMP98
+LD R3 CST423 ; R3 <- address of label CMP_ELSE98
+BR IGNORE_CST423
+CST423 .FILL #13149
+IGNORE_CST423
+JMP R3
+IGNORE_JMP98
+AND R0 R0 #0
+ADD R0 R0 #1 ; If comparison true, set R0 to 1
+LD R3 CST424 ; R3 <- address of label CMP_ENDELSE98
+BR IGNORE_CST424
+CST424 .FILL #13150
+IGNORE_CST424
+JMP R3
+CMP_ELSE98
+AND R0 R0 #0 ; If comparison false, set R0 to 0
+CMP_ENDELSE98
+; R0 <-  e1 == e2
+LD R3 CST425 ; R3 <- address of label EIF_ENDELSE100
+BR IGNORE_CST425
+CST425 .FILL #13157
+IGNORE_CST425
+JMP R3
+EIF_ELSE100
+LD R0 CST99 ; R0 <- cst 0
+BR IGNORE_CST99
+CST99 .FILL #0
+IGNORE_CST99
+EIF_ENDELSE100
+ADD R0 R0 #0
+BRnp IGNORE_JMP104
+LD R3 CST426 ; R3 <- address of label IF_ELSE104
+BR IGNORE_CST426
+CST426 .FILL #13183
+IGNORE_CST426
+JMP R3
+IGNORE_JMP104
+LD R0 CST103 ; R0 <- cst 124
+BR IGNORE_CST103
+CST103 .FILL #124
+IGNORE_CST103
+OUT
+LD R0 CST102 ; R0 <- cst 10
+BR IGNORE_CST102
+CST102 .FILL #10
+IGNORE_CST102
+OUT
+LD R0 CST427 ; R0 <- address of label STRING4
+BR IGNORE_CST427
+CST427 .FILL #15798
+IGNORE_CST427
+PUTS
+LD R0 CST101 ; R0 <- cst 124
+BR IGNORE_CST101
+CST101 .FILL #124
+IGNORE_CST101
+OUT
+LD R3 CST428 ; R3 <- address of label IF_ENDELSE104
+BR IGNORE_CST428
+CST428 .FILL #13183
+IGNORE_CST428
+JMP R3
+IF_ELSE104
+IF_ENDELSE104
+LD R0 CST85 ; R0 <- cst 32
+BR IGNORE_CST85
+CST85 .FILL #32
+IGNORE_CST85
+OUT
+; Call function print_int
+LD R0 CST80
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST80
+CST80 .FILL #-4
+IGNORE_CST80
+LD R1 CST81
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST81
+CST81 .FILL #-4
+IGNORE_CST81
+STR R0 R4 #-1
+LDR R0 R0 #0 ; Deref the last lvalue
+STR R0 R6 #0 ; Adding arg on the stack to call print_int
+ADD R6 R6 #-1
+LD R0 CST82 ; R0 <- cst 0
+BR IGNORE_CST82
+CST82 .FILL #0
+IGNORE_CST82
+STR R0 R6 #0 ; Adding arg on the stack to call print_int
+ADD R6 R6 #-1
+LD R3 CST429 ; R3 <- address of label FUN_USER_print_int
+BR IGNORE_CST429
+CST429 .FILL #12623
+IGNORE_CST429
+JSRR R3
+LD R1 CST83
+ADD R6 R6 R1 ; Remove print_int's args from the stack
+BR IGNORE_CST83
+CST83 .FILL #2
+IGNORE_CST83
+LD R1 CST84
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+STR R0 R1 #0 ; Change variable content to R0
+BR IGNORE_CST84
+CST84 .FILL #0
+IGNORE_CST84
+STARTWHILE70
+LD R0 CST72 ; R0 <- cst 0
+BR IGNORE_CST72
+CST72 .FILL #0
+IGNORE_CST72
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e1
+LD R0 CST73 ; R0 <- cst 3
+BR IGNORE_CST73
+CST73 .FILL #3
+IGNORE_CST73
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST74
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST74
+CST74 .FILL #0
+IGNORE_CST74
+LD R1 CST75
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST75
+CST75 .FILL #0
+IGNORE_CST75
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R0 R0 R1 ; R0 <- R1 - R0
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R0 R0 R1 ; Compute R1 - R0 for comparison
+ADD R0 R0 #0
+BRn IGNORE_JMP76
+LD R3 CST430 ; R3 <- address of label CMP_ELSE76
+BR IGNORE_CST430
+CST430 .FILL #13273
+IGNORE_CST430
+JMP R3
+IGNORE_JMP76
+AND R0 R0 #0
+ADD R0 R0 #1 ; If comparison true, set R0 to 1
+LD R3 CST431 ; R3 <- address of label CMP_ENDELSE76
+BR IGNORE_CST431
+CST431 .FILL #13274
+IGNORE_CST431
+JMP R3
+CMP_ELSE76
+AND R0 R0 #0 ; If comparison false, set R0 to 0
+CMP_ENDELSE76
+; R0 <-  e1 > e2
+ADD R0 R0 #0
+BRnp IGNORE_JMP_WHILE70
+LD R3 CST432 ; R3 <- address of label ENDWHILE70
+BR IGNORE_CST432
+CST432 .FILL #13308
+IGNORE_CST432
+JMP R3
+IGNORE_JMP_WHILE70
+LD R0 CST79 ; R0 <- cst 32
+BR IGNORE_CST79
+CST79 .FILL #32
+IGNORE_CST79
+OUT
+LD R0 CST77
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST77
+CST77 .FILL #0
+IGNORE_CST77
+LD R1 CST78
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST78
+CST78 .FILL #0
+IGNORE_CST78
+LDR R1 R4 #-1
+LDR R0 R1 #0
+ADD R0 R0 #1
+STR R0 R1 #0
+ADD R0 R0 #-1 ; (lvalue)++
+LD R3 CST433 ; R3 <- address of label STARTWHILE70
+BR IGNORE_CST433
+CST433 .FILL #13226
+IGNORE_CST433
+JMP R3
+ENDWHILE70
+LD R0 CST69
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST69
+CST69 .FILL #-4
+IGNORE_CST69
+LD R1 CST70
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST70
+CST70 .FILL #-4
+IGNORE_CST70
+LDR R1 R4 #-1
+LDR R0 R1 #0
+ADD R0 R0 #1
+STR R0 R1 #0
+ADD R0 R0 #-1 ; (lvalue)++
+LD R3 CST434 ; R3 <- address of label STARTWHILE61
+BR IGNORE_CST434
+CST434 .FILL #12961
+IGNORE_CST434
+JMP R3
+ENDWHILE61
+LD R0 CST435 ; R0 <- address of label STRING3
+BR IGNORE_CST435
+CST435 .FILL #15795
+IGNORE_CST435
+PUTS
+LD R0 CST436 ; R0 <- address of label STRING2
+BR IGNORE_CST436
+CST436 .FILL #15771
+IGNORE_CST436
+PUTS
+AND R0 R0 #0
+LDR R7 R5 #1 ; Restore R7
+LDR R6 R5 #2 ; Restore R6
+LDR R5 R5 #3 ; Restore R5
+RET
+FUN_USER_init_grid
+STR R5 R6 #0 ; Store R5 on the stack
+ADD R6 R6 #-1
+ADD R1 R6 #1
+STR R1 R6 #0 ; Store R6 on the stack
+ADD R6 R6 #-1
+STR R7 R6 #0 ; Store R7 on the stack
+ADD R6 R6 #-1
+ADD R5 R6 #0 ; R5 <- R6
+ADD R6 R6 #-1 ; Add variable i to the stack 
+LD R0 CST116 ; R0 <- cst 0
+BR IGNORE_CST116
+CST116 .FILL #0
+IGNORE_CST116
+LD R1 CST117
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+STR R0 R1 #0 ; Change variable content to R0
+BR IGNORE_CST117
+CST117 .FILL #0
+IGNORE_CST117
+STARTWHILE104
+LD R0 CST106
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST106
+CST106 .FILL #0
+IGNORE_CST106
+LD R1 CST107
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST107
+CST107 .FILL #0
+IGNORE_CST107
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+LD R0 CST108 ; R0 <- cst 16
+BR IGNORE_CST108
+CST108 .FILL #16
+IGNORE_CST108
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R0 R0 R1 ; Compute R1 - R0 for comparison
+ADD R0 R0 #0
+BRn IGNORE_JMP109
+LD R3 CST437 ; R3 <- address of label CMP_ELSE109
+BR IGNORE_CST437
+CST437 .FILL #13401
+IGNORE_CST437
+JMP R3
+IGNORE_JMP109
+AND R0 R0 #0
+ADD R0 R0 #1 ; If comparison true, set R0 to 1
+LD R3 CST438 ; R3 <- address of label CMP_ENDELSE109
+BR IGNORE_CST438
+CST438 .FILL #13402
+IGNORE_CST438
+JMP R3
+CMP_ELSE109
+AND R0 R0 #0 ; If comparison false, set R0 to 0
+CMP_ENDELSE109
+; R0 <-  e1 > e2
+ADD R0 R0 #0
+BRnp IGNORE_JMP_WHILE104
+LD R3 CST439 ; R3 <- address of label ENDWHILE104
+BR IGNORE_CST439
+CST439 .FILL #13463
+IGNORE_CST439
+JMP R3
+IGNORE_JMP_WHILE104
+LD R0 CST114 ; R0 <- cst 0
+BR IGNORE_CST114
+CST114 .FILL #0
+IGNORE_CST114
+LD R1 CST115
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+BR IGNORE_CST115
+CST115 .FILL #-4
+IGNORE_CST115
+
+STR R0 R1 #0 ; R0 <- M[R1]
+LD R0 CST112
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST112
+CST112 .FILL #-4
+IGNORE_CST112
+LD R1 CST113
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST113
+CST113 .FILL #-4
+IGNORE_CST113
+LDR R1 R4 #-1
+LDR R0 R1 #0
+ADD R0 R0 #1
+STR R0 R1 #0
+ADD R0 R0 #-1 ; (lvalue)++
+LD R0 CST110
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST110
+CST110 .FILL #0
+IGNORE_CST110
+LD R1 CST111
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST111
+CST111 .FILL #0
+IGNORE_CST111
+LDR R1 R4 #-1
+LDR R0 R1 #0
+ADD R0 R0 #1
+STR R0 R1 #0
+ADD R0 R0 #-1 ; (lvalue)++
+LD R3 CST440 ; R3 <- address of label STARTWHILE104
+BR IGNORE_CST440
+CST440 .FILL #13364
+IGNORE_CST440
+JMP R3
+ENDWHILE104
+AND R0 R0 #0
+LDR R7 R5 #1 ; Restore R7
+LDR R6 R5 #2 ; Restore R6
+LDR R5 R5 #3 ; Restore R5
+RET
+FUN_USER_put_sq
+STR R5 R6 #0 ; Store R5 on the stack
+ADD R6 R6 #-1
+ADD R1 R6 #1
+STR R1 R6 #0 ; Store R6 on the stack
+ADD R6 R6 #-1
+STR R7 R6 #0 ; Store R7 on the stack
+ADD R6 R6 #-1
+ADD R5 R6 #0 ; R5 <- R6
+LD R0 CST118
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST118
+CST118 .FILL #-4
+IGNORE_CST118
+LD R1 CST119
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST119
+CST119 .FILL #-4
+IGNORE_CST119
+LD R1 CST120
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+BR IGNORE_CST120
+CST120 .FILL #-5
+IGNORE_CST120
+
+STR R0 R1 #0 ; R0 <- M[R1]
+AND R0 R0 #0
+LDR R7 R5 #1 ; Restore R7
+LDR R6 R5 #2 ; Restore R6
+LDR R5 R5 #3 ; Restore R5
+RET
+FUN_USER_spawn_sq
+STR R5 R6 #0 ; Store R5 on the stack
+ADD R6 R6 #-1
+ADD R1 R6 #1
+STR R1 R6 #0 ; Store R6 on the stack
+ADD R6 R6 #-1
+STR R7 R6 #0 ; Store R7 on the stack
+ADD R6 R6 #-1
+ADD R5 R6 #0 ; R5 <- R6
+ADD R6 R6 #-1 ; Add variable q to the stack 
+; e1
+LD R0 CST138
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST138
+CST138 .FILL #-4
+IGNORE_CST138
+LD R1 CST139
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST139
+CST139 .FILL #-4
+IGNORE_CST139
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+; e1
+LD R0 CST140
+ADD R0 R0 R4
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST140
+CST140 .FILL #0
+IGNORE_CST140
+LD R1 CST141
+ADD R1 R4 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST141
+CST141 .FILL #0
+IGNORE_CST141
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST142 ; R0 <- cst 16
+BR IGNORE_CST142
+CST142 .FILL #16
+IGNORE_CST142
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+LD R3 CST441 ; R3 <- address of label FUN_MOD
+BR IGNORE_CST441
+CST441 .FILL #12358
+IGNORE_CST441
+JSRR R3 ; Compute R1 % R0
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+ADD R0 R0 R1 ; R0 <- R0 + R1
+LD R1 CST143
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+STR R0 R1 #0 ; Change variable content to R0
+BR IGNORE_CST143
+CST143 .FILL #0
+IGNORE_CST143
+STARTWHILE125
+LD R0 CST127 ; R0 <- cst 0
+BR IGNORE_CST127
+CST127 .FILL #0
+IGNORE_CST127
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+LD R0 CST128
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST128
+CST128 .FILL #0
+IGNORE_CST128
+LD R1 CST129
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST129
+CST129 .FILL #0
+IGNORE_CST129
+STR R0 R4 #-1
+LDR R0 R0 #0 ; Deref the last lvalue
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R0 R0 R1 ; Compute R1 - R0 for comparison
+ADD R0 R0 #0
+BRn IGNORE_JMP130
+LD R3 CST442 ; R3 <- address of label CMP_ELSE130
+BR IGNORE_CST442
+CST442 .FILL #13601
+IGNORE_CST442
+JMP R3
+IGNORE_JMP130
+AND R0 R0 #0
+ADD R0 R0 #1 ; If comparison true, set R0 to 1
+LD R3 CST443 ; R3 <- address of label CMP_ENDELSE130
+BR IGNORE_CST443
+CST443 .FILL #13602
+IGNORE_CST443
+JMP R3
+CMP_ELSE130
+AND R0 R0 #0 ; If comparison false, set R0 to 0
+CMP_ENDELSE130
+; R0 <-  e1 > e2
+ADD R0 R0 #0
+BRnp IGNORE_JMP_WHILE125
+LD R3 CST444 ; R3 <- address of label ENDWHILE125
+BR IGNORE_CST444
+CST444 .FILL #13669
+IGNORE_CST444
+JMP R3
+IGNORE_JMP_WHILE125
+; Call function gen_rnd
+LD R3 CST445 ; R3 <- address of label FUN_USER_gen_rnd
+BR IGNORE_CST445
+CST445 .FILL #12377
+IGNORE_CST445
+JSRR R3
+LD R1 CST137
+ADD R6 R6 R1 ; Remove gen_rnd's args from the stack
+BR IGNORE_CST137
+CST137 .FILL #0
+IGNORE_CST137
+; e1
+LD R0 CST131
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST131
+CST131 .FILL #-4
+IGNORE_CST131
+LD R1 CST132
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST132
+CST132 .FILL #-4
+IGNORE_CST132
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+; e1
+LD R0 CST133
+ADD R0 R0 R4
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST133
+CST133 .FILL #0
+IGNORE_CST133
+LD R1 CST134
+ADD R1 R4 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST134
+CST134 .FILL #0
+IGNORE_CST134
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST135 ; R0 <- cst 16
+BR IGNORE_CST135
+CST135 .FILL #16
+IGNORE_CST135
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+LD R3 CST446 ; R3 <- address of label FUN_MOD
+BR IGNORE_CST446
+CST446 .FILL #12358
+IGNORE_CST446
+JSRR R3 ; Compute R1 % R0
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+ADD R0 R0 R1 ; R0 <- R0 + R1
+LD R1 CST136
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+STR R0 R1 #0 ; Change variable content to R0
+BR IGNORE_CST136
+CST136 .FILL #0
+IGNORE_CST136
+LD R3 CST447 ; R3 <- address of label STARTWHILE125
+BR IGNORE_CST447
+CST447 .FILL #13562
+IGNORE_CST447
+JMP R3
+ENDWHILE125
+; Call function put_sq
+LD R0 CST122
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST122
+CST122 .FILL #0
+IGNORE_CST122
+LD R1 CST123
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST123
+CST123 .FILL #0
+IGNORE_CST123
+STR R0 R6 #0 ; Adding arg on the stack to call put_sq
+ADD R6 R6 #-1
+LD R0 CST124 ; R0 <- cst 2
+BR IGNORE_CST124
+CST124 .FILL #2
+IGNORE_CST124
+STR R0 R6 #0 ; Adding arg on the stack to call put_sq
+ADD R6 R6 #-1
+LD R3 CST448 ; R3 <- address of label FUN_USER_put_sq
+BR IGNORE_CST448
+CST448 .FILL #13468
+IGNORE_CST448
+JSRR R3
+LD R1 CST125
+ADD R6 R6 R1 ; Remove put_sq's args from the stack
+BR IGNORE_CST125
+CST125 .FILL #2
+IGNORE_CST125
+; Call function gen_rnd
+LD R3 CST449 ; R3 <- address of label FUN_USER_gen_rnd
+BR IGNORE_CST449
+CST449 .FILL #12377
+IGNORE_CST449
+JSRR R3
+LD R1 CST121
+ADD R6 R6 R1 ; Remove gen_rnd's args from the stack
+BR IGNORE_CST121
+CST121 .FILL #0
+IGNORE_CST121
+AND R0 R0 #0
+LDR R7 R5 #1 ; Restore R7
+LDR R6 R5 #2 ; Restore R6
+LDR R5 R5 #3 ; Restore R5
+RET
+FUN_USER_move_grid
+STR R5 R6 #0 ; Store R5 on the stack
+ADD R6 R6 #-1
+ADD R1 R6 #1
+STR R1 R6 #0 ; Store R6 on the stack
+ADD R6 R6 #-1
+STR R7 R6 #0 ; Store R7 on the stack
+ADD R6 R6 #-1
+ADD R5 R6 #0 ; R5 <- R6
+ADD R6 R6 #-1 ; Add variable b to the stack 
+ADD R6 R6 #-1 ; Add variable q to the stack 
+ADD R6 R6 #-1 ; Add variable p to the stack 
+ADD R6 R6 #-1 ; Add variable i to the stack 
+ADD R6 R6 #-1 ; Add variable a to the stack 
+ADD R6 R6 #-1 ; Add variable nb to the stack 
+LD R0 CST305 ; R0 <- cst 12
+BR IGNORE_CST305
+CST305 .FILL #12
+IGNORE_CST305
+LD R1 CST306
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+STR R0 R1 #0 ; Change variable content to R0
+BR IGNORE_CST306
+CST306 .FILL #5
+IGNORE_CST306
+STARTWHILE144
+LD R0 CST146 ; R0 <- cst 0
+BR IGNORE_CST146
+CST146 .FILL #0
+IGNORE_CST146
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+LD R0 CST147
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST147
+CST147 .FILL #5
+IGNORE_CST147
+LD R1 CST148
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST148
+CST148 .FILL #5
+IGNORE_CST148
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R0 R0 R1 ; Compute R1 - R0 for comparison
+ADD R0 R0 #0
+BRn IGNORE_JMP149
+LD R3 CST450 ; R3 <- address of label CMP_ELSE149
+BR IGNORE_CST450
+CST450 .FILL #13773
+IGNORE_CST450
+JMP R3
+IGNORE_JMP149
+AND R0 R0 #0
+ADD R0 R0 #1 ; If comparison true, set R0 to 1
+LD R3 CST451 ; R3 <- address of label CMP_ENDELSE149
+BR IGNORE_CST451
+CST451 .FILL #13774
+IGNORE_CST451
+JMP R3
+CMP_ELSE149
+AND R0 R0 #0 ; If comparison false, set R0 to 0
+CMP_ENDELSE149
+; R0 <-  e1 > e2
+ADD R0 R0 #0
+BRnp IGNORE_JMP_WHILE144
+LD R3 CST452 ; R3 <- address of label ENDWHILE144
+BR IGNORE_CST452
+CST452 .FILL #15098
+IGNORE_CST452
+JMP R3
+IGNORE_JMP_WHILE144
+; Call function init_grid
+LD R0 CST302
+ADD R0 R0 R4
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST302
+CST302 .FILL #2
+IGNORE_CST302
+LD R1 CST303
+ADD R1 R4 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST303
+CST303 .FILL #2
+IGNORE_CST303
+STR R0 R6 #0 ; Adding arg on the stack to call init_grid
+ADD R6 R6 #-1
+LD R3 CST453 ; R3 <- address of label FUN_USER_init_grid
+BR IGNORE_CST453
+CST453 .FILL #13345
+IGNORE_CST453
+JSRR R3
+LD R1 CST304
+ADD R6 R6 R1 ; Remove init_grid's args from the stack
+BR IGNORE_CST304
+CST304 .FILL #1
+IGNORE_CST304
+LD R0 CST300 ; R0 <- cst 0
+BR IGNORE_CST300
+CST300 .FILL #0
+IGNORE_CST300
+LD R1 CST301
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+STR R0 R1 #0 ; Change variable content to R0
+BR IGNORE_CST301
+CST301 .FILL #3
+IGNORE_CST301
+LD R0 CST298 ; R0 <- cst 1
+BR IGNORE_CST298
+CST298 .FILL #1
+IGNORE_CST298
+LD R1 CST299
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+STR R0 R1 #0 ; Change variable content to R0
+BR IGNORE_CST299
+CST299 .FILL #0
+IGNORE_CST299
+STARTWHILE152
+LD R0 CST154
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST154
+CST154 .FILL #3
+IGNORE_CST154
+LD R1 CST155
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST155
+CST155 .FILL #3
+IGNORE_CST155
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+LD R0 CST156 ; R0 <- cst 16
+BR IGNORE_CST156
+CST156 .FILL #16
+IGNORE_CST156
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R0 R0 R1 ; Compute R1 - R0 for comparison
+ADD R0 R0 #0
+BRn IGNORE_JMP157
+LD R3 CST454 ; R3 <- address of label CMP_ELSE157
+BR IGNORE_CST454
+CST454 .FILL #13858
+IGNORE_CST454
+JMP R3
+IGNORE_JMP157
+AND R0 R0 #0
+ADD R0 R0 #1 ; If comparison true, set R0 to 1
+LD R3 CST455 ; R3 <- address of label CMP_ENDELSE157
+BR IGNORE_CST455
+CST455 .FILL #13859
+IGNORE_CST455
+JMP R3
+CMP_ELSE157
+AND R0 R0 #0 ; If comparison false, set R0 to 0
+CMP_ENDELSE157
+; R0 <-  e1 > e2
+ADD R0 R0 #0
+BRnp IGNORE_JMP_WHILE152
+LD R3 CST456 ; R3 <- address of label ENDWHILE152
+BR IGNORE_CST456
+CST456 .FILL #15066
+IGNORE_CST456
+JMP R3
+IGNORE_JMP_WHILE152
+; e1
+LD R0 CST293
+ADD R0 R0 R4
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST293
+CST293 .FILL #1
+IGNORE_CST293
+LD R1 CST294
+ADD R1 R4 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST294
+CST294 .FILL #1
+IGNORE_CST294
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST295
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST295
+CST295 .FILL #3
+IGNORE_CST295
+LD R1 CST296
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST296
+CST296 .FILL #3
+IGNORE_CST296
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+ADD R0 R0 R1 ; R0 <- R0 + R1
+STR R0 R4 #-1
+LDR R0 R0 #0 ; Deref the last lvalue
+LD R1 CST297
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+STR R0 R1 #0 ; Change variable content to R0
+BR IGNORE_CST297
+CST297 .FILL #4
+IGNORE_CST297
+; e1
+LD R0 CST288
+ADD R0 R0 R4
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST288
+CST288 .FILL #2
+IGNORE_CST288
+LD R1 CST289
+ADD R1 R4 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST289
+CST289 .FILL #2
+IGNORE_CST289
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST290
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST290
+CST290 .FILL #3
+IGNORE_CST290
+LD R1 CST291
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST291
+CST291 .FILL #3
+IGNORE_CST291
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+ADD R0 R0 R1 ; R0 <- R0 + R1
+LD R1 CST292
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+STR R0 R1 #0 ; Change variable content to R0
+BR IGNORE_CST292
+CST292 .FILL #2
+IGNORE_CST292
+; e1
+LD R0 CST283
+ADD R0 R0 R4
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST283
+CST283 .FILL #1
+IGNORE_CST283
+LD R1 CST284
+ADD R1 R4 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST284
+CST284 .FILL #1
+IGNORE_CST284
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST285
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST285
+CST285 .FILL #3
+IGNORE_CST285
+LD R1 CST286
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST286
+CST286 .FILL #3
+IGNORE_CST286
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+ADD R0 R0 R1 ; R0 <- R0 + R1
+LD R1 CST287
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+STR R0 R1 #0 ; Change variable content to R0
+BR IGNORE_CST287
+CST287 .FILL #1
+IGNORE_CST287
+LD R0 CST168 ; R0 <- cst 0
+BR IGNORE_CST168
+CST168 .FILL #0
+IGNORE_CST168
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+LD R0 CST169
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST169
+CST169 .FILL #4
+IGNORE_CST169
+LD R1 CST170
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST170
+CST170 .FILL #4
+IGNORE_CST170
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R0 R0 R1 ; Compute R1 - R0 for comparison
+ADD R0 R0 #0
+BRn IGNORE_JMP171
+LD R3 CST457 ; R3 <- address of label CMP_ELSE171
+BR IGNORE_CST457
+CST457 .FILL #14018
+IGNORE_CST457
+JMP R3
+IGNORE_JMP171
+AND R0 R0 #0
+ADD R0 R0 #1 ; If comparison true, set R0 to 1
+LD R3 CST458 ; R3 <- address of label CMP_ENDELSE171
+BR IGNORE_CST458
+CST458 .FILL #14019
+IGNORE_CST458
+JMP R3
+CMP_ELSE171
+AND R0 R0 #0 ; If comparison false, set R0 to 0
+CMP_ENDELSE171
+; R0 <-  e1 > e2
+ADD R0 R0 #0
+BRnp IGNORE_JMP179
+LD R3 CST459 ; R3 <- address of label EIF_ELSE179
+BR IGNORE_CST459
+CST459 .FILL #14087
+IGNORE_CST459
+JMP R3
+IGNORE_JMP179
+LD R0 CST172 ; R0 <- cst 0
+BR IGNORE_CST172
+CST172 .FILL #0
+IGNORE_CST172
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e1
+LD R0 CST173
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST173
+CST173 .FILL #3
+IGNORE_CST173
+LD R1 CST174
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST174
+CST174 .FILL #3
+IGNORE_CST174
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST175
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST175
+CST175 .FILL #-4
+IGNORE_CST175
+LD R1 CST176
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST176
+CST176 .FILL #-4
+IGNORE_CST176
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+ADD R0 R0 R1 ; R0 <- R0 + R1
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R0 R0 R1 ; Compute R1 - R0 for comparison
+ADD R0 R0 #0
+BRnz IGNORE_JMP177
+LD R3 CST460 ; R3 <- address of label CMP_ELSE177
+BR IGNORE_CST460
+CST460 .FILL #14082
+IGNORE_CST460
+JMP R3
+IGNORE_JMP177
+AND R0 R0 #0
+ADD R0 R0 #1 ; If comparison true, set R0 to 1
+LD R3 CST461 ; R3 <- address of label CMP_ENDELSE177
+BR IGNORE_CST461
+CST461 .FILL #14083
+IGNORE_CST461
+JMP R3
+CMP_ELSE177
+AND R0 R0 #0 ; If comparison false, set R0 to 0
+CMP_ENDELSE177
+; R0 <-  e1 < e2
+LD R3 CST462 ; R3 <- address of label EIF_ENDELSE179
+BR IGNORE_CST462
+CST462 .FILL #14090
+IGNORE_CST462
+JMP R3
+EIF_ELSE179
+LD R0 CST178 ; R0 <- cst 0
+BR IGNORE_CST178
+CST178 .FILL #0
+IGNORE_CST178
+EIF_ENDELSE179
+ADD R0 R0 #0
+BRnp IGNORE_JMP187
+LD R3 CST463 ; R3 <- address of label EIF_ELSE187
+BR IGNORE_CST463
+CST463 .FILL #14158
+IGNORE_CST463
+JMP R3
+IGNORE_JMP187
+; e1
+LD R0 CST180
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST180
+CST180 .FILL #3
+IGNORE_CST180
+LD R1 CST181
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST181
+CST181 .FILL #3
+IGNORE_CST181
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST182
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST182
+CST182 .FILL #-4
+IGNORE_CST182
+LD R1 CST183
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST183
+CST183 .FILL #-4
+IGNORE_CST183
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+ADD R0 R0 R1 ; R0 <- R0 + R1
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+LD R0 CST184 ; R0 <- cst 16
+BR IGNORE_CST184
+CST184 .FILL #16
+IGNORE_CST184
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R0 R0 R1 ; Compute R1 - R0 for comparison
+ADD R0 R0 #0
+BRn IGNORE_JMP185
+LD R3 CST464 ; R3 <- address of label CMP_ELSE185
+BR IGNORE_CST464
+CST464 .FILL #14153
+IGNORE_CST464
+JMP R3
+IGNORE_JMP185
+AND R0 R0 #0
+ADD R0 R0 #1 ; If comparison true, set R0 to 1
+LD R3 CST465 ; R3 <- address of label CMP_ENDELSE185
+BR IGNORE_CST465
+CST465 .FILL #14154
+IGNORE_CST465
+JMP R3
+CMP_ELSE185
+AND R0 R0 #0 ; If comparison false, set R0 to 0
+CMP_ENDELSE185
+; R0 <-  e1 > e2
+LD R3 CST466 ; R3 <- address of label EIF_ENDELSE187
+BR IGNORE_CST466
+CST466 .FILL #14161
+IGNORE_CST466
+JMP R3
+EIF_ELSE187
+LD R0 CST186 ; R0 <- cst 0
+BR IGNORE_CST186
+CST186 .FILL #0
+IGNORE_CST186
+EIF_ENDELSE187
+ADD R0 R0 #0
+BRnp IGNORE_JMP222
+LD R3 CST467 ; R3 <- address of label EIF_ELSE222
+BR IGNORE_CST467
+CST467 .FILL #14471
+IGNORE_CST467
+JMP R3
+IGNORE_JMP222
+LD R0 CST188
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST188
+CST188 .FILL #-4
+IGNORE_CST188
+LD R1 CST189
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST189
+CST189 .FILL #-4
+IGNORE_CST189
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+LD R0 CST190 ; R0 <- cst 4
+BR IGNORE_CST190
+CST190 .FILL #4
+IGNORE_CST190
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R0 R0 R1 ; Compute R1 - R0 for comparison
+ADD R0 R0 #0
+BRz IGNORE_JMP191
+LD R3 CST468 ; R3 <- address of label CMP_ELSE191
+BR IGNORE_CST468
+CST468 .FILL #14204
+IGNORE_CST468
+JMP R3
+IGNORE_JMP191
+AND R0 R0 #0
+ADD R0 R0 #1 ; If comparison true, set R0 to 1
+LD R3 CST469 ; R3 <- address of label CMP_ENDELSE191
+BR IGNORE_CST469
+CST469 .FILL #14205
+IGNORE_CST469
+JMP R3
+CMP_ELSE191
+AND R0 R0 #0 ; If comparison false, set R0 to 0
+CMP_ENDELSE191
+; R0 <-  e1 == e2
+ADD R0 R0 #0
+BRnp IGNORE_JMP197
+LD R3 CST470 ; R3 <- address of label EIF_ELSE197
+BR IGNORE_CST470
+CST470 .FILL #14218
+IGNORE_CST470
+JMP R3
+IGNORE_JMP197
+LD R0 CST192 ; R0 <- cst 1
+BR IGNORE_CST192
+CST192 .FILL #1
+IGNORE_CST192
+LD R3 CST471 ; R3 <- address of label EIF_ENDELSE197
+BR IGNORE_CST471
+CST471 .FILL #14258
+IGNORE_CST471
+JMP R3
+EIF_ELSE197
+LD R0 CST193
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST193
+CST193 .FILL #-4
+IGNORE_CST193
+LD R1 CST194
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST194
+CST194 .FILL #-4
+IGNORE_CST194
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+LD R0 CST195 ; R0 <- cst 4
+BR IGNORE_CST195
+CST195 .FILL #4
+IGNORE_CST195
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R0 R0 R1 ; Compute R1 - R0 for comparison
+ADD R0 R0 #0
+BRz IGNORE_JMP196
+LD R3 CST472 ; R3 <- address of label CMP_ELSE196
+BR IGNORE_CST472
+CST472 .FILL #14257
+IGNORE_CST472
+JMP R3
+IGNORE_JMP196
+AND R0 R0 #0
+ADD R0 R0 #1 ; If comparison true, set R0 to 1
+LD R3 CST473 ; R3 <- address of label CMP_ENDELSE196
+BR IGNORE_CST473
+CST473 .FILL #14258
+IGNORE_CST473
+JMP R3
+CMP_ELSE196
+AND R0 R0 #0 ; If comparison false, set R0 to 0
+CMP_ENDELSE196
+; R0 <-  e1 == e2
+EIF_ENDELSE197
+ADD R0 R0 #0
+BRnp IGNORE_JMP220
+LD R3 CST474 ; R3 <- address of label EIF_ELSE220
+BR IGNORE_CST474
+CST474 .FILL #14271
+IGNORE_CST474
+JMP R3
+IGNORE_JMP220
+LD R0 CST198 ; R0 <- cst 1
+BR IGNORE_CST198
+CST198 .FILL #1
+IGNORE_CST198
+LD R3 CST475 ; R3 <- address of label EIF_ENDELSE220
+BR IGNORE_CST475
+CST475 .FILL #14467
+IGNORE_CST475
+JMP R3
+EIF_ELSE220
+LD R0 CST199
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST199
+CST199 .FILL #-4
+IGNORE_CST199
+LD R1 CST200
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST200
+CST200 .FILL #-4
+IGNORE_CST200
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+LD R0 CST201 ; R0 <- cst 1
+BR IGNORE_CST201
+CST201 .FILL #1
+IGNORE_CST201
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R0 R0 R1 ; Compute R1 - R0 for comparison
+ADD R0 R0 #0
+BRz IGNORE_JMP202
+LD R3 CST476 ; R3 <- address of label CMP_ELSE202
+BR IGNORE_CST476
+CST476 .FILL #14308
+IGNORE_CST476
+JMP R3
+IGNORE_JMP202
+AND R0 R0 #0
+ADD R0 R0 #1 ; If comparison true, set R0 to 1
+LD R3 CST477 ; R3 <- address of label CMP_ENDELSE202
+BR IGNORE_CST477
+CST477 .FILL #14309
+IGNORE_CST477
+JMP R3
+CMP_ELSE202
+AND R0 R0 #0 ; If comparison false, set R0 to 0
+CMP_ENDELSE202
+; R0 <-  e1 == e2
+ADD R0 R0 #0
+BRnp IGNORE_JMP208
+LD R3 CST478 ; R3 <- address of label EIF_ELSE208
+BR IGNORE_CST478
+CST478 .FILL #14322
+IGNORE_CST478
+JMP R3
+IGNORE_JMP208
+LD R0 CST203 ; R0 <- cst 1
+BR IGNORE_CST203
+CST203 .FILL #1
+IGNORE_CST203
+LD R3 CST479 ; R3 <- address of label EIF_ENDELSE208
+BR IGNORE_CST479
+CST479 .FILL #14362
+IGNORE_CST479
+JMP R3
+EIF_ELSE208
+LD R0 CST204
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST204
+CST204 .FILL #-4
+IGNORE_CST204
+LD R1 CST205
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST205
+CST205 .FILL #-4
+IGNORE_CST205
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+LD R0 CST206 ; R0 <- cst 1
+BR IGNORE_CST206
+CST206 .FILL #1
+IGNORE_CST206
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R0 R0 R1 ; Compute R1 - R0 for comparison
+ADD R0 R0 #0
+BRz IGNORE_JMP207
+LD R3 CST480 ; R3 <- address of label CMP_ELSE207
+BR IGNORE_CST480
+CST480 .FILL #14361
+IGNORE_CST480
+JMP R3
+IGNORE_JMP207
+AND R0 R0 #0
+ADD R0 R0 #1 ; If comparison true, set R0 to 1
+LD R3 CST481 ; R3 <- address of label CMP_ENDELSE207
+BR IGNORE_CST481
+CST481 .FILL #14362
+IGNORE_CST481
+JMP R3
+CMP_ELSE207
+AND R0 R0 #0 ; If comparison false, set R0 to 0
+CMP_ENDELSE207
+; R0 <-  e1 == e2
+EIF_ENDELSE208
+ADD R0 R0 #0
+BRnp IGNORE_JMP219
+LD R3 CST482 ; R3 <- address of label EIF_ELSE219
+BR IGNORE_CST482
+CST482 .FILL #14464
+IGNORE_CST482
+JMP R3
+IGNORE_JMP219
+; e1
+LD R0 CST209
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST209
+CST209 .FILL #3
+IGNORE_CST209
+LD R1 CST210
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST210
+CST210 .FILL #3
+IGNORE_CST210
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST211 ; R0 <- cst 4
+BR IGNORE_CST211
+CST211 .FILL #4
+IGNORE_CST211
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+LD R3 CST483 ; R3 <- address of label FUN_DIV
+BR IGNORE_CST483
+CST483 .FILL #12315
+IGNORE_CST483
+JSRR R3 ; Divide R1 by R0
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e1
+; e1
+LD R0 CST212
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST212
+CST212 .FILL #3
+IGNORE_CST212
+LD R1 CST213
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST213
+CST213 .FILL #3
+IGNORE_CST213
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST214
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST214
+CST214 .FILL #-4
+IGNORE_CST214
+LD R1 CST215
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST215
+CST215 .FILL #-4
+IGNORE_CST215
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+ADD R0 R0 R1 ; R0 <- R0 + R1
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST216 ; R0 <- cst 4
+BR IGNORE_CST216
+CST216 .FILL #4
+IGNORE_CST216
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+LD R3 CST484 ; R3 <- address of label FUN_DIV
+BR IGNORE_CST484
+CST484 .FILL #12315
+IGNORE_CST484
+JSRR R3 ; Divide R1 by R0
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R0 R0 R1 ; Compute R1 - R0 for comparison
+ADD R0 R0 #0
+BRz IGNORE_JMP217
+LD R3 CST485 ; R3 <- address of label CMP_ELSE217
+BR IGNORE_CST485
+CST485 .FILL #14459
+IGNORE_CST485
+JMP R3
+IGNORE_JMP217
+AND R0 R0 #0
+ADD R0 R0 #1 ; If comparison true, set R0 to 1
+LD R3 CST486 ; R3 <- address of label CMP_ENDELSE217
+BR IGNORE_CST486
+CST486 .FILL #14460
+IGNORE_CST486
+JMP R3
+CMP_ELSE217
+AND R0 R0 #0 ; If comparison false, set R0 to 0
+CMP_ENDELSE217
+; R0 <-  e1 == e2
+LD R3 CST487 ; R3 <- address of label EIF_ENDELSE219
+BR IGNORE_CST487
+CST487 .FILL #14467
+IGNORE_CST487
+JMP R3
+EIF_ELSE219
+LD R0 CST218 ; R0 <- cst 0
+BR IGNORE_CST218
+CST218 .FILL #0
+IGNORE_CST218
+EIF_ENDELSE219
+EIF_ENDELSE220
+LD R3 CST488 ; R3 <- address of label EIF_ENDELSE222
+BR IGNORE_CST488
+CST488 .FILL #14474
+IGNORE_CST488
+JMP R3
+EIF_ELSE222
+LD R0 CST221 ; R0 <- cst 0
+BR IGNORE_CST221
+CST221 .FILL #0
+IGNORE_CST221
+EIF_ENDELSE222
+ADD R0 R0 #0
+BRnp IGNORE_JMP282
+LD R3 CST489 ; R3 <- address of label IF_ELSE282
+BR IGNORE_CST489
+CST489 .FILL #14972
+IGNORE_CST489
+JMP R3
+IGNORE_JMP282
+; e1
+; e1
+LD R0 CST266
+ADD R0 R0 R4
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST266
+CST266 .FILL #1
+IGNORE_CST266
+LD R1 CST267
+ADD R1 R4 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST267
+CST267 .FILL #1
+IGNORE_CST267
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST268
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST268
+CST268 .FILL #3
+IGNORE_CST268
+LD R1 CST269
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST269
+CST269 .FILL #3
+IGNORE_CST269
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+ADD R0 R0 R1 ; R0 <- R0 + R1
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST270
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST270
+CST270 .FILL #-4
+IGNORE_CST270
+LD R1 CST271
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST271
+CST271 .FILL #-4
+IGNORE_CST271
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+ADD R0 R0 R1 ; R0 <- R0 + R1
+STR R0 R4 #-1
+LDR R0 R0 #0 ; Deref the last lvalue
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+LD R0 CST272 ; R0 <- cst 0
+BR IGNORE_CST272
+CST272 .FILL #0
+IGNORE_CST272
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R0 R0 R1 ; Compute R1 - R0 for comparison
+ADD R0 R0 #0
+BRz IGNORE_JMP273
+LD R3 CST490 ; R3 <- address of label CMP_ELSE273
+BR IGNORE_CST490
+CST490 .FILL #14555
+IGNORE_CST490
+JMP R3
+IGNORE_JMP273
+AND R0 R0 #0
+ADD R0 R0 #1 ; If comparison true, set R0 to 1
+LD R3 CST491 ; R3 <- address of label CMP_ENDELSE273
+BR IGNORE_CST491
+CST491 .FILL #14556
+IGNORE_CST491
+JMP R3
+CMP_ELSE273
+AND R0 R0 #0 ; If comparison false, set R0 to 0
+CMP_ENDELSE273
+; R0 <-  e1 == e2
+ADD R0 R0 #0
+BRnp IGNORE_JMP281
+LD R3 CST492 ; R3 <- address of label IF_ELSE281
+BR IGNORE_CST492
+CST492 .FILL #14624
+IGNORE_CST492
+JMP R3
+IGNORE_JMP281
+; e1
+; e1
+LD R0 CST274
+ADD R0 R0 R4
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST274
+CST274 .FILL #2
+IGNORE_CST274
+LD R1 CST275
+ADD R1 R4 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST275
+CST275 .FILL #2
+IGNORE_CST275
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST276
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST276
+CST276 .FILL #3
+IGNORE_CST276
+LD R1 CST277
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST277
+CST277 .FILL #3
+IGNORE_CST277
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+ADD R0 R0 R1 ; R0 <- R0 + R1
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST278
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST278
+CST278 .FILL #-4
+IGNORE_CST278
+LD R1 CST279
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST279
+CST279 .FILL #-4
+IGNORE_CST279
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+ADD R0 R0 R1 ; R0 <- R0 + R1
+LD R1 CST280
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+STR R0 R1 #0 ; Change variable content to R0
+BR IGNORE_CST280
+CST280 .FILL #2
+IGNORE_CST280
+LD R3 CST493 ; R3 <- address of label IF_ENDELSE281
+BR IGNORE_CST493
+CST493 .FILL #14624
+IGNORE_CST493
+JMP R3
+IF_ELSE281
+IF_ENDELSE281
+LD R0 CST223
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST223
+CST223 .FILL #0
+IGNORE_CST223
+LD R1 CST224
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST224
+CST224 .FILL #0
+IGNORE_CST224
+ADD R0 R0 #0
+BRnp IGNORE_JMP235
+LD R3 CST494 ; R3 <- address of label EIF_ELSE235
+BR IGNORE_CST494
+CST494 .FILL #14737
+IGNORE_CST494
+JMP R3
+IGNORE_JMP235
+; e1
+; e1
+LD R0 CST225
+ADD R0 R0 R4
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST225
+CST225 .FILL #1
+IGNORE_CST225
+LD R1 CST226
+ADD R1 R4 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST226
+CST226 .FILL #1
+IGNORE_CST226
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST227
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST227
+CST227 .FILL #3
+IGNORE_CST227
+LD R1 CST228
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST228
+CST228 .FILL #3
+IGNORE_CST228
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+ADD R0 R0 R1 ; R0 <- R0 + R1
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST229
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST229
+CST229 .FILL #-4
+IGNORE_CST229
+LD R1 CST230
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST230
+CST230 .FILL #-4
+IGNORE_CST230
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+ADD R0 R0 R1 ; R0 <- R0 + R1
+STR R0 R4 #-1
+LDR R0 R0 #0 ; Deref the last lvalue
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+LD R0 CST231
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST231
+CST231 .FILL #4
+IGNORE_CST231
+LD R1 CST232
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST232
+CST232 .FILL #4
+IGNORE_CST232
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R0 R0 R1 ; Compute R1 - R0 for comparison
+ADD R0 R0 #0
+BRz IGNORE_JMP233
+LD R3 CST495 ; R3 <- address of label CMP_ELSE233
+BR IGNORE_CST495
+CST495 .FILL #14732
+IGNORE_CST495
+JMP R3
+IGNORE_JMP233
+AND R0 R0 #0
+ADD R0 R0 #1 ; If comparison true, set R0 to 1
+LD R3 CST496 ; R3 <- address of label CMP_ENDELSE233
+BR IGNORE_CST496
+CST496 .FILL #14733
+IGNORE_CST496
+JMP R3
+CMP_ELSE233
+AND R0 R0 #0 ; If comparison false, set R0 to 0
+CMP_ENDELSE233
+; R0 <-  e1 == e2
+LD R3 CST497 ; R3 <- address of label EIF_ENDELSE235
+BR IGNORE_CST497
+CST497 .FILL #14740
+IGNORE_CST497
+JMP R3
+EIF_ELSE235
+LD R0 CST234 ; R0 <- cst 0
+BR IGNORE_CST234
+CST234 .FILL #0
+IGNORE_CST234
+EIF_ENDELSE235
+ADD R0 R0 #0
+BRnp IGNORE_JMP265
+LD R3 CST498 ; R3 <- address of label IF_ELSE265
+BR IGNORE_CST498
+CST498 .FILL #14968
+IGNORE_CST498
+JMP R3
+IGNORE_JMP265
+LD R0 CST263 ; R0 <- cst 0
+BR IGNORE_CST263
+CST263 .FILL #0
+IGNORE_CST263
+LD R1 CST264
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+STR R0 R1 #0 ; Change variable content to R0
+BR IGNORE_CST264
+CST264 .FILL #0
+IGNORE_CST264
+LD R0 CST261 ; R0 <- cst 0
+BR IGNORE_CST261
+CST261 .FILL #0
+IGNORE_CST261
+LD R1 CST262
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+BR IGNORE_CST262
+CST262 .FILL #1
+IGNORE_CST262
+
+STR R0 R1 #0 ; R0 <- M[R1]
+; e1
+LD R0 CST256
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST256
+CST256 .FILL #1
+IGNORE_CST256
+LD R1 CST257
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST257
+CST257 .FILL #1
+IGNORE_CST257
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST258
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST258
+CST258 .FILL #-4
+IGNORE_CST258
+LD R1 CST259
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST259
+CST259 .FILL #-4
+IGNORE_CST259
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+ADD R0 R0 R1 ; R0 <- R0 + R1
+LD R1 CST260
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+STR R0 R1 #0 ; Change variable content to R0
+BR IGNORE_CST260
+CST260 .FILL #1
+IGNORE_CST260
+LD R0 CST254 ; R0 <- cst 0
+BR IGNORE_CST254
+CST254 .FILL #0
+IGNORE_CST254
+LD R1 CST255
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+BR IGNORE_CST255
+CST255 .FILL #1
+IGNORE_CST255
+
+STR R0 R1 #0 ; R0 <- M[R1]
+; e1
+LD R0 CST249
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST249
+CST249 .FILL #2
+IGNORE_CST249
+LD R1 CST250
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST250
+CST250 .FILL #2
+IGNORE_CST250
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST251
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST251
+CST251 .FILL #-4
+IGNORE_CST251
+LD R1 CST252
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST252
+CST252 .FILL #-4
+IGNORE_CST252
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+ADD R0 R0 R1 ; R0 <- R0 + R1
+LD R1 CST253
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+STR R0 R1 #0 ; Change variable content to R0
+BR IGNORE_CST253
+CST253 .FILL #1
+IGNORE_CST253
+LD R0 CST247 ; R0 <- cst 0
+BR IGNORE_CST247
+CST247 .FILL #0
+IGNORE_CST247
+LD R1 CST248
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+BR IGNORE_CST248
+CST248 .FILL #1
+IGNORE_CST248
+
+STR R0 R1 #0 ; R0 <- M[R1]
+; e1
+; e1
+LD R0 CST240
+ADD R0 R0 R4
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST240
+CST240 .FILL #2
+IGNORE_CST240
+LD R1 CST241
+ADD R1 R4 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST241
+CST241 .FILL #2
+IGNORE_CST241
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST242
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST242
+CST242 .FILL #3
+IGNORE_CST242
+LD R1 CST243
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST243
+CST243 .FILL #3
+IGNORE_CST243
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+ADD R0 R0 R1 ; R0 <- R0 + R1
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST244
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST244
+CST244 .FILL #-4
+IGNORE_CST244
+LD R1 CST245
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST245
+CST245 .FILL #-4
+IGNORE_CST245
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+ADD R0 R0 R1 ; R0 <- R0 + R1
+LD R1 CST246
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+STR R0 R1 #0 ; Change variable content to R0
+BR IGNORE_CST246
+CST246 .FILL #2
+IGNORE_CST246
+; e1
+LD R0 CST236
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST236
+CST236 .FILL #4
+IGNORE_CST236
+LD R1 CST237
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST237
+CST237 .FILL #4
+IGNORE_CST237
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST238 ; R0 <- cst 2
+BR IGNORE_CST238
+CST238 .FILL #2
+IGNORE_CST238
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+LD R3 CST499 ; R3 <- address of label FUN_MULT
+BR IGNORE_CST499
+CST499 .FILL #12300
+IGNORE_CST499
+JSRR R3 ; Multiply R0 and R1
+LD R1 CST239
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+STR R0 R1 #0 ; Change variable content to R0
+BR IGNORE_CST239
+CST239 .FILL #4
+IGNORE_CST239
+LD R3 CST500 ; R3 <- address of label IF_ENDELSE265
+BR IGNORE_CST500
+CST500 .FILL #14968
+IGNORE_CST500
+JMP R3
+IF_ELSE265
+IF_ENDELSE265
+LD R3 CST501 ; R3 <- address of label IF_ENDELSE282
+BR IGNORE_CST501
+CST501 .FILL #14972
+IGNORE_CST501
+JMP R3
+IF_ELSE282
+IF_ENDELSE282
+LD R0 CST160 ; R0 <- cst 0
+BR IGNORE_CST160
+CST160 .FILL #0
+IGNORE_CST160
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+LD R0 CST161
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST161
+CST161 .FILL #4
+IGNORE_CST161
+LD R1 CST162
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST162
+CST162 .FILL #4
+IGNORE_CST162
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R0 R0 R1 ; Compute R1 - R0 for comparison
+ADD R0 R0 #0
+BRn IGNORE_JMP163
+LD R3 CST502 ; R3 <- address of label CMP_ELSE163
+BR IGNORE_CST502
+CST502 .FILL #15009
+IGNORE_CST502
+JMP R3
+IGNORE_JMP163
+AND R0 R0 #0
+ADD R0 R0 #1 ; If comparison true, set R0 to 1
+LD R3 CST503 ; R3 <- address of label CMP_ENDELSE163
+BR IGNORE_CST503
+CST503 .FILL #15010
+IGNORE_CST503
+JMP R3
+CMP_ELSE163
+AND R0 R0 #0 ; If comparison false, set R0 to 0
+CMP_ENDELSE163
+; R0 <-  e1 > e2
+ADD R0 R0 #0
+BRnp IGNORE_JMP167
+LD R3 CST504 ; R3 <- address of label IF_ELSE167
+BR IGNORE_CST504
+CST504 .FILL #15043
+IGNORE_CST504
+JMP R3
+IGNORE_JMP167
+LD R0 CST164
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST164
+CST164 .FILL #4
+IGNORE_CST164
+LD R1 CST165
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST165
+CST165 .FILL #4
+IGNORE_CST165
+LD R1 CST166
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+BR IGNORE_CST166
+CST166 .FILL #2
+IGNORE_CST166
+
+STR R0 R1 #0 ; R0 <- M[R1]
+LD R3 CST505 ; R3 <- address of label IF_ENDELSE167
+BR IGNORE_CST505
+CST505 .FILL #15043
+IGNORE_CST505
+JMP R3
+IF_ELSE167
+IF_ENDELSE167
+LD R0 CST158
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST158
+CST158 .FILL #3
+IGNORE_CST158
+LD R1 CST159
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST159
+CST159 .FILL #3
+IGNORE_CST159
+LDR R1 R4 #-1
+LDR R0 R1 #0
+ADD R0 R0 #1
+STR R0 R1 #0 ; ++(lvalue)
+LD R3 CST506 ; R3 <- address of label STARTWHILE152
+BR IGNORE_CST506
+CST506 .FILL #13821
+IGNORE_CST506
+JMP R3
+ENDWHILE152
+; Call function copy_grid
+LD R3 CST507 ; R3 <- address of label FUN_USER_copy_grid
+BR IGNORE_CST507
+CST507 .FILL #12453
+IGNORE_CST507
+JSRR R3
+LD R1 CST152
+ADD R6 R6 R1 ; Remove copy_grid's args from the stack
+BR IGNORE_CST152
+CST152 .FILL #0
+IGNORE_CST152
+LD R0 CST150
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST150
+CST150 .FILL #5
+IGNORE_CST150
+LD R1 CST151
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST151
+CST151 .FILL #5
+IGNORE_CST151
+LDR R1 R4 #-1
+LDR R0 R1 #0
+ADD R0 R0 #-1
+STR R0 R1 #0
+ADD R0 R0 #1 ; (lvalue)--
+LD R3 CST508 ; R3 <- address of label STARTWHILE144
+BR IGNORE_CST508
+CST508 .FILL #13736
+IGNORE_CST508
+JMP R3
+ENDWHILE144
+LD R0 CST144 ; R0 <- cst 0
+BR IGNORE_CST144
+CST144 .FILL #0
+IGNORE_CST144
+LDR R7 R5 #1 ; Restore R7
+LDR R6 R5 #2 ; Restore R6
+LDR R5 R5 #3 ; Restore R5
+RET
+FUN_USER_main
+STR R5 R6 #0 ; Store R5 on the stack
+ADD R6 R6 #-1
+ADD R1 R6 #1
+STR R1 R6 #0 ; Store R6 on the stack
+ADD R6 R6 #-1
+STR R7 R6 #0 ; Store R7 on the stack
+ADD R6 R6 #-1
+ADD R5 R6 #0 ; R5 <- R6
+ADD R6 R6 #-1 ; Add variable input to the stack 
+LD R0 CST509 ; R0 <- address of label STRING8
+BR IGNORE_CST509
+CST509 .FILL #15879
+IGNORE_CST509
+LD R1 CST389
+ADD R1 R4 R1
+STR R0 R1 #0 ; Change variable content to R0
+BR IGNORE_CST389
+CST389 .FILL #1
+IGNORE_CST389
+LD R0 CST510 ; R0 <- address of label STRING7
+BR IGNORE_CST510
+CST510 .FILL #15862
+IGNORE_CST510
+LD R1 CST388
+ADD R1 R4 R1
+STR R0 R1 #0 ; Change variable content to R0
+BR IGNORE_CST388
+CST388 .FILL #2
+IGNORE_CST388
+; Call function init_grid
+LD R0 CST385
+ADD R0 R0 R4
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST385
+CST385 .FILL #1
+IGNORE_CST385
+LD R1 CST386
+ADD R1 R4 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST386
+CST386 .FILL #1
+IGNORE_CST386
+STR R0 R6 #0 ; Adding arg on the stack to call init_grid
+ADD R6 R6 #-1
+LD R3 CST511 ; R3 <- address of label FUN_USER_init_grid
+BR IGNORE_CST511
+CST511 .FILL #13345
+IGNORE_CST511
+JSRR R3
+LD R1 CST387
+ADD R6 R6 R1 ; Remove init_grid's args from the stack
+BR IGNORE_CST387
+CST387 .FILL #1
+IGNORE_CST387
+; Call function print_grid
+LD R0 CST382
+ADD R0 R0 R4
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST382
+CST382 .FILL #1
+IGNORE_CST382
+LD R1 CST383
+ADD R1 R4 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST383
+CST383 .FILL #1
+IGNORE_CST383
+STR R0 R6 #0 ; Adding arg on the stack to call print_grid
+ADD R6 R6 #-1
+LD R3 CST512 ; R3 <- address of label FUN_USER_print_grid
+BR IGNORE_CST512
+CST512 .FILL #12948
+IGNORE_CST512
+JSRR R3
+LD R1 CST384
+ADD R6 R6 R1 ; Remove print_grid's args from the stack
+BR IGNORE_CST384
+CST384 .FILL #1
+IGNORE_CST384
+LD R0 CST513 ; R0 <- address of label STRING6
+BR IGNORE_CST513
+CST513 .FILL #15847
+IGNORE_CST513
+PUTS
+GETC
+LD R1 CST381
+ADD R1 R4 R1
+STR R0 R1 #0 ; Change variable content to R0
+BR IGNORE_CST381
+CST381 .FILL #0
+IGNORE_CST381
+; Call function put_sq
+LD R0 CST377
+ADD R0 R0 R4
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST377
+CST377 .FILL #1
+IGNORE_CST377
+LD R1 CST378
+ADD R1 R4 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST378
+CST378 .FILL #1
+IGNORE_CST378
+STR R0 R6 #0 ; Adding arg on the stack to call put_sq
+ADD R6 R6 #-1
+LD R0 CST379 ; R0 <- cst 2
+BR IGNORE_CST379
+CST379 .FILL #2
+IGNORE_CST379
+STR R0 R6 #0 ; Adding arg on the stack to call put_sq
+ADD R6 R6 #-1
+LD R3 CST514 ; R3 <- address of label FUN_USER_put_sq
+BR IGNORE_CST514
+CST514 .FILL #13468
+IGNORE_CST514
+JSRR R3
+LD R1 CST380
+ADD R6 R6 R1 ; Remove put_sq's args from the stack
+BR IGNORE_CST380
+CST380 .FILL #2
+IGNORE_CST380
+; Call function put_sq
+; e1
+LD R0 CST372
+ADD R0 R0 R4
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST372
+CST372 .FILL #1
+IGNORE_CST372
+LD R1 CST373
+ADD R1 R4 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST373
+CST373 .FILL #1
+IGNORE_CST373
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST374 ; R0 <- cst 1
+BR IGNORE_CST374
+CST374 .FILL #1
+IGNORE_CST374
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+ADD R0 R0 R1 ; R0 <- R0 + R1
+STR R0 R6 #0 ; Adding arg on the stack to call put_sq
+ADD R6 R6 #-1
+LD R0 CST375 ; R0 <- cst 2
+BR IGNORE_CST375
+CST375 .FILL #2
+IGNORE_CST375
+STR R0 R6 #0 ; Adding arg on the stack to call put_sq
+ADD R6 R6 #-1
+LD R3 CST515 ; R3 <- address of label FUN_USER_put_sq
+BR IGNORE_CST515
+CST515 .FILL #13468
+IGNORE_CST515
+JSRR R3
+LD R1 CST376
+ADD R6 R6 R1 ; Remove put_sq's args from the stack
+BR IGNORE_CST376
+CST376 .FILL #2
+IGNORE_CST376
+; Call function put_sq
+; e1
+LD R0 CST367
+ADD R0 R0 R4
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST367
+CST367 .FILL #1
+IGNORE_CST367
+LD R1 CST368
+ADD R1 R4 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST368
+CST368 .FILL #1
+IGNORE_CST368
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST369 ; R0 <- cst 2
+BR IGNORE_CST369
+CST369 .FILL #2
+IGNORE_CST369
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+ADD R0 R0 R1 ; R0 <- R0 + R1
+STR R0 R6 #0 ; Adding arg on the stack to call put_sq
+ADD R6 R6 #-1
+LD R0 CST370 ; R0 <- cst 4
+BR IGNORE_CST370
+CST370 .FILL #4
+IGNORE_CST370
+STR R0 R6 #0 ; Adding arg on the stack to call put_sq
+ADD R6 R6 #-1
+LD R3 CST516 ; R3 <- address of label FUN_USER_put_sq
+BR IGNORE_CST516
+CST516 .FILL #13468
+IGNORE_CST516
+JSRR R3
+LD R1 CST371
+ADD R6 R6 R1 ; Remove put_sq's args from the stack
+BR IGNORE_CST371
+CST371 .FILL #2
+IGNORE_CST371
+; Call function put_sq
+; e1
+LD R0 CST362
+ADD R0 R0 R4
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST362
+CST362 .FILL #1
+IGNORE_CST362
+LD R1 CST363
+ADD R1 R4 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST363
+CST363 .FILL #1
+IGNORE_CST363
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+; e2
+LD R0 CST364 ; R0 <- cst 3
+BR IGNORE_CST364
+CST364 .FILL #3
+IGNORE_CST364
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ; Retrieve upmost result on the stack in R1
+ADD R0 R0 R1 ; R0 <- R0 + R1
+STR R0 R6 #0 ; Adding arg on the stack to call put_sq
+ADD R6 R6 #-1
+LD R0 CST365 ; R0 <- cst 4
+BR IGNORE_CST365
+CST365 .FILL #4
+IGNORE_CST365
+STR R0 R6 #0 ; Adding arg on the stack to call put_sq
+ADD R6 R6 #-1
+LD R3 CST517 ; R3 <- address of label FUN_USER_put_sq
+BR IGNORE_CST517
+CST517 .FILL #13468
+IGNORE_CST517
+JSRR R3
+LD R1 CST366
+ADD R6 R6 R1 ; Remove put_sq's args from the stack
+BR IGNORE_CST366
+CST366 .FILL #2
+IGNORE_CST366
+; Call function clear
+LD R3 CST518 ; R3 <- address of label FUN_USER_clear
+BR IGNORE_CST518
+CST518 .FILL #12436
+IGNORE_CST518
+JSRR R3
+LD R1 CST361
+ADD R6 R6 R1 ; Remove clear's args from the stack
+BR IGNORE_CST361
+CST361 .FILL #0
+IGNORE_CST361
+; Call function print_grid
+LD R0 CST358
+ADD R0 R0 R4
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST358
+CST358 .FILL #1
+IGNORE_CST358
+LD R1 CST359
+ADD R1 R4 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST359
+CST359 .FILL #1
+IGNORE_CST359
+STR R0 R6 #0 ; Adding arg on the stack to call print_grid
+ADD R6 R6 #-1
+LD R3 CST519 ; R3 <- address of label FUN_USER_print_grid
+BR IGNORE_CST519
+CST519 .FILL #12948
+IGNORE_CST519
+JSRR R3
+LD R1 CST360
+ADD R6 R6 R1 ; Remove print_grid's args from the stack
+BR IGNORE_CST360
+CST360 .FILL #1
+IGNORE_CST360
+STARTWHILE306
+GETC
+LD R1 CST308
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+STR R0 R1 #0 ; Change variable content to R0
+BR IGNORE_CST308
+CST308 .FILL #0
+IGNORE_CST308
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+LD R0 CST309 ; R0 <- cst 120
+BR IGNORE_CST309
+CST309 .FILL #120
+IGNORE_CST309
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R0 R0 R1 ; Compute R1 - R0 for comparison
+ADD R0 R0 #0
+BRz IGNORE_JMP310
+LD R3 CST520 ; R3 <- address of label CMP_ELSE310
+BR IGNORE_CST520
+CST520 .FILL #15369
+IGNORE_CST520
+JMP R3
+IGNORE_JMP310
+AND R0 R0 #0
+ADD R0 R0 #1 ; If comparison true, set R0 to 1
+LD R3 CST521 ; R3 <- address of label CMP_ENDELSE310
+BR IGNORE_CST521
+CST521 .FILL #15370
+IGNORE_CST521
+JMP R3
+CMP_ELSE310
+AND R0 R0 #0 ; If comparison false, set R0 to 0
+CMP_ENDELSE310
+; R0 <-  e1 == e2
+ADD R0 R0 #0
+BRnp IGNORE_JMP313
+LD R3 CST522 ; R3 <- address of label EIF_ELSE313
+BR IGNORE_CST522
+CST522 .FILL #15383
+IGNORE_CST522
+JMP R3
+IGNORE_JMP313
+LD R0 CST311 ; R0 <- cst 0
+BR IGNORE_CST311
+CST311 .FILL #0
+IGNORE_CST311
+LD R3 CST523 ; R3 <- address of label EIF_ENDELSE313
+BR IGNORE_CST523
+CST523 .FILL #15386
+IGNORE_CST523
+JMP R3
+EIF_ELSE313
+LD R0 CST312 ; R0 <- cst 1
+BR IGNORE_CST312
+CST312 .FILL #1
+IGNORE_CST312
+EIF_ENDELSE313
+ADD R0 R0 #0
+BRnp IGNORE_JMP_WHILE306
+LD R3 CST524 ; R3 <- address of label ENDWHILE306
+BR IGNORE_CST524
+CST524 .FILL #15757
+IGNORE_CST524
+JMP R3
+IGNORE_JMP_WHILE306
+LD R0 CST348
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST348
+CST348 .FILL #0
+IGNORE_CST348
+LD R1 CST349
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST349
+CST349 .FILL #0
+IGNORE_CST349
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+LD R0 CST350 ; R0 <- cst 122
+BR IGNORE_CST350
+CST350 .FILL #122
+IGNORE_CST350
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R0 R0 R1 ; Compute R1 - R0 for comparison
+ADD R0 R0 #0
+BRz IGNORE_JMP351
+LD R3 CST525 ; R3 <- address of label CMP_ELSE351
+BR IGNORE_CST525
+CST525 .FILL #15429
+IGNORE_CST525
+JMP R3
+IGNORE_JMP351
+AND R0 R0 #0
+ADD R0 R0 #1 ; If comparison true, set R0 to 1
+LD R3 CST526 ; R3 <- address of label CMP_ENDELSE351
+BR IGNORE_CST526
+CST526 .FILL #15430
+IGNORE_CST526
+JMP R3
+CMP_ELSE351
+AND R0 R0 #0 ; If comparison false, set R0 to 0
+CMP_ENDELSE351
+; R0 <-  e1 == e2
+ADD R0 R0 #0
+BRnp IGNORE_JMP357
+LD R3 CST527 ; R3 <- address of label IF_ELSE357
+BR IGNORE_CST527
+CST527 .FILL #15476
+IGNORE_CST527
+JMP R3
+IGNORE_JMP357
+; Call function move_grid
+LD R0 CST355 ; R0 <- cst 4
+BR IGNORE_CST355
+CST355 .FILL #4
+IGNORE_CST355
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+STR R0 R6 #0 ; Adding arg on the stack to call move_grid
+ADD R6 R6 #-1
+LD R3 CST528 ; R3 <- address of label FUN_USER_move_grid
+BR IGNORE_CST528
+CST528 .FILL #13712
+IGNORE_CST528
+JSRR R3
+LD R1 CST356
+ADD R6 R6 R1 ; Remove move_grid's args from the stack
+BR IGNORE_CST356
+CST356 .FILL #1
+IGNORE_CST356
+; Call function spawn_sq
+LD R0 CST352
+ADD R0 R0 R4
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST352
+CST352 .FILL #1
+IGNORE_CST352
+LD R1 CST353
+ADD R1 R4 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST353
+CST353 .FILL #1
+IGNORE_CST353
+STR R0 R6 #0 ; Adding arg on the stack to call spawn_sq
+ADD R6 R6 #-1
+LD R3 CST529 ; R3 <- address of label FUN_USER_spawn_sq
+BR IGNORE_CST529
+CST529 .FILL #13504
+IGNORE_CST529
+JSRR R3
+LD R1 CST354
+ADD R6 R6 R1 ; Remove spawn_sq's args from the stack
+BR IGNORE_CST354
+CST354 .FILL #1
+IGNORE_CST354
+LD R3 CST530 ; R3 <- address of label IF_ENDELSE357
+BR IGNORE_CST530
+CST530 .FILL #15476
+IGNORE_CST530
+JMP R3
+IF_ELSE357
+IF_ENDELSE357
+LD R0 CST338
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST338
+CST338 .FILL #0
+IGNORE_CST338
+LD R1 CST339
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST339
+CST339 .FILL #0
+IGNORE_CST339
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+LD R0 CST340 ; R0 <- cst 115
+BR IGNORE_CST340
+CST340 .FILL #115
+IGNORE_CST340
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R0 R0 R1 ; Compute R1 - R0 for comparison
+ADD R0 R0 #0
+BRz IGNORE_JMP341
+LD R3 CST531 ; R3 <- address of label CMP_ELSE341
+BR IGNORE_CST531
+CST531 .FILL #15513
+IGNORE_CST531
+JMP R3
+IGNORE_JMP341
+AND R0 R0 #0
+ADD R0 R0 #1 ; If comparison true, set R0 to 1
+LD R3 CST532 ; R3 <- address of label CMP_ENDELSE341
+BR IGNORE_CST532
+CST532 .FILL #15514
+IGNORE_CST532
+JMP R3
+CMP_ELSE341
+AND R0 R0 #0 ; If comparison false, set R0 to 0
+CMP_ENDELSE341
+; R0 <-  e1 == e2
+ADD R0 R0 #0
+BRnp IGNORE_JMP347
+LD R3 CST533 ; R3 <- address of label IF_ELSE347
+BR IGNORE_CST533
+CST533 .FILL #15558
+IGNORE_CST533
+JMP R3
+IGNORE_JMP347
+; Call function move_grid
+LD R0 CST345 ; R0 <- cst 4
+BR IGNORE_CST345
+CST345 .FILL #4
+IGNORE_CST345
+STR R0 R6 #0 ; Adding arg on the stack to call move_grid
+ADD R6 R6 #-1
+LD R3 CST534 ; R3 <- address of label FUN_USER_move_grid
+BR IGNORE_CST534
+CST534 .FILL #13712
+IGNORE_CST534
+JSRR R3
+LD R1 CST346
+ADD R6 R6 R1 ; Remove move_grid's args from the stack
+BR IGNORE_CST346
+CST346 .FILL #1
+IGNORE_CST346
+; Call function spawn_sq
+LD R0 CST342
+ADD R0 R0 R4
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST342
+CST342 .FILL #1
+IGNORE_CST342
+LD R1 CST343
+ADD R1 R4 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST343
+CST343 .FILL #1
+IGNORE_CST343
+STR R0 R6 #0 ; Adding arg on the stack to call spawn_sq
+ADD R6 R6 #-1
+LD R3 CST535 ; R3 <- address of label FUN_USER_spawn_sq
+BR IGNORE_CST535
+CST535 .FILL #13504
+IGNORE_CST535
+JSRR R3
+LD R1 CST344
+ADD R6 R6 R1 ; Remove spawn_sq's args from the stack
+BR IGNORE_CST344
+CST344 .FILL #1
+IGNORE_CST344
+LD R3 CST536 ; R3 <- address of label IF_ENDELSE347
+BR IGNORE_CST536
+CST536 .FILL #15558
+IGNORE_CST536
+JMP R3
+IF_ELSE347
+IF_ENDELSE347
+LD R0 CST328
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST328
+CST328 .FILL #0
+IGNORE_CST328
+LD R1 CST329
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST329
+CST329 .FILL #0
+IGNORE_CST329
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+LD R0 CST330 ; R0 <- cst 100
+BR IGNORE_CST330
+CST330 .FILL #100
+IGNORE_CST330
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R0 R0 R1 ; Compute R1 - R0 for comparison
+ADD R0 R0 #0
+BRz IGNORE_JMP331
+LD R3 CST537 ; R3 <- address of label CMP_ELSE331
+BR IGNORE_CST537
+CST537 .FILL #15595
+IGNORE_CST537
+JMP R3
+IGNORE_JMP331
+AND R0 R0 #0
+ADD R0 R0 #1 ; If comparison true, set R0 to 1
+LD R3 CST538 ; R3 <- address of label CMP_ENDELSE331
+BR IGNORE_CST538
+CST538 .FILL #15596
+IGNORE_CST538
+JMP R3
+CMP_ELSE331
+AND R0 R0 #0 ; If comparison false, set R0 to 0
+CMP_ENDELSE331
+; R0 <-  e1 == e2
+ADD R0 R0 #0
+BRnp IGNORE_JMP337
+LD R3 CST539 ; R3 <- address of label IF_ELSE337
+BR IGNORE_CST539
+CST539 .FILL #15640
+IGNORE_CST539
+JMP R3
+IGNORE_JMP337
+; Call function move_grid
+LD R0 CST335 ; R0 <- cst 1
+BR IGNORE_CST335
+CST335 .FILL #1
+IGNORE_CST335
+STR R0 R6 #0 ; Adding arg on the stack to call move_grid
+ADD R6 R6 #-1
+LD R3 CST540 ; R3 <- address of label FUN_USER_move_grid
+BR IGNORE_CST540
+CST540 .FILL #13712
+IGNORE_CST540
+JSRR R3
+LD R1 CST336
+ADD R6 R6 R1 ; Remove move_grid's args from the stack
+BR IGNORE_CST336
+CST336 .FILL #1
+IGNORE_CST336
+; Call function spawn_sq
+LD R0 CST332
+ADD R0 R0 R4
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST332
+CST332 .FILL #1
+IGNORE_CST332
+LD R1 CST333
+ADD R1 R4 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST333
+CST333 .FILL #1
+IGNORE_CST333
+STR R0 R6 #0 ; Adding arg on the stack to call spawn_sq
+ADD R6 R6 #-1
+LD R3 CST541 ; R3 <- address of label FUN_USER_spawn_sq
+BR IGNORE_CST541
+CST541 .FILL #13504
+IGNORE_CST541
+JSRR R3
+LD R1 CST334
+ADD R6 R6 R1 ; Remove spawn_sq's args from the stack
+BR IGNORE_CST334
+CST334 .FILL #1
+IGNORE_CST334
+LD R3 CST542 ; R3 <- address of label IF_ENDELSE337
+BR IGNORE_CST542
+CST542 .FILL #15640
+IGNORE_CST542
+JMP R3
+IF_ELSE337
+IF_ENDELSE337
+LD R0 CST318
+NOT R0 R0
+ADD R0 R0 #1
+ADD R0 R0 R5
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST318
+CST318 .FILL #0
+IGNORE_CST318
+LD R1 CST319
+NOT R1 R1
+ADD R1 R1 #1
+ADD R1 R5 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST319
+CST319 .FILL #0
+IGNORE_CST319
+STR R0 R6 #0 ; Store R0 on the stack
+ADD R6 R6 #-1 ; Increase the stack
+LD R0 CST320 ; R0 <- cst 113
+BR IGNORE_CST320
+CST320 .FILL #113
+IGNORE_CST320
+ADD R6 R6 #1 ; Decrease the stack
+LDR R1 R6 #0 ;  Retrieve upmost result on the stack in R1
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+ADD R0 R0 R1 ; Compute R1 - R0 for comparison
+ADD R0 R0 #0
+BRz IGNORE_JMP321
+LD R3 CST543 ; R3 <- address of label CMP_ELSE321
+BR IGNORE_CST543
+CST543 .FILL #15677
+IGNORE_CST543
+JMP R3
+IGNORE_JMP321
+AND R0 R0 #0
+ADD R0 R0 #1 ; If comparison true, set R0 to 1
+LD R3 CST544 ; R3 <- address of label CMP_ENDELSE321
+BR IGNORE_CST544
+CST544 .FILL #15678
+IGNORE_CST544
+JMP R3
+CMP_ELSE321
+AND R0 R0 #0 ; If comparison false, set R0 to 0
+CMP_ENDELSE321
+; R0 <-  e1 == e2
+ADD R0 R0 #0
+BRnp IGNORE_JMP327
+LD R3 CST545 ; R3 <- address of label IF_ELSE327
+BR IGNORE_CST545
+CST545 .FILL #15724
+IGNORE_CST545
+JMP R3
+IGNORE_JMP327
+; Call function move_grid
+LD R0 CST325 ; R0 <- cst 1
+BR IGNORE_CST325
+CST325 .FILL #1
+IGNORE_CST325
+NOT R0 R0
+ADD R0 R0 #1 ;  R0 <- -R0
+STR R0 R6 #0 ; Adding arg on the stack to call move_grid
+ADD R6 R6 #-1
+LD R3 CST546 ; R3 <- address of label FUN_USER_move_grid
+BR IGNORE_CST546
+CST546 .FILL #13712
+IGNORE_CST546
+JSRR R3
+LD R1 CST326
+ADD R6 R6 R1 ; Remove move_grid's args from the stack
+BR IGNORE_CST326
+CST326 .FILL #1
+IGNORE_CST326
+; Call function spawn_sq
+LD R0 CST322
+ADD R0 R0 R4
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST322
+CST322 .FILL #1
+IGNORE_CST322
+LD R1 CST323
+ADD R1 R4 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST323
+CST323 .FILL #1
+IGNORE_CST323
+STR R0 R6 #0 ; Adding arg on the stack to call spawn_sq
+ADD R6 R6 #-1
+LD R3 CST547 ; R3 <- address of label FUN_USER_spawn_sq
+BR IGNORE_CST547
+CST547 .FILL #13504
+IGNORE_CST547
+JSRR R3
+LD R1 CST324
+ADD R6 R6 R1 ; Remove spawn_sq's args from the stack
+BR IGNORE_CST324
+CST324 .FILL #1
+IGNORE_CST324
+LD R3 CST548 ; R3 <- address of label IF_ENDELSE327
+BR IGNORE_CST548
+CST548 .FILL #15724
+IGNORE_CST548
+JMP R3
+IF_ELSE327
+IF_ENDELSE327
+; Call function clear
+LD R3 CST549 ; R3 <- address of label FUN_USER_clear
+BR IGNORE_CST549
+CST549 .FILL #12436
+IGNORE_CST549
+JSRR R3
+LD R1 CST317
+ADD R6 R6 R1 ; Remove clear's args from the stack
+BR IGNORE_CST317
+CST317 .FILL #0
+IGNORE_CST317
+; Call function print_grid
+LD R0 CST314
+ADD R0 R0 R4
+STR R0 R4 #-1 ; Change lvalue
+BR IGNORE_CST314
+CST314 .FILL #1
+IGNORE_CST314
+LD R1 CST315
+ADD R1 R4 R1
+LDR R1 R1 #0 ; Put variable content in R0
+ADD R0 R1 #0
+BR IGNORE_CST315
+CST315 .FILL #1
+IGNORE_CST315
+STR R0 R6 #0 ; Adding arg on the stack to call print_grid
+ADD R6 R6 #-1
+LD R3 CST550 ; R3 <- address of label FUN_USER_print_grid
+BR IGNORE_CST550
+CST550 .FILL #12948
+IGNORE_CST550
+JSRR R3
+LD R1 CST316
+ADD R6 R6 R1 ; Remove print_grid's args from the stack
+BR IGNORE_CST316
+CST316 .FILL #1
+IGNORE_CST316
+LD R3 CST551 ; R3 <- address of label STARTWHILE306
+BR IGNORE_CST551
+CST551 .FILL #15339
+IGNORE_CST551
+JMP R3
+ENDWHILE306
+AND R0 R0 #0
+LDR R7 R5 #1 ; Restore R7
+LDR R6 R5 #2 ; Restore R6
+LDR R5 R5 #3 ; Restore R5
+RET
+STRINGS
+STRING1 .STRINGZ "\n\n\n\n\n\n\n\n" ; 8
+STRING2 .STRINGZ "----------------------\n" ; 23
+STRING3 .STRINGZ "|\n" ; 2
+STRING4 .STRINGZ "|                    |\n" ; 23
+STRING5 .STRINGZ "----------------------\n|" ; 24
+STRING6 .STRINGZ "Enter seed : \n" ; 14
+STRING7 .STRINGZ "xxxxxxxxxxxxxxxx" ; 16
+STRING8 .STRINGZ "xxxxxxxxxxxxxxxx" ; 16
+STATIC_VAR
+LVALUE_ADDR .BLKW #1
+V_rnd .BLKW #1
+V_grid .BLKW #1
+V_altgrid .BLKW #1
+
+.END
+; mem 15896 15899
