@@ -1,6 +1,7 @@
 
 int rnd;
 int* grid;
+int mem;
 
 int gen_rnd()
 {
@@ -104,7 +105,7 @@ int move_grid(int d)
 	int* q;
 	int b;
 
-	nb = 12;
+	nb = 8;
 	while(nb > 0)
 	{
 		i = 0;
@@ -147,12 +148,6 @@ int main()
 
 	spawn_sq(grid);
 	spawn_sq(grid);
-
-	// put_sq(grid,2);
-	// put_sq(grid+1,2);
-	// put_sq(grid+2,4);
-	// put_sq(grid+3,4);
-
 
 
 	clear();

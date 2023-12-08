@@ -1,7 +1,7 @@
 
 int rnd;
 int* grid;
-int* altgrid;
+int mem;
 
 int gen_rnd()
 {
@@ -12,21 +12,6 @@ int gen_rnd()
 int clear()
 {
 	puts("\n\n\n\n\n\n\n\n");
-	return;
-}
-
-int copy_grid()
-{
-	int i;
-	int* p;
-	p = grid;
-	i = 0;
-	while(i < 16)
-	{
-		*p = *(altgrid + i);
-		++i;
-		++p;
-	}
 	return;
 }
 
@@ -120,7 +105,7 @@ int move_grid(int d)
 	int* q;
 	int b;
 
-	nb = 12;
+	nb = 8;
 	while(nb > 0)
 	{
 		i = 0;
@@ -156,20 +141,13 @@ int main()
 {
 	int input;
 	grid = "xxxxxxxxxxxxxxxx";
-	altgrid = "xxxxxxxxxxxxxxxx";
 	init_grid(grid);
 	print_grid(grid);
 	puts("Enter seed : \n");
 	rnd = getc();
 
-	// spawn_sq(grid);
-	// spawn_sq(grid);
-
-	put_sq(grid,2);
-	put_sq(grid+1,2);
-	put_sq(grid+2,4);
-	put_sq(grid+3,4);
-
+	spawn_sq(grid);
+	spawn_sq(grid);
 
 
 	clear();

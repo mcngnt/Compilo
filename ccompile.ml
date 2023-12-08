@@ -94,7 +94,7 @@ let check_file f =
   (* Counter used to generate labels injectively *)
   let flagcount = ref 0 in
   (* List of every global variables : the list is non-empty because it contains pseudo-variables used to handle lvalues *)
-  let globvar = ref ["LVALUE_ADDR"] in
+  let globvar = ref [] in
   let strings = ref [] in
   let stringcount = ref 0 in
 
@@ -128,7 +128,7 @@ let check_file f =
   (* Puts in LVALUE_ADDR the real address of the variable based on its scope and offset *)
   let set_lvalue addr isglob = 
     incr_flag();
-    "LD R0 CST" ^ (string_of_int !flagcount) ^ "\n" ^ ( if isglob then "ADD R0 R0 R4\n" else "NOT R0 R0\nADD R0 R0 #1\nADD R0 R0 R5\n" ) ^ "STR R0 R4 #-1 ; Change lvalue\n" ^ (print_cst_fill !flagcount addr)
+    "LD R0 CST" ^ (string_of_int !flagcount) ^ "\n" ^ ( if isglob then "ADD R0 R0 R4\n" else "NOT R0 R0\nADD R0 R0 #1\nADD R0 R0 R5\n" ) ^ (print_cst_fill !flagcount addr)
   in
 
   let get_string_len lab = 
@@ -139,7 +139,6 @@ let check_file f =
   	in
   	aux !strings
   in
-
 
 
   (* Compute the second pass of compilation, translating made up instruction like GLEA to real LC3 code *)
@@ -161,7 +160,7 @@ let check_file f =
 								begin match List.hd args with
 									| ".ORIG" -> create_env t count
 									| "GLEA" -> create_env t (count + 3)
-									| "RET" | "RTI" | "PUTS" | "GETC" | "OUT" | "HALT" -> create_env t (count + 1)
+									| "RET" | "RTI" | "PUTS" | "GETC" | "OUT" | "HALT" | "IN" | "PUTSP" -> create_env t (count + 1)
 									| _ when nbargs = 1 -> (h,count)::(create_env t count)
 									| _ when nbargs > 1 && List.nth args 1 = ".STRINGZ" -> let size = get_string_len (List.hd args) in (List.hd args,count)::(create_env t (count + size + 1))
 									| _ -> create_env t (count + 1)
@@ -182,7 +181,7 @@ let check_file f =
 			| [] -> ""
 			| h::t -> let args = String.split_on_char ' ' h in
 								begin match List.hd args with
-										(* Instruction example -> GLEA RX LABEL where x \in {0,1,2,3} *)
+										(* GLEA instruction format -> GLEA RX LABEL *)
 									| "GLEA" -> 
 															let label = (List.nth args 2) in
 															let r = (List.nth args 1) in
@@ -196,41 +195,47 @@ let check_file f =
 		(replace_fun asml env) ^ (print_env env)
 	in
 
+	(* Used when a function call occurs : push arguments on the stack, call the function and then pop the arguments of the stack *)
 	let rec gen_call s lle tab n = match lle with
 			| [] -> incr_flag(); "GLEA R3 FUN_USER_" ^ s ^ "\nJSRR R3\nLD R1 CST" ^ (string_of_int !flagcount) ^ "\nADD R6 R6 R1 ; Remove " ^ s ^ "'s args from the stack\n" ^ (print_cst_fill !flagcount n)
 			| h::t -> let msge = handle_expr h tab false in
 								msge ^ "STR R0 R6 #0 ; Adding arg on the stack to call " ^ s ^ "\nADD R6 R6 #-1\n" ^ (gen_call s t tab n)
-
+	(* Compile expressions : the boolean get_lvalue is used to know if the value of the variable or its address needs to be in R0 *)
 	and handle_expr le tab get_lvalue = match le with | (l,e) -> begin match e with
-																																(* Change the current lvalue address to the variable's address and set R0 to its value*)
-		| VAR s -> let a,isglob = get_addr_tab tab s in let slvalue = (set_lvalue a isglob) in slvalue ^ (get_var a isglob  true) (* Set LVALUE_VAR to a and isglob *)
+		| VAR s -> let a,isglob = get_addr_tab tab s in if get_lvalue then set_lvalue a isglob  else (get_var a isglob  true)
 		| CST x -> incr_flag() ; "LD R0 CST" ^ (string_of_int !flagcount) ^ " ; R0 <- cst " ^ (string_of_int x) ^ "\n" ^ (print_cst_fill !flagcount x)
 		| STRING s ->  incr_string(); strings := (s,"STRING" ^ (string_of_int !stringcount), String.length s)::!strings ; "GLEA R0 STRING" ^ (string_of_int !stringcount) ^ "\n"
 		| NULLPTR -> "AND R0 R0 #0\n"
 		| SET_VAR(s,le) -> let a,isglob = get_addr_tab tab s in let e = (handle_expr le tab false) in e ^ (set_var a isglob )
 		| SET_VAL(s,le) -> let a,isglob = get_addr_tab tab s in let e = (handle_expr le tab false) in e ^ (get_var a isglob  false) ^  "STR R0 R1 #0 ; R0 <- M[R1]\n"
+		(* Call string related functions *)
 		| CALL(s,lle) when s = "puts" -> let e = handle_expr (List.hd lle) tab false in e ^ "PUTS\n"
 		| CALL(s,lle) when s = "putc" -> let e = handle_expr (List.hd lle) tab false in e ^ "OUT\n"
 		| CALL(s,lle) when s = "getc" -> "GETC\n"
+		(* Call user defined functions *)
 		| CALL(s,lle) -> "; Call function " ^ s ^ "\n" ^ gen_call s lle tab (List.length lle)
-		| OP1(op, le) -> let msg = (handle_expr le tab false) in
+																	(* Retrieve value or address of the son of the instruction node *)
+		| OP1(op, le) -> let msg = match op with
+																| M_ADDR | M_PRE_INC | M_PRE_DEC | M_POST_INC | M_POST_DEC -> handle_expr le tab true
+																| _ -> handle_expr le tab false
+											in
 										 msg ^ begin
 											match op with
 												| M_MINUS -> "NOT R0 R0\nADD R0 R0 #1 ;  R0 <- -R0\n"
 												| M_NOT -> "NOT R0 R0\n"
 												(* The address of the expression will be the address of the last lvalue encountered *)
-												| M_ADDR ->  "LDR R0 R4 #-1 ; Get address of the last lvalue\n"
+												| M_ADDR ->  ""
 												(* After dereferencing, the new address of lvalue will become the result of the expression and the deref will return M[R0] *)
-												| M_DEREF -> "STR R0 R4 #-1\nLDR R0 R0 #0 ; Deref the last lvalue\n"
+												| M_DEREF -> "LDR R0 R0 #0 ; Deref the last lvalue\n"
 												(* For INC and DEC, get the value of the last lvalue, incr or decr and change its value in memory *)
-												| M_PRE_INC -> "LDR R1 R4 #-1\nLDR R0 R1 #0\nADD R0 R0 #1\nSTR R0 R1 #0 ; ++(lvalue)\n"
-												| M_PRE_DEC -> "LDR R1 R4 #-1\nLDR R0 R1 #0\nADD R0 R0 #-1\nSTR R0 R1 #0 ; --(lvalue)\n"
-												| M_POST_INC -> "LDR R1 R4 #-1\nLDR R0 R1 #0\nADD R0 R0 #1\nSTR R0 R1 #0\nADD R0 R0 #-1 ; (lvalue)++\n"
-												| M_POST_DEC -> "LDR R1 R4 #-1\nLDR R0 R1 #0\nADD R0 R0 #-1\nSTR R0 R1 #0\nADD R0 R0 #1 ; (lvalue)--\n"
+												| M_PRE_INC -> "ADD R1 R0 #0\nLDR R0 R1 #0\nADD R0 R0 #1\nSTR R0 R1 #0 ; ++(lvalue)\n"
+												| M_PRE_DEC -> "ADD R1 R0 #0\nLDR R0 R1 #0\nADD R0 R0 #-1\nSTR R0 R1 #0 ; --(lvalue)\n"
+												| M_POST_INC -> "ADD R1 R0 #0\nLDR R0 R1 #0\nADD R0 R0 #1\nSTR R0 R1 #0\nADD R0 R0 #-1 ; (lvalue)++\n"
+												| M_POST_DEC -> "ADD R1 R0 #0\nLDR R0 R1 #0\nADD R0 R0 #-1\nSTR R0 R1 #0\nADD R0 R0 #1 ; (lvalue)--\n"
 											end
 														(* I compute binary operations by storing the result of the first one on the stack and reusing it after computing the second one *)
 		| OP2(op, le1, le2) -> let e1 =  (handle_expr le1 tab false) and e2 = (handle_expr le2 tab false) in
-													 "; e1\n" ^ e1 ^ "STR R0 R6 #0 ; Store R0 on the stack\nADD R6 R6 #-1 ; Increase the stack\n; e2\n" ^ e2 ^ "ADD R6 R6 #1 ; Decrease the stack\nLDR R1 R6 #0 ; Retrieve upmost result on the stack in R1\n" ^ begin
+													 e1 ^ "STR R0 R6 #0 ; Store R0 on the stack\nADD R6 R6 #-1 ; Increase the stack\n" ^ e2 ^ "ADD R6 R6 #1 ; Decrease the stack\nLDR R1 R6 #0 ; Retrieve upmost result on the stack in R1\n" ^ begin
 													 match op with
 													 	| S_ADD -> "ADD R0 R0 R1 ; R0 <- R0 + R1\n"
 													 	| S_SUB -> "NOT R0 R0\nADD R0 R0 #1 ;  R0 <- -R0\nADD R0 R0 R1 ; R0 <- R1 - R0\n"
@@ -287,7 +292,9 @@ let check_file f =
 	 let rec handle_val_dec f tab r4 = match f with
 	 	| [] -> ""
 	 	| CDECL(l,s,t)::q -> globvar := s::(!globvar) ; ( handle_val_dec q (insert_var_tab tab s r4 true) (r4 + 1))
+	 														(* New environment for the function : adding its arguments to the symbol table *)
 	 	| CFUN(l,s,vl,t,lc)::q -> let funtab = (insert_fun_tab tab s vl) in
+	 														(* First instructions of every function : pushing R5,R6,R7 and changing the value of R5 *)
 	 														let funbase = "FUN_USER_" ^ s ^ "\nSTR R5 R6 #0 ; Store R5 on the stack\nADD R6 R6 #-1\nADD R1 R6 #1\nSTR R1 R6 #0 ; Store R6 on the stack\nADD R6 R6 #-1\nSTR R7 R6 #0 ; Store R7 on the stack\nADD R6 R6 #-1\nADD R5 R6 #0 ; R5 <- R6\n" in
 	 														let c = (handle_code lc funtab 0) in
 	 														funbase ^ c ^ (handle_val_dec q funtab r4)
@@ -297,7 +304,7 @@ let check_file f =
 
 	incr_flag();
 																											(* Init R6 value to the address of the stack *)                      (*Init R5 and R4 and leave space to store LVALUE_ADDR at offset -1*)   (*Jump to main*)
-	let header = ".ORIG " ^ (hexstring_of_int orig) ^ "\nLD R6 CST" ^ (string_of_int !flagcount) ^ " ; Init R6 value to the start of the stack\n" ^ (print_cst_fill !flagcount stack) ^ "ADD R5 R6 #0\nGLEA R4 STATIC_VAR\nADD R4 R4 #1\nGLEA R3 FUN_USER_main\nJMP R3\n" in
+	let header = ".ORIG " ^ (hexstring_of_int orig) ^ "\nLD R6 CST" ^ (string_of_int !flagcount) ^ " ; Init R6 value to the start of the stack\n" ^ (print_cst_fill !flagcount stack) ^ "ADD R5 R6 #0\nGLEA R4 STATIC_VAR\nGLEA R3 FUN_USER_main\nJMP R3\n" in
 	let protoasm = header
 		^ print_mult_fun()
 		^ print_div_fun()
@@ -306,6 +313,7 @@ let check_file f =
 	  ^ (fill_strings !strings)
 	  ^ (fill_glob_var !globvar)
 	  ^ "\n.END" in
+	(* Second pass : I calculate the line position of every instruction and use this information to replace my pseudo instruction GLEA *)
 	let finalasm = secondpass protoasm in
 	finalasm
 
@@ -320,6 +328,5 @@ Features :
 
  (* 
 Possible improvements :
-	- Dont calculate lvalue everytime
 	- Use naive instruction when small offset
   *)
