@@ -124,7 +124,7 @@ let check_file f =
   (* Retreive the absolute address of a variable and place it in R0 *)
   let set_lvalue addr isglob = 
     incr_flag();
-    (load_immediate "R0" addr) @ ( if isglob then ["ADD R0 R0 R4"] else ["NOT R0 R0";"ADD R0 R0 #1";"ADD R0 R0 R5"] ) @ ["STR R0 R4 #-1"]
+    (load_immediate "R0" addr) @ ( if isglob then ["ADD R0 R0 R4"] else ["NOT R0 R0";"ADD R0 R0 #1";"ADD R0 R0 R5"] )
   in
 
 (* Get the length of a string stored in the strings constants *)
@@ -176,10 +176,17 @@ let check_file f =
 									| _ -> h :: (replace_fun t env)
 								end
 		in
+
+		let rec print_env l = match l with
+			| []-> []
+			| (s,c)::t -> ( ";  " ^ s ^ " <- " ^ (string_of_int c) ) :: (print_env t)
+		in
+
 		let env = create_env asm orig in
-		replace_fun asm env
+		replace_fun asm env @ (print_env env)
 	in
 
+(* Used when a function call occurs : push arguments on the stack, call the function and then pop the arguments of the stack *)
 	let rec gen_call s lle tab n = match lle with
 			| [] -> incr_flag(); ["GLEA R3 FUN_USER_" ^ s ; "JSRR R3"] @ (load_immediate "R1" n) @ ["ADD R6 R6 R1"]
 			| h::t -> let msge = handle_expr h tab false in

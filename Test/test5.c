@@ -1,4 +1,5 @@
 int res;
+int res2;
 
 int clear()
 {
@@ -11,7 +12,7 @@ int getwidth(int* maze)
 	int n;
 	n = 1;
 	while (*maze && *maze != '\n')
-		n++, maze++;
+		n++,maze++;
 	return n;
 }
 
@@ -45,6 +46,8 @@ int main()
 	clear();
 	x = 1;
 	y = 1;
+	res = '@';
+	res2 = '&';
 	width = getwidth(maze);
 	res = width;
 	pos = maze+y*width+x;
