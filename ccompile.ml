@@ -192,9 +192,11 @@ let check_file f =
 		| NULLPTR -> ["AND R0 R0 #0"]
 		| SET_VAR(s,le) -> let a,isglob = get_addr_tab tab s in let e = (handle_expr le tab false) in e @ (set_var a isglob )
 		| SET_VAL(s,le) -> let a,isglob = get_addr_tab tab s in let e = (handle_expr le tab false) in e @ (get_var a isglob  false) @  ["STR R0 R1 #0"]
+		(* Call string related functions *)
 		| CALL(s,lle) when s = "puts" -> let e = handle_expr (List.hd lle) tab false in e @ ["PUTS"]
 		| CALL(s,lle) when s = "putc" -> let e = handle_expr (List.hd lle) tab false in e @ ["OUT"]
 		| CALL(s,lle) when s = "getc" -> ["GETC"]
+		(* Call user defined functions *)
 		| CALL(s,lle) -> ( gen_call s lle tab (List.length lle) )
 		| OP1(op, le) -> let msg = match op with
 																| M_ADDR | M_PRE_INC | M_PRE_DEC | M_POST_INC | M_POST_DEC -> handle_expr le tab true
@@ -205,14 +207,14 @@ let check_file f =
 												| M_MINUS -> ["NOT R0 R0";"ADD R0 R0 #1"]
 												| M_NOT -> ["NOT R0 R0"]
 												(* The address of the expression will be the address of the last lvalue encountered *)
-												| M_ADDR ->  ["LDR R0 R4 #-1"]
+												| M_ADDR ->  []
 												(* After dereferencing, the new address of lvalue will become the result of the expression and the deref will return M[R0] *)
-												| M_DEREF -> ["STR R0 R4 #-1";"LDR R0 R0 #0"]
+												| M_DEREF -> ["LDR R0 R0 #0"]
 												(* For INC and DEC, get the value of the last lvalue, incr or decr and change its value in memory *)
-												| M_PRE_INC -> ["LDR R1 R4 #-1";"LDR R0 R1 #0";"ADD R0 R0 #1";"STR R0 R1 #0"]
-												| M_PRE_DEC -> ["LDR R1 R4 #-1";"LDR R0 R1 #0";"ADD R0 R0 #-1";"STR R0 R1 #0"]
-												| M_POST_INC -> ["LDR R1 R4 #-1";"LDR R0 R1 #0";"ADD R0 R0 #1";"STR R0 R1 #0";"ADD R0 R0 #-1"]
-												| M_POST_DEC -> ["LDR R1 R4 #-1";"LDR R0 R1 #0";"ADD R0 R0 #-1";"STR R0 R1 #0";"ADD R0 R0 #1"]
+												| M_PRE_INC -> ["ADD R1 R0 #0";"LDR R0 R1 #0";"ADD R0 R0 #1";"STR R0 R1 #0"]
+												| M_PRE_DEC -> ["ADD R1 R0 #0";"LDR R0 R1 #0";"ADD R0 R0 #-1";"STR R0 R1 #0"]
+												| M_POST_INC -> ["ADD R1 R0 #0";"LDR R0 R1 #0";"ADD R0 R0 #1";"STR R0 R1 #0";"ADD R0 R0 #-1"]
+												| M_POST_DEC -> ["ADD R1 R0 #0";"LDR R0 R1 #0";"ADD R0 R0 #-1";"STR R0 R1 #0";"ADD R0 R0 #1"]
 											end
 														(* I compute binary operations by storing the result of the first one on the stack and reusing it after computing the second one *)
 		| OP2(op, le1, le2) -> let e1 =  (handle_expr le1 tab false) and e2 = (handle_expr le2 tab false) in
@@ -269,7 +271,9 @@ let check_file f =
 	 let rec handle_val_dec f tab r4 = match f with
 	 	| [] -> []
 	 	| CDECL(l,s,t)::q -> globvar := s::(!globvar) ; ( handle_val_dec q (insert_var_tab tab s r4 true) (r4 + 1))
+	 														(* New environment for the function : adding its arguments to the symbol table *)
 	 	| CFUN(l,s,vl,t,lc)::q -> let funtab = (insert_fun_tab tab s vl) in
+	 														(* First instructions of every function : pushing R5,R6,R7 and changing the value of R5 *)
 	 														let funbase = ["FUN_USER_" ^ s;"STR R5 R6 #0";"ADD R6 R6 #-1";"ADD R1 R6 #1";"STR R1 R6 #0";"ADD R6 R6 #-1";"STR R7 R6 #0";"ADD R6 R6 #-1";"ADD R5 R6 #0"] in
 	 														let c = (handle_code lc funtab 0) in
 	 														funbase @ c @ (handle_val_dec q funtab r4)
@@ -288,6 +292,7 @@ let check_file f =
 	  @ (fill_strings !strings)
 	  @ (fill_glob_var !globvar)
 	  @ [".END"] in
+	(* Second pass : I calculate the line position of every instruction and use this information to replace my pseudo instruction GLEA *)
 	let finalasm = secondpass protoasm in
 	finalasm
 
