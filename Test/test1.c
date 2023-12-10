@@ -17,5 +17,5 @@ int main()
                 *p = *(p-1) + *(p-2);
         }
         res = *p;
-        return 0;
+        return -1;
 }

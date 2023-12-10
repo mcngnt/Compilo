@@ -211,8 +211,12 @@ TINT_104 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4
 SET_VAR_98:type -> TINT_104
 CRETURN_105 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CRETURN</b></td></tr><tr ><td port='loc_expr'>loc_expr</td></tr></table>>]
 CBLOCK_5:loc_code_list -> CRETURN_105
-CST_106 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "0"</td></tr><tr ><td port='type'>type</td></tr></table>>]
-CRETURN_105:loc_expr -> CST_106
-TINT_107 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
-CST_106:type -> TINT_107
+OP1_106 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >OP1</b></td></tr><tr ><td colspan = '2'>unop = "-"</td></tr><tr ><td port='pexpr'>pexpr</td><td port='type'>type</td></tr></table>>]
+CRETURN_105:loc_expr -> OP1_106
+CST_107 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "1"</td></tr><tr ><td port='type'>type</td></tr></table>>]
+OP1_106:pexpr -> CST_107
+TINT_108 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+CST_107:type -> TINT_108
+TINT_109 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+OP1_106:type -> TINT_109
 }

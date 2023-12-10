@@ -28,6 +28,6 @@ int main()
                 ++p;
                 x = --(*p);
         }
-        puts("-hello");
+        puts("-hello\n");
         return x;
 }

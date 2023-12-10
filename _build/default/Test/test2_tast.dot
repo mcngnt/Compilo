@@ -251,7 +251,8 @@ CEXPR_124 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='
 CBLOCK_5:loc_code_list -> CEXPR_124
 CALL_125 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >CALL</b></td></tr><tr ><td colspan = '2'>fname = "puts"</td></tr><tr ><td port='pexpr_list'>pexpr_list</td><td port='type'>type</td></tr></table>>]
 CEXPR_124:pexpr -> CALL_125
-STRING_126 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >STRING</b></td></tr><tr ><td colspan = '1'>string = "-hello"</td></tr><tr ><td port='type'>type</td></tr></table>>]
+STRING_126 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >STRING</b></td></tr><tr ><td colspan = '1'>string = "-hello
+"</td></tr><tr ><td port='type'>type</td></tr></table>>]
 CALL_125:pexpr_list -> STRING_126
 TPTR_127 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TPTR</b></td></tr><tr ><td port='ptyp'>ptyp</td></tr></table>>]
 STRING_126:type -> TPTR_127

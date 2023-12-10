@@ -115,6 +115,8 @@ VAR_56 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'>
 OP1_55:pexpr -> VAR_56
 CRETURN_57 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CRETURN</b></td></tr><tr ><td port='loc_expr'>loc_expr</td></tr></table>>]
 CBLOCK_5:loc_code_list -> CRETURN_57
-CST_58 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "0"</td></tr></table>>]
-CRETURN_57:loc_expr -> CST_58
+OP1_58 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >OP1</b></td></tr><tr ><td colspan = '1'>unop = "-"</td></tr><tr ><td port='pexpr'>pexpr</td></tr></table>>]
+CRETURN_57:loc_expr -> OP1_58
+CST_59 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "1"</td></tr></table>>]
+OP1_58:pexpr -> CST_59
 }

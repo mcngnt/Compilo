@@ -3,8 +3,6 @@ open Cast
 
 exception Error of string
 
-let hexstring_of_int a = Printf.sprintf "x%x" a
-
 let ignore_specials s = 
 	let rec aux l = match l with
 		| [] -> ""
@@ -139,8 +137,6 @@ let check_file f =
   	aux !strings
   in
 
-
-
   (* Compute the second pass of compilation, translating made up instruction like GLEA to real LC3 code *)
   let secondpass asm = 
 
@@ -153,16 +149,14 @@ let check_file f =
 		(* Stores every label and string declaration with their line number in the code *)
 		let rec create_env l count = match l with
 			| [] -> []
-			| h::t -> let args = String.split_on_char ';' h in
+			| h::t -> let args = String.split_on_char ' ' h in
 								let nbargs = List.length args in
-								let labelargs = String.split_on_char ' ' (List.hd args) in
-								let nblabelargs = List.length labelargs in
-								begin match List.hd labelargs with
+								begin match List.hd args with
 									| ".ORIG" -> create_env t count
 									| "GLEA" -> create_env t (count + 3)
 									| "RET" | "RTI" | "PUTS" | "GETC" | "OUT" | "HALT" -> create_env t (count + 1)
-									| _ when nbargs = 1 && nblabelargs = 1 -> (h,count)::(create_env t count)
-									| _ when nbargs = 1 && nblabelargs > 1  && List.nth labelargs 1 = ".STRINGZ" -> let size = get_string_len h in (h,count)::(create_env t (count + size + 1))
+									| _ when nbargs = 1 -> (h,count)::(create_env t count)
+									| _ when nbargs > 1 && List.nth args 1 = ".STRINGZ" -> let size = get_string_len (List.hd args) in (List.hd args,count)::(create_env t (count + size + 1))
 									| _ -> create_env t (count + 1)
 							  end
 			in
@@ -170,7 +164,7 @@ let check_file f =
 		(* Replaces GLEA, an instruction used for accessing labels and strings more than 256 lines away, with real LC3 code *)
 		let rec replace_fun l env = match l with
 			| [] -> []
-			| h::t -> let args = String.split_on_char ';' h in
+			| h::t -> let args = String.split_on_char ' ' h in
 								begin match List.hd args with
 										(* Instruction example -> GLEA RX LABEL where x \in {0,1,2,3} *)
 									| "GLEA" -> 
@@ -240,8 +234,7 @@ let check_file f =
 													 let cfalse = ["AND R0 R0 #0"] in
 													 (gen_condition e ctrue cfalse "CMP" brtype)
 		| EIF(le1,le2,le3) -> let e = (handle_expr le1 tab false) and c1 = handle_expr le2 tab false and c2 = handle_expr le3 tab false in gen_condition e c1 c2 "EIF" "z"
-		(* | ESEQ(lle) -> List.fold_left (fun acc le -> acc ^ (handle_expr le tab false)) "" lle *)
-		| ESEQ(lle) -> []
+		| ESEQ(lle) -> List.concat (List.map (fun le -> handle_expr le tab false) lle)
 	end
 	in
 
@@ -284,7 +277,7 @@ let check_file f =
 
 	incr_flag();
 																											(* Init R6 value to the address of the stack *)                                                                                    (*Init R5 and R4 *)           (*Jump to main*)
-	let header = [".ORIG " ^ (hexstring_of_int orig) ; "LD R6 CST" ^ (string_of_int !flagcount)] @ (print_cst_fill !flagcount stack) @ ["ADD R5 R6 #0";"GLEA R4 STATIC_VAR";"GLEA R3 FUN_USER_main";"JMP R3"] in
+	let header = [".ORIG #" ^ (string_of_int orig) ; "LD R6 CST" ^ (string_of_int !flagcount)] @ (print_cst_fill !flagcount stack) @ ["ADD R5 R6 #0";"GLEA R4 STATIC_VAR";"GLEA R3 FUN_USER_main";"JMP R3"] in
 	let protoasm = header
 		@ print_mult_fun()
 		@ print_div_fun()
@@ -303,10 +296,25 @@ Features :
 		- Can jump to arbitrarly far away piece of code with the custom instruction GLEA, converted to real LC3 code in a second pass
 		- Division, multiplication and modulo operation implemented in a subroutine to be more lines-efficient
 		- Can handle IF and WHILE statements more than 256 lines long by using GLEA and JMP
+		- Uses a list representation instead of a plain string to avoid string concatenation (complexity of ^ : both string size , complexity of @ : left list size)
  *)
 
- (* 
+(* 
 Possible improvements :
-	- Dont calculate lvalue everytime
-	- Use naive instruction when small offset
-  *)
+	- Use custom type instead of string as an intermediate to avoid second pass parsing
+*)
+
+(* 
+Implementation choices :
+	- I use a list of custom instructions (like GLEA) without any comma (to facilitate second pass parsing) as an intermediate to code generation
+	- To put an immediate in a register, I store the immediate in a .FILL and then I load that .FILL in the register, as well as using labels and BR to jump over the .FILL 
+			-> LD R0 CST
+			-> BR IGNORE_CST
+			-> CST .FILL #42
+			-> IGNORE_CST
+	- I manage lvalues by having a paramter to handle_expr that tells the function to return the value or the address of an lvalue.
+		For intance, when it encounters ++x : it recovers x's address to then add 1 to x and return its value
+	- I store every string at the end of instructions and before the static memory
+	- I access global variables with R4 and an offset and local variables with R6 and an offset
+	- I jump somwhere in the instructions by putting the address of where to go in a register (this address is computed in a second pass with the instruction GLEA) and jump to this register (with JSRR or JMP)
+*)

@@ -153,7 +153,8 @@ CEXPR_75 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4
 CBLOCK_5:loc_code_list -> CEXPR_75
 CALL_76 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CALL</b></td></tr><tr ><td colspan = '1'>fname = "puts"</td></tr><tr ><td port='pexpr_list'>pexpr_list</td></tr></table>>]
 CEXPR_75:pexpr -> CALL_76
-STRING_77 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >STRING</b></td></tr><tr ><td colspan = '1'>string = "-hello"</td></tr></table>>]
+STRING_77 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >STRING</b></td></tr><tr ><td colspan = '1'>string = "-hello
+"</td></tr></table>>]
 CALL_76:pexpr_list -> STRING_77
 CRETURN_78 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CRETURN</b></td></tr><tr ><td port='loc_expr'>loc_expr</td></tr></table>>]
 CBLOCK_5:loc_code_list -> CRETURN_78

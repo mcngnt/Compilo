@@ -10,7 +10,7 @@ $(EXE): *.ml*
 n ?= 0
 
 test: $(EXE)
-# 	./ccomp --debug Test/test${n}.c
+	./ccomp --debug Test/test${n}.c
 # 	dot -v -Tpng -O Test/test${n}_ast.dot
 # 	tail -1 Test/test${n}.asm | cut -c3- | xclip -i -selection clipboard
 # 	~/lc3tools2/lc3as Test/test${n}.asm
