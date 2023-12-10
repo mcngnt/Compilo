@@ -1,0 +1,40 @@
+// Symbol table
+// Scope level 0:
+//	Symbol Name       Page Address
+//	----------------  ------------
+//	CST8              3002
+//	IGNORE_CST8       3003
+//	CST10             3006
+//	IGNORE_CST10      3007
+//	CST12             3009
+//	IGNORE_CST12      300A
+//	FUN_MULT          300B
+//	MULT_CHANGE_SIGN  300E
+//	MULT_INIT         3012
+//	MULT_LOOP         3015
+//	MULT_STOP         3019
+//	FUN_DIV           301A
+//	DIV_A_NEG         301F
+//	DIV_A_POS         3024
+//	DIV_AN_BN         3027
+//	DIV_AN_BP         302A
+//	DIV_AP_BN         302B
+//	DIV_AP_BP         302E
+//	DIV_NEG           302F
+//	DIV_POS           3032
+//	DIV_ENDSIGN       3033
+//	DIV_LOOP          3033
+//	DIV_END_LOOP      303E
+//	DIV_END           3043
+//	DIV_ISNEG         3044
+//	FUN_MOD           3045
+//	MOD_A_NEG         3049
+//	MOD_ENDSIGN       304B
+//	MOD_LOOP          304B
+//	MOD_END_LOOP      3056
+//	MOD_END           3057
+//	FUN_USER_main     3058
+//	STRINGS           309A
+//	STATIC_VAR        309A
+//	V_res             309A
+

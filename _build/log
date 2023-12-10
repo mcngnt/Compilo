@@ -3,7 +3,7 @@
 # Shared cache: disabled
 # Workspace root: /home/mcngnt/compilo
 # Auto-detected concurrency: 12
-$ /usr/bin/ocamlc.opt -config > /tmp/dune_31431e_output
+$ /usr/bin/ocamlc.opt -config > /tmp/dune_1f91bb_output
 # Dune context:
 #  { name = "default"
 #  ; kind = "default"
@@ -141,6 +141,6 @@ $ /usr/bin/ocamlc.opt -config > /tmp/dune_31431e_output
 $ (cd _build/default && /usr/bin/ocamldep.opt -modules -impl ccompile.ml) > _build/default/.main.eobjs/dune__exe__Ccompile.impl.d
 $ (cd _build/default && /usr/bin/ocamlc.opt -g -bin-annot -I .main.eobjs/byte -no-alias-deps -opaque -open Dune__exe -o .main.eobjs/byte/dune__exe__Ccompile.cmo -c -impl ccompile.ml)
 $ (cd _build/default && /usr/bin/ocamlc.opt -g -bin-annot -I .main.eobjs/byte -no-alias-deps -opaque -open Dune__exe -o .main.eobjs/byte/dune__exe__Main.cmo -c -impl main.ml)
-$ (cd _build/default && /usr/bin/ocamlopt.opt -g -I .main.eobjs/byte -I .main.eobjs/native -intf-suffix .ml -no-alias-deps -opaque -open Dune__exe -o .main.eobjs/native/dune__exe__Ccompile.cmx -c -impl ccompile.ml)
 $ (cd _build/default && /usr/bin/ocamlopt.opt -g -I .main.eobjs/byte -I .main.eobjs/native -intf-suffix .ml -no-alias-deps -opaque -open Dune__exe -o .main.eobjs/native/dune__exe__Main.cmx -c -impl main.ml)
+$ (cd _build/default && /usr/bin/ocamlopt.opt -g -I .main.eobjs/byte -I .main.eobjs/native -intf-suffix .ml -no-alias-deps -opaque -open Dune__exe -o .main.eobjs/native/dune__exe__Ccompile.cmx -c -impl ccompile.ml)
 $ (cd _build/default && /usr/bin/ocamlopt.opt -g -o main.exe .main.eobjs/native/dune__exe.cmx .main.eobjs/native/dune__exe__Cast.cmx .main.eobjs/native/dune__exe__Ctable.cmx .main.eobjs/native/dune__exe__Ccompile.cmx .main.eobjs/native/dune__exe__Cparser.cmx .main.eobjs/native/dune__exe__Clexer.cmx .main.eobjs/native/dune__exe__Ctyping.cmx .main.eobjs/native/dune__exe__Lc3.cmx .main.eobjs/native/dune__exe__Pretty.cmx .main.eobjs/native/dune__exe__Usage.cmx .main.eobjs/native/dune__exe__Main.cmx)

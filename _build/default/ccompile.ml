@@ -127,7 +127,7 @@ let check_file f =
     (load_immediate "R0" addr) @ ( if isglob then ["ADD R0 R0 R4"] else ["NOT R0 R0";"ADD R0 R0 #1";"ADD R0 R0 R5"] ) @ ["STR R0 R4 #-1"]
   in
 
-
+(* Get the length of a string stored in the strings constants *)
   let get_string_len lab = 
   	let rec aux l = match l with
   		| [] -> raise (Error("String " ^ lab ^ " does not exist."))
@@ -186,8 +186,7 @@ let check_file f =
 								msge @ ["STR R0 R6 #0" ; "ADD R6 R6 #-1"] @ (gen_call s t tab n)
 
 	and handle_expr le tab get_lvalue = match le with | (l,e) -> begin match e with
-																																(* Change the current lvalue address to the variable's address and set R0 to its value*)
-		| VAR s -> let a,isglob = get_addr_tab tab s in let slvalue = (set_lvalue a isglob) in slvalue @ (get_var a isglob  true)
+		| VAR s -> let a,isglob = get_addr_tab tab s in if get_lvalue then set_lvalue a isglob  else (get_var a isglob  true)
 		| CST x -> load_immediate "R0" x
 		| STRING s ->  incr_string(); strings := (s,"STRING" ^ (string_of_int !stringcount), String.length s)::!strings ; ["GLEA R0 STRING" ^ (string_of_int !stringcount)]
 		| NULLPTR -> ["AND R0 R0 #0"]
@@ -197,7 +196,10 @@ let check_file f =
 		| CALL(s,lle) when s = "putc" -> let e = handle_expr (List.hd lle) tab false in e @ ["OUT"]
 		| CALL(s,lle) when s = "getc" -> ["GETC"]
 		| CALL(s,lle) -> ( gen_call s lle tab (List.length lle) )
-		| OP1(op, le) -> let msg = (handle_expr le tab false) in
+		| OP1(op, le) -> let msg = match op with
+																| M_ADDR | M_PRE_INC | M_PRE_DEC | M_POST_INC | M_POST_DEC -> handle_expr le tab true
+																| _ -> handle_expr le tab false
+											in
 										 msg @ begin
 											match op with
 												| M_MINUS -> ["NOT R0 R0";"ADD R0 R0 #1"]
@@ -292,8 +294,8 @@ let check_file f =
 
 (* 
 Features :
-		- Can handle more than 32 static variables and local variables at the same time (normally difficult beacause the offset is in the -32,32 range)
-		- Can jump to arbitrarly far away piece of code with the custom instruction GLEA, converted to real LC3 code in a second pass
+		- Can handle more than 32 static variables and local variables at the same time (normally difficult because the offset is in the -32,32 range)
+		- Can jump to arbitrary far away piece of code with the custom instruction GLEA, converted to real LC3 code in a second pass
 		- Division, multiplication and modulo operation implemented in a subroutine to be more lines-efficient
 		- Can handle IF and WHILE statements more than 256 lines long by using GLEA and JMP
 		- Uses a list representation instead of a plain string to avoid string concatenation (complexity of ^ : both string size , complexity of @ : left list size)
@@ -312,9 +314,12 @@ Implementation choices :
 			-> BR IGNORE_CST
 			-> CST .FILL #42
 			-> IGNORE_CST
-	- I manage lvalues by having a paramter to handle_expr that tells the function to return the value or the address of an lvalue.
-		For intance, when it encounters ++x : it recovers x's address to then add 1 to x and return its value
+	- I manage lvalues by having a parameter to handle_expr that tells the function to return the value or the address of a lvalue.
+		For instance, when it encounters ++x : it recovers x's address to then add 1 to x and return its value
 	- I store every string at the end of instructions and before the static memory
 	- I access global variables with R4 and an offset and local variables with R6 and an offset
-	- I jump somwhere in the instructions by putting the address of where to go in a register (this address is computed in a second pass with the instruction GLEA) and jump to this register (with JSRR or JMP)
+	- I jump somewhere in the instructions by placing the address of where to go in a register (this address is computed in a second pass with the instruction GLEA) and jump to this register (with JSRR or JMP)
+	- I use a symbol table that is changed recursively to store its name, offset and if it is global or not
+	- When a function is called, the caller pushes its arguments on the stack (ie decreasing R6), jump to the calle and pops the arguments
+															 the calle pushes R5,R6 and R7 and resets R5 to R6 and when it returns, it remakes R5,R6 and R7 before popping them and RET
 *)

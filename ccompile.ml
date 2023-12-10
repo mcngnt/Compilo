@@ -186,7 +186,7 @@ let check_file f =
 								msge @ ["STR R0 R6 #0" ; "ADD R6 R6 #-1"] @ (gen_call s t tab n)
 
 	and handle_expr le tab get_lvalue = match le with | (l,e) -> begin match e with
-		| VAR s -> let a,isglob = get_addr_tab tab s in let slvalue = (set_lvalue a isglob) in slvalue @ (get_var a isglob  true)
+		| VAR s -> let a,isglob = get_addr_tab tab s in if get_lvalue then set_lvalue a isglob  else (get_var a isglob  true)
 		| CST x -> load_immediate "R0" x
 		| STRING s ->  incr_string(); strings := (s,"STRING" ^ (string_of_int !stringcount), String.length s)::!strings ; ["GLEA R0 STRING" ^ (string_of_int !stringcount)]
 		| NULLPTR -> ["AND R0 R0 #0"]
@@ -196,7 +196,10 @@ let check_file f =
 		| CALL(s,lle) when s = "putc" -> let e = handle_expr (List.hd lle) tab false in e @ ["OUT"]
 		| CALL(s,lle) when s = "getc" -> ["GETC"]
 		| CALL(s,lle) -> ( gen_call s lle tab (List.length lle) )
-		| OP1(op, le) -> let msg = (handle_expr le tab false) in
+		| OP1(op, le) -> let msg = match op with
+																| M_ADDR | M_PRE_INC | M_PRE_DEC | M_POST_INC | M_POST_DEC -> handle_expr le tab true
+																| _ -> handle_expr le tab false
+											in
 										 msg @ begin
 											match op with
 												| M_MINUS -> ["NOT R0 R0";"ADD R0 R0 #1"]
