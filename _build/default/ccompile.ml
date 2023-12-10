@@ -48,7 +48,6 @@ let get_addr_tab tab sx =
 let fill_glob_var l = 
 	let rec aux li = match li with 
 		| []-> ""
-		| h::q when h = "LVALUE_ADDR" -> (aux q) ^ h ^ " .BLKW #1\n"
 		| h::q ->  (aux q) ^ "V_" ^ h ^ " .BLKW #1\n"
 	in
 	"STATIC_VAR\n" ^ (aux l)
@@ -94,7 +93,7 @@ let check_file f =
   (* Counter used to generate labels injectively *)
   let flagcount = ref 0 in
   (* List of every global variables : the list is non-empty because it contains pseudo-variables used to handle lvalues *)
-  let globvar = ref ["LVALUE_ADDR"] in
+  let globvar = ref [] in
   let strings = ref [] in
   let stringcount = ref 0 in
 
@@ -109,27 +108,32 @@ let check_file f =
   	e ^ "ADD R0 R0 #0\n" ^ condjmp ^ ctrue ^ "GLEA R3 " ^ flagname ^ "_" ^ "ENDELSE" ^ idstring ^ "\nJMP R3\n" ^ flagname ^ "_" ^  "ELSE" ^ idstring ^ "\n" ^ cfalse ^ flagname ^ "_" ^  "ENDELSE" ^ idstring ^ "\n"
   in
 
+  let load_immediate r x = match x with
+  	| x when Int.abs(x) < 15 -> "AND " ^ r ^ " " ^ r ^ " #0\nADD " ^ r ^ " " ^ r ^ " #" ^ (string_of_int x) ^ "\n"
+  	| _ -> incr_flag() ; "LD " ^ r ^ " CST" ^ (string_of_int !flagcount) ^ " ; R0 <- cst " ^ (string_of_int x) ^ "\n" ^ (print_cst_fill !flagcount x)
+  in
 
   (* Puts the value of a variable in R0 by first storing the address in R1 *)
   (* I store the address in R1 because if I did LDR R0 R4 #offest, I would be limited to 32 offset, 
   limiting the number of static variables to 32 *)
   let get_var a isglob inR0 = 
   	incr_flag();
-  	"LD R1 CST" ^ (string_of_int !flagcount) ^ "\n" ^ (if isglob then "ADD R1 R4 R1\nLDR R1 R1 #0 ; Put variable content in R0\n" else "NOT R1 R1\nADD R1 R1 #1\nADD R1 R5 R1\nLDR R1 R1 #0 ; Put variable content in R0\n") ^ (if inR0 then "ADD R0 R1 #0\n" else "") ^ (print_cst_fill !flagcount a)
+  	(load_immediate "R1" a) ^ (if isglob then "ADD R1 R4 R1\nLDR R1 R1 #0 ; Put variable content in R0\n" else "NOT R1 R1\nADD R1 R1 #1\nADD R1 R5 R1\nLDR R1 R1 #0 ; Put variable content in R0\n") ^ (if inR0 then "ADD R0 R1 #0\n" else "")
   in
 
   (* Sets the value of a variable to the content of R0 by first storing the address in R1 *)
   let set_var a isglob =
   	incr_flag();
-  	"LD R1 CST" ^ (string_of_int !flagcount) ^ "\n" ^ (if isglob then "ADD R1 R4 R1\nSTR R0 R1 #0 ; Change variable content to R0\n" else "NOT R1 R1\nADD R1 R1 #1\nADD R1 R5 R1\nSTR R0 R1 #0 ; Change variable content to R0\n") ^ (print_cst_fill !flagcount a)
+  	(load_immediate "R1" a) ^ (if isglob then "ADD R1 R4 R1\nSTR R0 R1 #0 ; Change variable content to R0\n" else "NOT R1 R1\nADD R1 R1 #1\nADD R1 R5 R1\nSTR R0 R1 #0 ; Change variable content to R0\n")
   in
 
 
-  (* Puts in LVALUE_ADDR the real address of the variable based on its scope and offset *)
+  (* Retreive the absolute address of a variable and place it in R0 *)
   let set_lvalue addr isglob = 
     incr_flag();
-    "LD R0 CST" ^ (string_of_int !flagcount) ^ "\n" ^ ( if isglob then "ADD R0 R0 R4\n" else "NOT R0 R0\nADD R0 R0 #1\nADD R0 R0 R5\n" ) ^ "STR R0 R4 #-1 ; Change lvalue\n" ^ (print_cst_fill !flagcount addr)
+    (load_immediate "R0" addr) ^ ( if isglob then "ADD R0 R0 R4\n" else "NOT R0 R0\nADD R0 R0 #1\nADD R0 R0 R5\n" ) ^ "STR R0 R4 #-1\n"
   in
+
 
   let get_string_len lab = 
   	let rec aux l = match l with
@@ -177,6 +181,7 @@ let check_file f =
 			| (s,c)::t -> (print_env t)
 		in
 
+
 		(* Replaces GLEA, an instruction used for accessing labels and strings more than 256 lines away, with real LC3 code *)
 		let rec replace_fun l env = match l with
 			| [] -> ""
@@ -187,7 +192,7 @@ let check_file f =
 															let label = (List.nth args 2) in
 															let r = (List.nth args 1) in
 															let n = find_line label env in incr_flag();
-															let msg = "LD " ^ r ^ " CST" ^ (string_of_int !flagcount) ^ " ; " ^ r ^ " <- address of label " ^ label ^ "\n" ^ (print_cst_fill !flagcount n) in
+															let msg = load_immediate r n in
 															msg ^ (replace_fun t env)
 									| _ -> h ^ "\n" ^ (replace_fun t env)
 								end
@@ -197,14 +202,14 @@ let check_file f =
 	in
 
 	let rec gen_call s lle tab n = match lle with
-			| [] -> incr_flag(); "GLEA R3 FUN_USER_" ^ s ^ "\nJSRR R3\nLD R1 CST" ^ (string_of_int !flagcount) ^ "\nADD R6 R6 R1 ; Remove " ^ s ^ "'s args from the stack\n" ^ (print_cst_fill !flagcount n)
+			| [] -> incr_flag(); "GLEA R3 FUN_USER_" ^ s ^ "\nJSRR R3\n" ^ (load_immediate "R1" n) ^ "ADD R6 R6 R1 ; Remove " ^ s ^ "'s args from the stack\n"
 			| h::t -> let msge = handle_expr h tab false in
 								msge ^ "STR R0 R6 #0 ; Adding arg on the stack to call " ^ s ^ "\nADD R6 R6 #-1\n" ^ (gen_call s t tab n)
 
 	and handle_expr le tab get_lvalue = match le with | (l,e) -> begin match e with
 																																(* Change the current lvalue address to the variable's address and set R0 to its value*)
 		| VAR s -> let a,isglob = get_addr_tab tab s in let slvalue = (set_lvalue a isglob) in slvalue ^ (get_var a isglob  true) (* Set LVALUE_VAR to a and isglob *)
-		| CST x -> incr_flag() ; "LD R0 CST" ^ (string_of_int !flagcount) ^ " ; R0 <- cst " ^ (string_of_int x) ^ "\n" ^ (print_cst_fill !flagcount x)
+		| CST x -> load_immediate "R0" x
 		| STRING s ->  incr_string(); strings := (s,"STRING" ^ (string_of_int !stringcount), String.length s)::!strings ; "GLEA R0 STRING" ^ (string_of_int !stringcount) ^ "\n"
 		| NULLPTR -> "AND R0 R0 #0\n"
 		| SET_VAR(s,le) -> let a,isglob = get_addr_tab tab s in let e = (handle_expr le tab false) in e ^ (set_var a isglob )
@@ -296,8 +301,8 @@ let check_file f =
 	let codebody = handle_val_dec f [] 0 in
 
 	incr_flag();
-																											(* Init R6 value to the address of the stack *)                      (*Init R5 and R4 and leave space to store LVALUE_ADDR at offset -1*)   (*Jump to main*)
-	let header = ".ORIG " ^ (hexstring_of_int orig) ^ "\nLD R6 CST" ^ (string_of_int !flagcount) ^ " ; Init R6 value to the start of the stack\n" ^ (print_cst_fill !flagcount stack) ^ "ADD R5 R6 #0\nGLEA R4 STATIC_VAR\nADD R4 R4 #1\nGLEA R3 FUN_USER_main\nJMP R3\n" in
+																											(* Init R6 value to the address of the stack *)                                                                                    (*Init R5 and R4 *)           (*Jump to main*)
+	let header = ".ORIG " ^ (hexstring_of_int orig) ^ "\nLD R6 CST" ^ (string_of_int !flagcount) ^ " ; Init R6 value to the start of the stack\n" ^ (print_cst_fill !flagcount stack) ^ "ADD R5 R6 #0\nGLEA R4 STATIC_VAR\nGLEA R3 FUN_USER_main\nJMP R3\n" in
 	let protoasm = header
 		^ print_mult_fun()
 		^ print_div_fun()

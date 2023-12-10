@@ -18,6 +18,9 @@ module Ctable = Dune__exe__Ctable
 (** @canonical Dune__exe.Ctyping *)
 module Ctyping = Dune__exe__Ctyping
 
+(** @canonical Dune__exe.Lc3 *)
+module Lc3 = Dune__exe__Lc3
+
 (** @canonical Dune__exe.Main *)
 module Main = Dune__exe__Main
 

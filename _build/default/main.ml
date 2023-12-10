@@ -8,6 +8,7 @@ open Clexer
 open Cparser
 open Usage
 open Ctyping
+open Lc3
 
 let () =
   let c = open_in file in
@@ -35,10 +36,17 @@ let () =
       close_out tast_dot_file;
     end;
 
-    let code = Ccompile.check_file f in
+   (*  let code = Ccompile.check_file f in
     let oc = open_out (Filename.chop_suffix file ".c" ^ ".asm") in
     Printf.fprintf oc "%s\n" code;
-    close_out oc;
+    close_out oc; *)
+
+    let code = Ccompile.check_file f in
+
+    let c = open_out (Filename.chop_suffix file ".c" ^ ".asm") in
+    let fmt = formatter_of_out_channel c in
+    Lc3.print_program fmt code;
+    close_out c
 
 
 

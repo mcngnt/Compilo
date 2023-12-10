@@ -4,6 +4,7 @@ dune__exe__Clexer
 dune__exe__Cparser
 dune__exe__Ctable
 dune__exe__Ctyping
+dune__exe__Lc3
 dune__exe__Pretty
 dune__exe__Tast
 dune__exe__Usage
