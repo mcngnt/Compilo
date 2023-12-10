@@ -1,9 +1,5 @@
 open Ctable
 
-let convert_code code = 
-	code
-
-let print_program fmt code = 
-	let msg = convert_code code in
-	Format.fprintf fmt "%s" msg;
-	Format.pp_print_flush fmt ()
+let rec print_program fmt code = match code with
+	| [] -> Format.pp_print_flush fmt ()
+	| h::t -> Format.fprintf fmt "%s\n" h ; print_program fmt t
