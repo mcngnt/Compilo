@@ -27,7 +27,7 @@ int main()
 
     ppx = &px;
     px = &x;
-    x = 10;
+    x = -5 % 3;
     res = **ppx;
     print_int_nl(res);
     return 0;
