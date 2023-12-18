@@ -1,0 +1,154 @@
+digraph ast {
+node [shape=plaintext];
+root [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >*</b></td></tr></table>>]
+CFUN_1 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '3'><b >CFUN</b></td></tr><tr ><td colspan = '3'>f_name = "print_int"</td></tr><tr ><td port='f_params'>f_params</td><td port='f_rtyp'>f_rtyp</td><td port='f_code'>f_code</td></tr></table>>]
+root -> CFUN_1
+CDECL_2 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CDECL</b></td></tr><tr ><td colspan = '1'>v_name = "t"</td></tr><tr ><td port='v_typ'>v_typ</td></tr></table>>]
+CFUN_1:f_params -> CDECL_2
+TINT_3 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+CDECL_2:v_typ -> TINT_3
+TINT_4 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+CFUN_1:f_rtyp -> TINT_4
+CBLOCK_5 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >CBLOCK</b></td></tr><tr ><td port='var_decl_list'>var_decl_list</td><td port='loc_code_list'>loc_code_list</td></tr></table>>]
+CFUN_1:f_code -> CBLOCK_5
+CIF_6 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '3'><b >CIF</b></td></tr><tr ><td port='loc_expr_cond'>loc_expr_cond</td><td port='loc_code_if'>loc_code_if</td><td port='loc_code_else'>loc_code_else</td></tr></table>>]
+CBLOCK_5:loc_code_list -> CIF_6
+CMP_7 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >CMP</b></td></tr><tr ><td colspan = '2'>cmpop = "&le;"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='pexpr_right'>pexpr_right</td></tr></table>>]
+CIF_6:loc_expr_cond -> CMP_7
+VAR_8 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >VAR</b></td></tr><tr ><td colspan = '1'>name = "t"</td></tr></table>>]
+CMP_7:pexpr_left -> VAR_8
+CST_9 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "9"</td></tr></table>>]
+CMP_7:pexpr_right -> CST_9
+CBLOCK_10 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >CBLOCK</b></td></tr><tr ><td port='var_decl_list'>var_decl_list</td><td port='loc_code_list'>loc_code_list</td></tr></table>>]
+CIF_6:loc_code_if -> CBLOCK_10
+CEXPR_11 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CEXPR</b></td></tr><tr ><td port='pexpr'>pexpr</td></tr></table>>]
+CBLOCK_10:loc_code_list -> CEXPR_11
+CALL_12 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CALL</b></td></tr><tr ><td colspan = '1'>fname = "putc"</td></tr><tr ><td port='pexpr_list'>pexpr_list</td></tr></table>>]
+CEXPR_11:pexpr -> CALL_12
+OP2_13 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >OP2</b></td></tr><tr ><td colspan = '2'>binop = "+"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='pexpr_right'>pexpr_right</td></tr></table>>]
+CALL_12:pexpr_list -> OP2_13
+CST_14 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "48"</td></tr></table>>]
+OP2_13:pexpr_left -> CST_14
+VAR_15 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >VAR</b></td></tr><tr ><td colspan = '1'>name = "t"</td></tr></table>>]
+OP2_13:pexpr_right -> VAR_15
+CRETURN_16 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CRETURN</b></td></tr></table>>]
+CBLOCK_10:loc_code_list -> CRETURN_16
+CBLOCK_17 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >CBLOCK</b></td></tr><tr ><td port='var_decl_list'>var_decl_list</td><td port='loc_code_list'>loc_code_list</td></tr></table>>]
+CIF_6:loc_code_else -> CBLOCK_17
+CEXPR_18 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CEXPR</b></td></tr><tr ><td port='pexpr'>pexpr</td></tr></table>>]
+CBLOCK_5:loc_code_list -> CEXPR_18
+CALL_19 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CALL</b></td></tr><tr ><td colspan = '1'>fname = "print_int"</td></tr><tr ><td port='pexpr_list'>pexpr_list</td></tr></table>>]
+CEXPR_18:pexpr -> CALL_19
+OP2_20 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >OP2</b></td></tr><tr ><td colspan = '2'>binop = "/"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='pexpr_right'>pexpr_right</td></tr></table>>]
+CALL_19:pexpr_list -> OP2_20
+VAR_21 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >VAR</b></td></tr><tr ><td colspan = '1'>name = "t"</td></tr></table>>]
+OP2_20:pexpr_left -> VAR_21
+CST_22 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "10"</td></tr></table>>]
+OP2_20:pexpr_right -> CST_22
+CEXPR_23 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CEXPR</b></td></tr><tr ><td port='pexpr'>pexpr</td></tr></table>>]
+CBLOCK_5:loc_code_list -> CEXPR_23
+CALL_24 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CALL</b></td></tr><tr ><td colspan = '1'>fname = "putc"</td></tr><tr ><td port='pexpr_list'>pexpr_list</td></tr></table>>]
+CEXPR_23:pexpr -> CALL_24
+OP2_25 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >OP2</b></td></tr><tr ><td colspan = '2'>binop = "+"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='pexpr_right'>pexpr_right</td></tr></table>>]
+CALL_24:pexpr_list -> OP2_25
+CST_26 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "48"</td></tr></table>>]
+OP2_25:pexpr_left -> CST_26
+OP2_27 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >OP2</b></td></tr><tr ><td colspan = '2'>binop = "%"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='pexpr_right'>pexpr_right</td></tr></table>>]
+OP2_25:pexpr_right -> OP2_27
+VAR_28 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >VAR</b></td></tr><tr ><td colspan = '1'>name = "t"</td></tr></table>>]
+OP2_27:pexpr_left -> VAR_28
+CST_29 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "10"</td></tr></table>>]
+OP2_27:pexpr_right -> CST_29
+CRETURN_30 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CRETURN</b></td></tr></table>>]
+CBLOCK_5:loc_code_list -> CRETURN_30
+CFUN_31 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '3'><b >CFUN</b></td></tr><tr ><td colspan = '3'>f_name = "print_int_nl"</td></tr><tr ><td port='f_params'>f_params</td><td port='f_rtyp'>f_rtyp</td><td port='f_code'>f_code</td></tr></table>>]
+root -> CFUN_31
+CDECL_32 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CDECL</b></td></tr><tr ><td colspan = '1'>v_name = "t"</td></tr><tr ><td port='v_typ'>v_typ</td></tr></table>>]
+CFUN_31:f_params -> CDECL_32
+TINT_33 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+CDECL_32:v_typ -> TINT_33
+TINT_34 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+CFUN_31:f_rtyp -> TINT_34
+CBLOCK_35 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >CBLOCK</b></td></tr><tr ><td port='var_decl_list'>var_decl_list</td><td port='loc_code_list'>loc_code_list</td></tr></table>>]
+CFUN_31:f_code -> CBLOCK_35
+CIF_36 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '3'><b >CIF</b></td></tr><tr ><td port='loc_expr_cond'>loc_expr_cond</td><td port='loc_code_if'>loc_code_if</td><td port='loc_code_else'>loc_code_else</td></tr></table>>]
+CBLOCK_35:loc_code_list -> CIF_36
+CMP_37 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >CMP</b></td></tr><tr ><td colspan = '2'>cmpop = "&lt;"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='pexpr_right'>pexpr_right</td></tr></table>>]
+CIF_36:loc_expr_cond -> CMP_37
+VAR_38 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >VAR</b></td></tr><tr ><td colspan = '1'>name = "t"</td></tr></table>>]
+CMP_37:pexpr_left -> VAR_38
+CST_39 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "0"</td></tr></table>>]
+CMP_37:pexpr_right -> CST_39
+CBLOCK_40 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >CBLOCK</b></td></tr><tr ><td port='var_decl_list'>var_decl_list</td><td port='loc_code_list'>loc_code_list</td></tr></table>>]
+CIF_36:loc_code_if -> CBLOCK_40
+CEXPR_41 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CEXPR</b></td></tr><tr ><td port='pexpr'>pexpr</td></tr></table>>]
+CBLOCK_40:loc_code_list -> CEXPR_41
+SET_VAR_42 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >SET_VAR</b></td></tr><tr ><td colspan = '1'>vg = "t"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td></tr></table>>]
+CEXPR_41:pexpr -> SET_VAR_42
+OP1_43 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >OP1</b></td></tr><tr ><td colspan = '1'>unop = "-"</td></tr><tr ><td port='pexpr'>pexpr</td></tr></table>>]
+SET_VAR_42:pexpr_left -> OP1_43
+VAR_44 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >VAR</b></td></tr><tr ><td colspan = '1'>name = "t"</td></tr></table>>]
+OP1_43:pexpr -> VAR_44
+CEXPR_45 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CEXPR</b></td></tr><tr ><td port='pexpr'>pexpr</td></tr></table>>]
+CBLOCK_40:loc_code_list -> CEXPR_45
+CALL_46 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CALL</b></td></tr><tr ><td colspan = '1'>fname = "putc"</td></tr><tr ><td port='pexpr_list'>pexpr_list</td></tr></table>>]
+CEXPR_45:pexpr -> CALL_46
+CST_47 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "45"</td></tr></table>>]
+CALL_46:pexpr_list -> CST_47
+CBLOCK_48 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >CBLOCK</b></td></tr><tr ><td port='var_decl_list'>var_decl_list</td><td port='loc_code_list'>loc_code_list</td></tr></table>>]
+CIF_36:loc_code_else -> CBLOCK_48
+CEXPR_49 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CEXPR</b></td></tr><tr ><td port='pexpr'>pexpr</td></tr></table>>]
+CBLOCK_35:loc_code_list -> CEXPR_49
+CALL_50 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CALL</b></td></tr><tr ><td colspan = '1'>fname = "print_int"</td></tr><tr ><td port='pexpr_list'>pexpr_list</td></tr></table>>]
+CEXPR_49:pexpr -> CALL_50
+VAR_51 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >VAR</b></td></tr><tr ><td colspan = '1'>name = "t"</td></tr></table>>]
+CALL_50:pexpr_list -> VAR_51
+CEXPR_52 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CEXPR</b></td></tr><tr ><td port='pexpr'>pexpr</td></tr></table>>]
+CBLOCK_35:loc_code_list -> CEXPR_52
+CALL_53 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CALL</b></td></tr><tr ><td colspan = '1'>fname = "putc"</td></tr><tr ><td port='pexpr_list'>pexpr_list</td></tr></table>>]
+CEXPR_52:pexpr -> CALL_53
+CST_54 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "10"</td></tr></table>>]
+CALL_53:pexpr_list -> CST_54
+CRETURN_55 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CRETURN</b></td></tr></table>>]
+CBLOCK_35:loc_code_list -> CRETURN_55
+CFUN_56 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '3'><b >CFUN</b></td></tr><tr ><td colspan = '3'>f_name = "main"</td></tr><tr ><td port='f_params'>f_params</td><td port='f_rtyp'>f_rtyp</td><td port='f_code'>f_code</td></tr></table>>]
+root -> CFUN_56
+TINT_57 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+CFUN_56:f_rtyp -> TINT_57
+CBLOCK_58 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >CBLOCK</b></td></tr><tr ><td port='var_decl_list'>var_decl_list</td><td port='loc_code_list'>loc_code_list</td></tr></table>>]
+CFUN_56:f_code -> CBLOCK_58
+CDECL_59 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CDECL</b></td></tr><tr ><td colspan = '1'>v_name = "a"</td></tr><tr ><td port='v_typ'>v_typ</td></tr></table>>]
+CBLOCK_58:var_decl_list -> CDECL_59
+TINT_60 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >TINT</b></td></tr></table>>]
+CDECL_59:v_typ -> TINT_60
+CEXPR_61 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CEXPR</b></td></tr><tr ><td port='pexpr'>pexpr</td></tr></table>>]
+CBLOCK_58:loc_code_list -> CEXPR_61
+SET_VAR_62 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >SET_VAR</b></td></tr><tr ><td colspan = '1'>vg = "a"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td></tr></table>>]
+CEXPR_61:pexpr -> SET_VAR_62
+CST_63 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "30"</td></tr></table>>]
+SET_VAR_62:pexpr_left -> CST_63
+CWHILE_64 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >CWHILE</b></td></tr><tr ><td port='loc_expr_cond'>loc_expr_cond</td><td port='loc_code_while'>loc_code_while</td></tr></table>>]
+CBLOCK_58:loc_code_list -> CWHILE_64
+CMP_65 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >CMP</b></td></tr><tr ><td colspan = '2'>cmpop = "&lt;"</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='pexpr_right'>pexpr_right</td></tr></table>>]
+CWHILE_64:loc_expr_cond -> CMP_65
+CST_66 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CST</b></td></tr><tr ><td colspan = '1'>int = "0"</td></tr></table>>]
+CMP_65:pexpr_left -> CST_66
+VAR_67 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >VAR</b></td></tr><tr ><td colspan = '1'>name = "a"</td></tr></table>>]
+CMP_65:pexpr_right -> VAR_67
+CBLOCK_68 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >CBLOCK</b></td></tr><tr ><td port='var_decl_list'>var_decl_list</td><td port='loc_code_list'>loc_code_list</td></tr></table>>]
+CWHILE_64:loc_code_while -> CBLOCK_68
+CEXPR_69 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CEXPR</b></td></tr><tr ><td port='pexpr'>pexpr</td></tr></table>>]
+CBLOCK_68:loc_code_list -> CEXPR_69
+CALL_70 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CALL</b></td></tr><tr ><td colspan = '1'>fname = "print_int_nl"</td></tr><tr ><td port='pexpr_list'>pexpr_list</td></tr></table>>]
+CEXPR_69:pexpr -> CALL_70
+VAR_71 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >VAR</b></td></tr><tr ><td colspan = '1'>name = "a"</td></tr></table>>]
+CALL_70:pexpr_list -> VAR_71
+CEXPR_72 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CEXPR</b></td></tr><tr ><td port='pexpr'>pexpr</td></tr></table>>]
+CBLOCK_68:loc_code_list -> CEXPR_72
+OP1_73 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >OP1</b></td></tr><tr ><td colspan = '1'>unop = "--"</td></tr><tr ><td port='pexpr'>pexpr</td></tr></table>>]
+CEXPR_72:pexpr -> OP1_73
+VAR_74 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >VAR</b></td></tr><tr ><td colspan = '1'>name = "a"</td></tr></table>>]
+OP1_73:pexpr -> VAR_74
+CRETURN_75 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >CRETURN</b></td></tr></table>>]
+CBLOCK_58:loc_code_list -> CRETURN_75
+}
