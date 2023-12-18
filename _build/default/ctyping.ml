@@ -78,7 +78,7 @@ let  current_fun_type_env env l =
 let rec is_lvalue le = match le with
 	| (l,e) -> begin match e with
 				| VAR s -> true
-				| OP1(op,le) when op = M_DEREF -> is_lvalue le
+				| OP1(op,le) when op = M_DEREF -> true
 				| _ -> false
 				end
 

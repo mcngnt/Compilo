@@ -3,13 +3,17 @@ open Cast
 
 exception Error of string
 
+(* Handle special characters in string *)
 let ignore_specials s = 
 	let rec aux l = match l with
 		| [] -> ""
 		| h::t when h = '\n' -> "\\n" ^ (aux t)
+		| h::t when h = '\"' -> "\\\"" ^ (aux t)
+		| h::t when h = '\\' -> "\\\\" ^ (aux t)
 		| h::t -> (String.make 1 h) ^ (aux t)
 	in
 	aux (List.init (String.length s) (String.get s))
+
 
 (* Inserts new variable in the table with its name, absolute offest relative to base and scope *)
 let insert_var_tab tab s r isglob = SVAR(s,r, isglob)::tab
@@ -177,6 +181,7 @@ let check_file f =
 								end
 		in
 
+		(* Prints every label used and its line number for debug purposes *)
 		let rec print_env l = match l with
 			| []-> []
 			| (s,c)::t -> ( ";  " ^ s ^ " <- " ^ (string_of_int c) ) :: (print_env t)
@@ -205,18 +210,19 @@ let check_file f =
 		| CALL(s,lle) when s = "getc" -> ["GETC"]
 		(* Call user defined functions *)
 		| CALL(s,lle) -> ( gen_call s lle tab (List.length lle) )
-		| OP1(op, le) -> let msg = match op with
+		| OP1(op, le) ->  (* Decide depending of the operator whether the value or the adress of the argument is needed *)
+											let msg = match op with
 																| M_ADDR | M_PRE_INC | M_PRE_DEC | M_POST_INC | M_POST_DEC -> handle_expr le tab true
 																| _ -> handle_expr le tab false
 											in
-										 msg @ begin
+										 	msg @ begin
 											match op with
 												| M_MINUS -> ["NOT R0 R0";"ADD R0 R0 #1"]
 												| M_NOT -> ["NOT R0 R0"]
 												(* The address of the expression will be the address of the last lvalue encountered *)
 												| M_ADDR ->  []
 												(* After dereferencing, the new address of lvalue will become the result of the expression and the deref will return M[R0] *)
-												| M_DEREF -> ["LDR R0 R0 #0"]
+												| M_DEREF -> if get_lvalue then [] else ["LDR R0 R0 #0"]
 												(* For INC and DEC, get the value of the last lvalue, incr or decr and change its value in memory *)
 												| M_PRE_INC -> ["ADD R1 R0 #0";"LDR R0 R1 #0";"ADD R0 R0 #1";"STR R0 R1 #0"]
 												| M_PRE_DEC -> ["ADD R1 R0 #0";"LDR R0 R1 #0";"ADD R0 R0 #-1";"STR R0 R1 #0"]
@@ -286,11 +292,13 @@ let check_file f =
 	 														funbase @ c @ (handle_val_dec q funtab r4)
 	in
 
+
 	let codebody = handle_val_dec f [] 0 in
 
 	incr_flag();
-																											(* Init R6 value to the address of the stack *)                                                                                    (*Init R5 and R4 *)           (*Jump to main*)
+																								(* Init R6 value to the address of the stack *)                                     (*Init R5 and R4 *)                  (*Jump to main*)
 	let header = [".ORIG #" ^ (string_of_int orig) ; "LD R6 CST" ^ (string_of_int !flagcount)] @ (print_cst_fill !flagcount stack) @ ["ADD R5 R6 #0";"GLEA R4 STATIC_VAR";"GLEA R3 FUN_USER_main";"JMP R3"] in
+	(* Intermediate LC3 code *)
 	let protoasm = header
 		@ print_mult_fun()
 		@ print_div_fun()
@@ -299,39 +307,9 @@ let check_file f =
 	  @ (fill_strings !strings)
 	  @ (fill_glob_var !globvar)
 	  @ [".END"] in
-	(* Second pass : I calculate the line position of every instruction and use this information to replace my pseudo instruction GLEA *)
+	(* Second pass : I calculate the line position of every instruction and use this information to replace my pseudo instruction GLEA by real LC3 code*)
 	let finalasm = secondpass protoasm in
 	finalasm
 
 
-(* 
-Features :
-		- Can handle more than 32 static variables and local variables at the same time (normally difficult because the offset is in the -32,32 range)
-		- Can jump to arbitrary far away piece of code with the custom instruction GLEA, converted to real LC3 code in a second pass
-		- Division, multiplication and modulo operation implemented in a subroutine to be more lines-efficient
-		- Can handle IF and WHILE statements more than 256 lines long by using GLEA and JMP
-		- Uses a list representation instead of a plain string to avoid string concatenation (complexity of ^ : both string size , complexity of @ : left list size)
- *)
-
-(* 
-Possible improvements :
-	- Use custom type instead of string as an intermediate to avoid second pass parsing
-*)
-
-(* 
-Implementation choices :
-	- I use a list of custom instructions (like GLEA) without any comma (to facilitate second pass parsing) as an intermediate to code generation
-	- To put an immediate in a register, I store the immediate in a .FILL and then I load that .FILL in the register, as well as using labels and BR to jump over the .FILL 
-			-> LD R0 CST
-			-> BR IGNORE_CST
-			-> CST .FILL #42
-			-> IGNORE_CST
-	- I manage lvalues by having a parameter to handle_expr that tells the function to return the value or the address of a lvalue.
-		For instance, when it encounters ++x : it recovers x's address to then add 1 to x and return its value
-	- I store every string at the end of instructions and before the static memory
-	- I access global variables with R4 and an offset and local variables with R6 and an offset
-	- I jump somewhere in the instructions by placing the address of where to go in a register (this address is computed in a second pass with the instruction GLEA) and jump to this register (with JSRR or JMP)
-	- I use a symbol table that is changed recursively to store its name, offset and if it is global or not
-	- When a function is called, the caller pushes its arguments on the stack (ie decreasing R6), jump to the calle and pops the arguments
-															 the calle pushes R5,R6 and R7 and resets R5 to R6 and when it returns, it remakes R5,R6 and R7 before popping them and RET
-*)
+(* Please, look at the readme.pdf ! *)
