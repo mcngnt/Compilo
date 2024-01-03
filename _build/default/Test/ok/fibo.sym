@@ -1,0 +1,33 @@
+// Symbol table
+// Scope level 0:
+//	Symbol Name       Page Address
+//	----------------  ------------
+//	CST8              3002
+//	IGNORE_CST8       3003
+//	CST10             3006
+//	IGNORE_CST10      3007
+//	CST12             3009
+//	IGNORE_CST12      300A
+//	FUN_USER_f        300B
+//	CST14             3027
+//	IGNORE_CST14      3028
+//	IGNORE_JMP_IF6    3029
+//	CST16             302D
+//	IGNORE_CST16      302E
+//	CMP_ELSE6         302F
+//	CMP_ENDELSE6      3030
+//	CST18             3034
+//	IGNORE_CST18      3035
+//	IGNORE_JMP_IF7    3036
+//	CST20             303E
+//	IGNORE_CST20      303F
+//	IF_ELSE7          3040
+//	IF_ENDELSE7       3040
+//	CST22             3054
+//	IGNORE_CST22      3055
+//	CST24             306F
+//	IGNORE_CST24      3070
+//	FUN_USER_main     307B
+//	STRINGS           3088
+//	STATIC_VAR        3088
+

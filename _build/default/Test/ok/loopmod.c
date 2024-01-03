@@ -25,16 +25,19 @@ int print_int_nl(int t)
 
 int f()
 {
-		int a;
-		int b;
-
-		for (a = -10; a < 10; a++) {
-	        	for (b = -10; b < 10; b++) {
-	                	if ((a/b)*b + a%b != a)
-	                        	return -1;
-	        	}
-		}
-		return 0;
+	int a;
+	int b;
+	for (a = -100; a < 100; a++)
+	{
+	    for (b = -100; b < 100; b++)
+	    {
+	        if (b != 0 && (a/b)*b + a%b != a)
+	        {
+	            return -1;
+	        }
+	    }
+	}
+	return 0;
 }
 
 

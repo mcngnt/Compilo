@@ -93,6 +93,9 @@ let check_file f =
   let globvar = ref [] in
   let strings = ref [] in
   let stringcount = ref 0 in
+  let use_mod = ref false in
+  let use_mult = ref false in
+  let use_div = ref false in
 
   let incr_flag () = flagcount := !flagcount + 1 in
   let incr_string () = stringcount := !stringcount + 1 in
@@ -235,9 +238,9 @@ let check_file f =
 													 match op with
 													 	| S_ADD -> ["ADD R0 R0 R1"]
 													 	| S_SUB -> ["NOT R0 R0";"ADD R0 R0 #1";"ADD R0 R0 R1"]
-													 	| S_MUL -> ["GLEA R3 FUN_MULT";"JSRR R3"]
-													 	| S_DIV -> ["GLEA R3 FUN_DIV";"JSRR R3"]
-													 	| S_MOD -> ["GLEA R3 FUN_MOD";"JSRR R3"]
+													 	| S_MUL -> use_mult := true ; ["GLEA R3 FUN_MULT";"JSRR R3"]
+													 	| S_DIV -> use_div := true ; ["GLEA R3 FUN_DIV";"JSRR R3"]
+													 	| S_MOD -> use_mod := true ; ["GLEA R3 FUN_MOD";"JSRR R3"]
 													 end
 		| CMP(op, le1, le2) -> let e1 = (handle_expr le1 tab false) and e2 = (handle_expr le2 tab false) in
 													 e1 @ ["STR R0 R6 #0";"ADD R6 R6 #-1"] @ e2 @ ["ADD R6 R6 #1";"LDR R1 R6 #0"] @
@@ -300,9 +303,9 @@ let check_file f =
 	let header = [".ORIG #" ^ (string_of_int orig) ; "LD R6 CST" ^ (string_of_int !flagcount)] @ (print_cst_fill !flagcount stack) @ ["ADD R5 R6 #0";"GLEA R4 STATIC_VAR";"GLEA R3 FUN_USER_main";"JMP R3"] in
 	(* Intermediate LC3 code *)
 	let protoasm = header
-		@ print_mult_fun()
-		@ print_div_fun()
-		@ print_mod_fun()
+		@ ( if !use_mult then print_mult_fun() else [])
+		@ ( if !use_div then print_div_fun() else [])
+		@ ( if !use_mod then print_mod_fun() else [])
 	  @ codebody
 	  @ (fill_strings !strings)
 	  @ (fill_glob_var !globvar)
@@ -312,4 +315,4 @@ let check_file f =
 	finalasm
 
 
-(* Please, look at the readme.pdf ! *)
+(* Please, look at  readme.pdf ! *)
